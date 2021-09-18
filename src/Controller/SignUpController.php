@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\HttpFoundation\JsonSuccessResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -22,6 +23,6 @@ class SignUpController
 {
     public function __invoke(): JsonResponse
     {
-        return new JsonResponse('success');
+        return JsonSuccessResponse::create(["status" => "success"]);
     }
 }
