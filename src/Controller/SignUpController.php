@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -21,8 +24,17 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class SignUpController
 {
-    public function __invoke(): JsonResponse
+    public function __invoke(UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
     {
-        return JsonSuccessResponse::create(["status" => "success"]);
+        $user = $userRepository->find(0);
+        if (null === $user) {
+            $user = new User();
+            $user->setEmail('example@example.org');
+            $user->setPassword('nopass');
+            $entityManager->persist($user);
+            $entityManager->flush($user);
+        }
+
+        return JsonSuccessResponse::create(["status" => "success", "user" => [$user->getId(), $user->getEmail()]]);
     }
 }
