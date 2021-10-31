@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @ORM\Entity(repositoryClass=TaskRepository::class)
@@ -41,6 +42,26 @@ class Task
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $icon;
+
+    public static function createFromRequest(Request $request): self
+    {
+        $task = new self();
+        $task->name = $request->request->get('name');
+        $task->duration = (int) $request->request->get('duration');
+        if (null !== $description = $request->request->get('description')) {
+            $task->description = $description;
+        }
+        if (null !== $icon = $request->request->get('icon')) {
+            $task->icon = $icon;
+        }
+
+        return $task;
+    }
+
+    public function serialize(): string
+    {
+        return json_encode($this);
+    }
 
     public function getId(): ?int
     {
