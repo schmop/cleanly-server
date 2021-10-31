@@ -10,6 +10,8 @@
 ###< symfony/framework-bundle ###
 
 .idea
+composer.lock
+composer.phar
 
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
