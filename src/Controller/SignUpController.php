@@ -36,8 +36,11 @@ class SignUpController
     {
         $command = SignUpCommand::fromRequest($request);
         $errors = $validator->validate($command);
-        if (!empty($errors)) {
-            return JsonErrorResponse::create(['status' => 'error', 'errors' => (string)$errors]);
+        if (count($errors) > 0) {
+            return JsonErrorResponse::create(
+                ['status' => 'error', 'errors' => (string)$errors],
+                ['Access-Control-Allow-Origin' => '*']
+            );
         }
 
 
@@ -47,6 +50,9 @@ class SignUpController
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(["status" => "success", "user" => [$user->getId(), $user->getMail()]]);
+        return JsonSuccessResponse::create(
+            ["status" => "success", "user" => [$user->getId(), $user->getMail()]],
+            ['Access-Control-Allow-Origin' => '*']
+        );
     }
 }

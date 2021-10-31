@@ -7,7 +7,7 @@ nelmio_cors:
         expose_headers: ['Link']
         max_age: 3600
     paths:
-        '^/api/':
+        '^(/api/|/signup)':
             allow_origin: ['*']
             allow_headers: ['*']
             allow_methods: ['POST', 'PUT', 'GET', 'DELETE']

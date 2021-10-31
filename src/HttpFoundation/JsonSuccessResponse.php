@@ -8,8 +8,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class JsonSuccessResponse
 {
-    public static function create(array $data): JsonResponse
+    public static function create(array $data, array $headers = []): JsonResponse
     {
-        return new JsonResponse($data, JsonResponse::HTTP_OK);
+        return new JsonResponse($data, JsonResponse::HTTP_OK, $headers);
     }
 }
