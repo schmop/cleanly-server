@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\SignUp\SignUpCommand;
 use Doctrine\ORM\EntityManagerInterface;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 /**
@@ -28,10 +30,16 @@ class SignUpController
     public function __invoke(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        ValidatorInterface $validator
     ): JsonResponse
     {
         $command = SignUpCommand::fromRequest($request);
+        $errors = $validator->validate($command);
+        if (!empty($errors)) {
+            return JsonErrorResponse::create(['status' => 'error', 'errors' => (string)$errors]);
+        }
+
 
         $user = new User($command->getMail(), $command->getName());
         $user->setPassword($passwordHasher->hashPassword($user, $command->getPassword()));
