@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\SignUp\SignUpCommand;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,16 +31,14 @@ class SignUpController
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse
     {
-        $email = $request->get('_email');
-        $password = $request->get('_password');
+        $command = SignUpCommand::fromRequest($request);
 
-        $user = new User();
-        $user->setEmail($email);
-        $user->setPassword($passwordHasher->hashPassword($user, $password));
+        $user = new User($command->getMail(), $command->getName());
+        $user->setPassword($passwordHasher->hashPassword($user, $command->getPassword()));
 
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(["status" => "success", "user" => [$user->getId(), $user->getEmail()]]);
+        return JsonSuccessResponse::create(["status" => "success", "user" => [$user->getId(), $user->getMail()]]);
     }
 }

@@ -20,22 +20,46 @@ class SignUpCommand
     /**
      * @Assert\Email
      */
-    private string $email;
+    private string $mail;
 
     /**
      * @Assert\NotCompromisedPassword
      */
     private string $passwd;
 
-    public function __construct($name, $email, $passwd)
+    public function __construct(string $name, string $mail, string $passwd)
     {
         $this->name = $name;
-        $this->email = $email;
+        $this->mail = $mail;
         $this->passwd = $passwd;
     }
 
     public static function fromRequest(Request $request): self
     {
-        return new self(/**TODO**/);
+        $name = $request->request->get('_name');
+        $mail = $request->request->get('_mail');
+        $password = $request->request->get('_password');
+
+        if (!is_string($mail) || !is_string($password)) {
+            throw new \InvalidArgumentException("'_name', '_mail' and '_password' must be provided!");
+        }
+
+
+        return new self($name, $mail, $password);
+    }
+
+    public function getMail(): string
+    {
+        return $this->mail;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->passwd;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }
