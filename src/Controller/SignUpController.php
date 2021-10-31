@@ -6,9 +6,10 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\HttpFoundation\JsonSuccessResponse;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 
@@ -18,22 +19,26 @@ use Symfony\Component\Routing\Annotation\Route;
  * Validates a sign up request and creates a new user
  *
  * The request needs to contain the following to be valid:
- *  - a user name
  *  - an email-address
  *  - a password that has be deemed "secure"
  */
 class SignUpController
 {
-    public function __invoke(UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function __invoke(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse
     {
-        $user = $userRepository->find(0);
-        if (null === $user) {
-            $user = new User();
-            $user->setEmail('example@example.org');
-            $user->setPassword('nopass');
-            $entityManager->persist($user);
-            $entityManager->flush($user);
-        }
+        $email = $request->get('_email');
+        $password = $request->get('_password');
+
+        $user = new User();
+        $user->setEmail($email);
+        $user->setPassword($passwordHasher->hashPassword($user, $password));
+
+        $entityManager->persist($user);
+        $entityManager->flush();
 
         return JsonSuccessResponse::create(["status" => "success", "user" => [$user->getId(), $user->getEmail()]]);
     }
