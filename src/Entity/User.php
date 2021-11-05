@@ -41,8 +41,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password;
 
     /**
-     * @param $mail
+     * @ORM\ManyToMany(targetEntity="Household", mappedBy="member")
+     *
+     * @var Household[]
      */
+    private array $households;
+
     public function __construct(string $mail, string $name)
     {
         $this->mail = $mail;

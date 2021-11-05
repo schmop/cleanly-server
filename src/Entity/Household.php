@@ -4,33 +4,56 @@ namespace App\Entity;
 
 use App\Repository\HouseholdRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=HouseholdRepository::class)
  */
-class Household
+class Household implements \JsonSerializable
 {
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $picture;
+    private string $picture;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\JoinColumn(name="admin_id", referencedColumnName="id")
      */
-    private $admin;
+    private ?UserInterface $admin;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="User", inversedBy="households")
+     * @ORM\JoinTable(name="household_members")
+     *
+     * @var UserInterface[]
+     */
+    private array $members;
+
+    public static function createFromRequest(Request $request, UserInterface $user): self
+    {
+        if (null == $request->request->get('name')) {
+            throw new \InvalidArgumentException('No name set!');
+        }
+        $household = new self();
+        $household->setName($request->request->get('name'));
+        $household->setAdmin($user));
+
+        return $household;
+    }
 
     public function getId(): ?int
     {
@@ -61,15 +84,24 @@ class Household
         return $this;
     }
 
-    public function getAdmin(): ?string
+    public function getAdmin(): ?UserInterface
     {
         return $this->admin;
     }
 
-    public function setAdmin(string $admin): self
+    public function setAdmin(UserInterface $admin): self
     {
         $this->admin = $admin;
 
         return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'picture' => $this->getPicture(),
+        ];
     }
 }
