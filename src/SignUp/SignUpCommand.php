@@ -22,7 +22,7 @@ class SignUpCommand
      */
     private string $mail;
 
-    /**
+    /* TODO: Readd this in production
      * @Assert\NotCompromisedPassword
      */
     private string $passwd;

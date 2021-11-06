@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -41,11 +42,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Household", mappedBy="member")
+     * @ORM\ManyToMany(targetEntity="Household", mappedBy="members")
      *
-     * @var Household[]
+     * @var Household[]|Collection
      */
-    private array $households;
+    private $households;
 
     public function __construct(string $mail, string $name)
     {
@@ -146,5 +147,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Household[]
+     */
+    public function getHouseholds(): array
+    {
+        return $this->households->getValues();
     }
 }

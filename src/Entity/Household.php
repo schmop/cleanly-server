@@ -45,12 +45,12 @@ class Household implements \JsonSerializable
 
     public static function createFromRequest(Request $request, UserInterface $user): self
     {
-        if (null == $request->request->get('name')) {
+        if (null === $request->request->get('name')) {
             throw new \InvalidArgumentException('No name set!');
         }
         $household = new self();
         $household->setName($request->request->get('name'));
-        $household->setAdmin($user));
+        $household->setAdmin($user);
 
         return $household;
     }

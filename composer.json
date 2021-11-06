@@ -23,7 +23,6 @@
         "symfony/proxy-manager-bridge": "5.3.*",
         "symfony/runtime": "5.3.*",
         "symfony/validator": "5.3.*",
-        "symfony/web-server-bundle": "4.4",
         "symfony/yaml": "5.3.*",
       "ext-json": "*"
     },
