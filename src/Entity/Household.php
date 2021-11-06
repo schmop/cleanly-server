@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\HouseholdRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -27,7 +29,7 @@ class Household implements \JsonSerializable
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $picture;
+    private ?string $picture;
 
     /**
      * @ORM\ManyToOne(targetEntity="User")
@@ -39,9 +41,14 @@ class Household implements \JsonSerializable
      * @ORM\ManyToMany(targetEntity="User", inversedBy="households")
      * @ORM\JoinTable(name="household_members")
      *
-     * @var UserInterface[]
+     * @var Collection<UserInterface>
      */
-    private array $members;
+    private Collection $members;
+
+    public function __construct()
+    {
+        $this->members = new ArrayCollection();
+    }
 
     public static function createFromRequest(Request $request, UserInterface $user): self
     {
@@ -51,6 +58,7 @@ class Household implements \JsonSerializable
         $household = new self();
         $household->setName($request->request->get('name'));
         $household->setAdmin($user);
+        $household->addMember($user);
 
         return $household;
     }
@@ -96,12 +104,27 @@ class Household implements \JsonSerializable
         return $this;
     }
 
+    public function getMembers(): Collection
+    {
+        return $this->members;
+    }
+
+    public function addMember(UserInterface $member): self
+    {
+        $this->members->add($member);
+
+        return $this;
+    }
+
     public function jsonSerialize(): array
     {
         return [
             'id' => $this->getId(),
             'name' => $this->getName(),
             'picture' => $this->getPicture(),
+            'members' => $this->getMembers()->map(static function(User $user) {
+                return $user->jsonSerialize();
+            })->toArray()
         ];
     }
 }

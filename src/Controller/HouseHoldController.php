@@ -23,6 +23,6 @@ class HouseHoldController extends AbstractController
         $entityManager->persist($household);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success', 'task' => $household->jsonSerialize()]);
+        return JsonSuccessResponse::create(['status' => 'success']);
     }
 }
