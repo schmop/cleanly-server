@@ -32,6 +32,11 @@ class Household implements \JsonSerializable
     private ?string $picture;
 
     /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private string $color;
+
+    /**
      * @ORM\ManyToOne(targetEntity="User")
      * @ORM\JoinColumn(name="admin_id", referencedColumnName="id")
      */
@@ -48,6 +53,7 @@ class Household implements \JsonSerializable
     public function __construct()
     {
         $this->members = new ArrayCollection();
+        $this->color = '#233662';
     }
 
     public static function createFromRequest(Request $request, UserInterface $user): self
@@ -116,12 +122,25 @@ class Household implements \JsonSerializable
         return $this;
     }
 
+    public function getColor(): string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): self
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+
     public function jsonSerialize(): array
     {
         return [
             'id' => $this->getId(),
             'name' => $this->getName(),
             'picture' => $this->getPicture(),
+            'color' => $this->getColor(),
             'members' => $this->getMembers()->map(static function(User $user) {
                 return $user->jsonSerialize();
             })->toArray()
