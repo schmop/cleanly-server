@@ -150,12 +150,8 @@ class Household implements \JsonSerializable
             'color' => $this->getColor(),
             'members' => $this->getMembers()->map(static function(User $user) {
                 return $user->jsonSerialize();
-            })->toArray()
+            })->toArray(),
+            'admin' => $this->getAdmin()->getUserIdentifier()
         ];
-    }
-
-    public function generateNewInvite(): string
-    {
-
     }
 }
