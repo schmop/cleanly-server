@@ -39,6 +39,7 @@ class SignUpController
         if (count($errors) > 0) {
             return JsonErrorResponse::create(
                 ['status' => 'error', 'errors' => (string)$errors],
+                JsonResponse::HTTP_BAD_REQUEST,
                 ['Access-Control-Allow-Origin' => '*']
             );
         }

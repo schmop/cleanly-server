@@ -50,6 +50,13 @@ class Household implements \JsonSerializable
      */
     private Collection $members;
 
+    /**
+     * @ORM\OneToMany(targetEntity="HouseholdInvite", mappedBy="household")
+     *
+     * @var Collection<HouseholdInvite>
+     */
+    private Collection $invites;
+
     public function __construct()
     {
         $this->members = new ArrayCollection();
@@ -145,5 +152,10 @@ class Household implements \JsonSerializable
                 return $user->jsonSerialize();
             })->toArray()
         ];
+    }
+
+    public function generateNewInvite(): string
+    {
+
     }
 }

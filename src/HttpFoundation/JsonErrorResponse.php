@@ -6,8 +6,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class JsonErrorResponse
 {
-    public static function create(array $data, array $headers = []): JsonResponse
+    public static function create(array $data, int $statusCode = JsonResponse::HTTP_BAD_REQUEST, array $headers = []): JsonResponse
     {
-        return new JsonResponse($data, JsonResponse::HTTP_BAD_REQUEST, $headers);
+        return new JsonResponse($data, $statusCode, $headers);
     }
 }
