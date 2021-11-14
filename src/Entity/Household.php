@@ -3,9 +3,9 @@
 namespace App\Entity;
 
 use App\Repository\HouseholdRepository;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -57,9 +57,18 @@ class Household implements \JsonSerializable
      */
     private Collection $invites;
 
+    /**
+     * @ORM\OneToMany(targetEntity="Task", mappedBy="household")
+     *
+     * @var Collection<Task>
+     */
+    private Collection $tasks;
+
     public function __construct()
     {
         $this->members = new ArrayCollection();
+        $this->invites = new ArrayCollection();
+        $this->tasks = new ArrayCollection();
         $this->color = '#233662';
     }
 
@@ -141,6 +150,16 @@ class Household implements \JsonSerializable
         return $this;
     }
 
+    public function getInvites(): Collection
+    {
+        return $this->invites;
+    }
+
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
     public function jsonSerialize(): array
     {
         return [
@@ -148,8 +167,11 @@ class Household implements \JsonSerializable
             'name' => $this->getName(),
             'picture' => $this->getPicture(),
             'color' => $this->getColor(),
-            'members' => $this->getMembers()->map(static function(User $user) {
+            'members' => $this->getMembers()->map(static function (User $user) {
                 return $user->jsonSerialize();
+            })->toArray(),
+            'tasks' => $this->getTasks()->map(static function (Task $task) {
+                return $task->jsonSerialize();
             })->toArray(),
             'admin' => $this->getAdmin()->getUserIdentifier()
         ];

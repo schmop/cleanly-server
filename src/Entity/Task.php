@@ -4,68 +4,63 @@ namespace App\Entity;
 
 use App\Repository\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @ORM\Entity(repositoryClass=TaskRepository::class)
  */
-class Task
+class Task implements \JsonSerializable
 {
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
      */
-    private $lastCompleted;
+    private ?\DateTimeImmutable $lastCompleted;
 
     /**
      * @ORM\Column(type="integer")
      */
-    private $duration;
+    private int $duration;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
      * @ORM\Column(type="string", length=510, nullable=true)
      */
-    private $description;
+    private ?string $description;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $icon;
+    private ?string $icon;
 
-    public static function createFromRequest(Request $request): self
-    {
-        $task = new self();
-        $task->name = $request->request->get('name');
-        $task->duration = (int) $request->request->get('duration');
-        if (null !== $description = $request->request->get('description')) {
-            $task->description = $description;
-        }
-        if (null !== $icon = $request->request->get('icon')) {
-            $task->icon = $icon;
-        }
+    /**
+     * @ORM\ManyToOne(targetEntity="Household", inversedBy="tasks")
+     * @ORM\JoinColumn(name="household_id", referencedColumnName="id")
+     */
+    private Household $household;
 
-        return $task;
-    }
-
-    public function serialize(): string
-    {
-        return json_encode($this);
-    }
-
-    public function getId(): ?int
+    public function getId(): int
     {
         return $this->id;
+    }
+
+    public function getHousehold(): Household
+    {
+        return $this->household;
+    }
+
+    public function setHousehold(Household $household): void
+    {
+        $this->household = $household;
     }
 
     public function getLastCompleted(): ?\DateTimeImmutable
@@ -126,5 +121,17 @@ class Task
         $this->icon = $icon;
 
         return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'icon' => $this->getIcon(),
+            'description' => $this->getDescription(),
+            'lastCompleted' => $this->getLastCompleted(),
+            'duration' => $this->getDuration(),
+        ];
     }
 }
