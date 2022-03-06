@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Household;
+use App\Entity\HouseholdInvite;
 use App\Entity\User;
 use App\Repository\HouseholdRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,8 +25,14 @@ class DashboardController extends AbstractController
          */
         $user = $this->getUser();
 
-        return new JsonResponse(array_map(static function (Household $houseHold) {
-            return $houseHold->jsonSerialize();
-        }, $user->getHouseholds()));
+        return new JsonResponse([
+            'households' => array_map(static function (Household $houseHold) {
+                return $houseHold->jsonSerialize();
+            }, $user->getHouseholds()),
+            'invites' => array_map(static function (HouseholdInvite $invite) {
+                return $invite->jsonSerialize();
+            }, $user->getInvites()),
+            'user' => $user->jsonSerialize(),
+        ]);
     }
 }

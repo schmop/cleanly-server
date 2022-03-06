@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\Table(name="`user`")
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSerializable
 {
@@ -47,6 +48,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
      * @var Household[]|Collection
      */
     private $households;
+
+    /**
+     * @ORM\OneToMany(targetEntity="HouseholdInvite", mappedBy="invitee")
+     * 
+     * @var HouseholdInvite[]|Collection
+     */
+    private $invites;
 
     public function __construct(string $mail, string $name)
     {
@@ -155,6 +163,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
     public function getHouseholds(): array
     {
         return $this->households->getValues();
+    }
+
+    /**
+     * @return HouseholdInvite[]
+     */
+    public function getInvites(): array
+    {
+        return $this->invites->getValues();
     }
 
     public function jsonSerialize(): array

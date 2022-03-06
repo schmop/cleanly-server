@@ -7,7 +7,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=HouseholdRepository::class)
@@ -40,13 +39,13 @@ class Household implements \JsonSerializable
      * @ORM\ManyToOne(targetEntity="User")
      * @ORM\JoinColumn(name="admin_id", referencedColumnName="id")
      */
-    private ?UserInterface $admin;
+    private ?User $admin;
 
     /**
      * @ORM\ManyToMany(targetEntity="User", inversedBy="households")
      * @ORM\JoinTable(name="household_members")
      *
-     * @var Collection<UserInterface>
+     * @var Collection<User>
      */
     private Collection $members;
 
@@ -72,7 +71,7 @@ class Household implements \JsonSerializable
         $this->color = '#233662';
     }
 
-    public static function createFromRequest(Request $request, UserInterface $user): self
+    public static function createFromRequest(Request $request, User $user): self
     {
         if (null === $request->request->get('name')) {
             throw new \InvalidArgumentException('No name set!');
@@ -114,12 +113,12 @@ class Household implements \JsonSerializable
         return $this;
     }
 
-    public function getAdmin(): ?UserInterface
+    public function getAdmin(): ?User
     {
         return $this->admin;
     }
 
-    public function setAdmin(UserInterface $admin): self
+    public function setAdmin(User $admin): self
     {
         $this->admin = $admin;
 
@@ -131,7 +130,7 @@ class Household implements \JsonSerializable
         return $this->members;
     }
 
-    public function addMember(UserInterface $member): self
+    public function addMember(User $member): self
     {
         $this->members->add($member);
 
@@ -173,7 +172,7 @@ class Household implements \JsonSerializable
             'tasks' => $this->getTasks()->map(static function (Task $task) {
                 return $task->jsonSerialize();
             })->toArray(),
-            'admin' => $this->getAdmin()->getUserIdentifier()
+            'admin' => $this->getAdmin()->getMail() // @TODO: Use uuids
         ];
     }
 }

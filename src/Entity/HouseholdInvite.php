@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass=HouseholdInviteRepository::class)
  */
-class HouseholdInvite
+class HouseholdInvite implements \JsonSerializable
 {
     /**
      * @ORM\Id
@@ -27,10 +27,17 @@ class HouseholdInvite
      */
     private Household $household;
 
-    public function __construct(string $token, Household $household)
+    /**
+     * @ORM\ManyToOne(targetEntity="Household", inversedBy="invites")
+     * @ORM\JoinColumn(name="invitee_id", referencedColumnName="id")
+     */
+    private ?User $invitee;
+
+    public function __construct(string $token, Household $household, ?User $invitee = null)
     {
         $this->household = $household;
         $this->token = $token;
+        $this->invitee = $invitee;
         $this->validUntil = (new \DateTimeImmutable())->add(new \DateInterval('PT2H'));
     }
 
@@ -49,4 +56,17 @@ class HouseholdInvite
         return $this->household;
     }
 
+    public function getInvitee(): ?User
+    {
+        return $this->invitee;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'householdId' => $this->household->getId(),
+            'householdName' => $this->household->getName(),
+            'inviter' => $this->household->getAdmin()->jsonSerialize(),
+        ];
+    }
 }
