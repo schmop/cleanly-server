@@ -9,6 +9,8 @@ use App\Entity\HouseholdInvite;
 use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Repository\UserRepository;
+use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -66,23 +68,24 @@ class HouseHoldController extends AbstractController
     public function invite(
         Household $household,
         EntityManagerInterface $entityManager,
-        UrlGeneratorInterface $urlGenerator,
-        Base64UrlInterface $base64Url
+        UserRepository $userRepository,
+        Base64UrlInterface $base64Url,
+        Request $request,
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
             throw new \InvalidArgumentException('Insufficient privileges!');
         }
-        try {
-            $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household);
-        } catch (\Exception $e) {
-            return JsonErrorResponse::create(['status' => 'error', 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
+        $invitees = $userRepository->findBy(['id' => $ids]);
+        foreach ($invitees as $invitee) {
+            try {
+                $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee);
+            } catch (\Exception $e) {
+                return JsonErrorResponse::create(['status' => 'error', 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            }
+            $entityManager->persist($inviteToken);
         }
-        $entityManager->persist($inviteToken);
         $entityManager->flush();
-        /**
-         * @TODO: If this will be an App using JWT, links will not be as easy. Use Links or QR-Codes.
-         */
-        //$url = $urlGenerator->generate('household_join', ['token' => $inviteToken->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return JsonSuccessResponse::create(['status' => 'success']);
     }
@@ -93,10 +96,9 @@ class HouseHoldController extends AbstractController
     public function generateInvite(
         Household $household,
         EntityManagerInterface $entityManager,
-        UrlGeneratorInterface $urlGenerator,
         Base64UrlInterface $base64Url
     ): JsonResponse {
-        if ($household->getAdmin() !== $this->getUser()) {
+        if ($household->getAdmin()->getId() !== $this->getUser()->getUserIdentifier()) {
             throw new \InvalidArgumentException('Insufficient privileges!');
         }
         try {
@@ -125,7 +127,7 @@ class HouseHoldController extends AbstractController
         if ($invite->getValidUntil()->getTimestamp() <= (new \DateTime())->getTimestamp()) {
             return JsonErrorResponse::create(['status' => 'error', 'reason' => 'Outdated invite!']);
         }
-        $alreadyMember = $invite->getHousehold()->getMembers()->exists(function(int $id, User $member) {
+        $alreadyMember = $invite->getHousehold()->getMembers()->exists(function (int $id, User $member) {
             return $member === $this->getUser();
         });
         if ($alreadyMember) {

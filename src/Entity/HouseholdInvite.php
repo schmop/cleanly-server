@@ -28,7 +28,7 @@ class HouseholdInvite implements \JsonSerializable
     private Household $household;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Household", inversedBy="invites")
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="invites")
      * @ORM\JoinColumn(name="invitee_id", referencedColumnName="id")
      */
     private ?User $invitee;

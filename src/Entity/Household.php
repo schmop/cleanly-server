@@ -166,7 +166,7 @@ class Household implements \JsonSerializable
             'name' => $this->getName(),
             'picture' => $this->getPicture(),
             'color' => $this->getColor(),
-            'members' => $this->getMembers()->map(static function (User $user) {
+            'users' => $this->getMembers()->map(static function (User $user) {
                 return $user->jsonSerialize();
             })->toArray(),
             'tasks' => $this->getTasks()->map(static function (Task $task) {
