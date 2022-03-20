@@ -9,6 +9,7 @@ use App\Entity\HouseholdInvite;
 use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Repository\HouseholdInviteRepository;
 use App\Repository\UserRepository;
 use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
@@ -118,7 +119,7 @@ class HouseHoldController extends AbstractController
 
 
     /**
-     * @Route("/api/household/{token}/join", name="household_join")
+     * @Route("/api/household/join-by-token/{token}", name="household_join")
      */
     public function join(
         HouseholdInvite $invite,
@@ -140,6 +141,69 @@ class HouseHoldController extends AbstractController
         $entityManager->flush();
 
         return JsonSuccessResponse::create(['status' => 'success']);
+    }
+
+
+    /**
+     * @Route("/api/household/accept-invite/{id}", name="household_accept_invite")
+     */
+    public function acceptInvite(
+        Household $household,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if ($household->getMembers()->contains($user)) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You are already a member of this household!'
+            ]);
+        }
+        $invites = $household->getInvites();
+        foreach ($invites as $invite) {
+            if ($invite->getInvitee() === $user) {
+                $household->addMember($user);
+                $entityManager->remove($invite);
+                $entityManager->persist($household);
+                $entityManager->flush();
+
+                return JsonSuccessResponse::create([
+                    'status' => 'success', 
+                    'household' => $household->jsonSerialize()
+                ]);
+            }
+        }
+
+        return JsonErrorResponse::create([
+            'status' => 'error',
+            'reason' => 'You did not receive an invite to this household!'
+        ]);
+    }
+
+
+    /**
+     * @Route("/api/household/decline-invite/{id}", name="household_decline_invite")
+     */
+    public function declineInvite(
+        Household $household,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+        $invites = $household->getInvites();
+        foreach ($invites as $invite) {
+            if ($invite->getInvitee() === $user) {
+                $entityManager->remove($invite);
+                $entityManager->flush();
+
+                return JsonSuccessResponse::create([
+                    'status' => 'success'
+                ]);
+            }
+        }
+
+        return JsonErrorResponse::create([
+            'status' => 'error',
+            'reason' => 'You did not receive an invite to this household!'
+        ]);
     }
 
     /**
