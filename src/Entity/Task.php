@@ -130,7 +130,7 @@ class Task implements \JsonSerializable
             'name' => $this->getName(),
             'icon' => $this->getIcon(),
             'description' => $this->getDescription(),
-            'lastCompleted' => $this->getLastCompleted(),
+            'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),
         ];
     }
