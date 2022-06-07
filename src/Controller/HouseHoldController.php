@@ -14,6 +14,7 @@ use App\Repository\UserRepository;
 use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -179,7 +180,6 @@ class HouseHoldController extends AbstractController
         ]);
     }
 
-
     /**
      * @Route("/api/household/decline-invite/{id}", name="household_decline_invite")
      */
@@ -207,6 +207,60 @@ class HouseHoldController extends AbstractController
     }
 
     /**
+     * @Route("/api/household/leave/{id}", name="household_leave", methods={"POST"})
+     */
+    public function leaveHousehold(
+        Household $household,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$household->getMembers()->contains($user)) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'Cannot leave, you are not a member.',
+            ]);
+        }
+        if (!$household->getAdmin() === $user) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You cannot leave this household as an admin.',
+            ]);
+        }
+        $household->removeMember($user);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create(['status' => 'success']);
+    }
+
+    /**
+     * @Route("/api/household/kick/{id}/{user_id}", name="household_kick", methods={"POST"})
+     * @Entity("kicked", expr="repository.find(user_id)")
+     */
+    public function kickMember(
+        Household $household,
+        User $kicked,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$household->getAdmin() === $user) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You do not have sufficient privileges to kick members.',
+            ]);
+        }
+        if ($user === $kicked) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You cannot kick yourself.',
+            ]);
+        }
+        $household->removeMember($user);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create(['status' => 'success']);
+    }
+
+    /**
      * @Route("/api/household/{id}", name="delete_household", methods={"DELETE"})
      */
     public function deleteHousehold(
@@ -214,7 +268,10 @@ class HouseHoldController extends AbstractController
         EntityManagerInterface $entityManager
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
-            throw new \InvalidArgumentException('Insufficient privileges!');
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You do not have sufficient privileges to remove this task!'
+            ]);
         }
         $entityManager->remove($household);
         $entityManager->flush();

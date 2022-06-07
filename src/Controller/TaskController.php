@@ -55,4 +55,26 @@ class TaskController extends AbstractController
 
         return JsonSuccessResponse::create(['status' => 'success', 'timestamp' => $task->getLastCompleted()?->getTimestamp()]);
     }
+
+    /**
+     * @Route("/api/task/{id}", "task_delete", methods={"DELETE"})
+     */
+    public function deleteTask(Task $task, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /**
+         * @var User $user
+         */
+        $user = $this->getUser();
+        if ($task->getHousehold()->getAdmin() !== $user) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You do not have sufficient privileges to remove this task!'
+            ]);
+        }
+
+        $entityManager->remove($task);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create(['status' => 'success']);
+    }
 }

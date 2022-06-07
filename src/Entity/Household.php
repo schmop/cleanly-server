@@ -137,6 +137,13 @@ class Household implements \JsonSerializable
         return $this;
     }
 
+    public function removeMember(User $member): self
+    {
+        $this->members->removeElement($member);
+
+        return $this;
+    }
+
     public function getColor(): string
     {
         return $this->color;
