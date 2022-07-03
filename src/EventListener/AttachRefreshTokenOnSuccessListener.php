@@ -13,7 +13,7 @@ final class AttachRefreshTokenOnSuccessListener
     public function attachRefreshToken(AuthenticationSuccessEvent $event): void
     {
         $data = $event->getData();
-        $data['refresh_token'] = $this->refreshTokenCreator->create($event->getUser());
+        $data['refresh_token'] = $this->refreshTokenCreator->create($event->getUser())->getToken();
         $event->setData($data);
     }
 }

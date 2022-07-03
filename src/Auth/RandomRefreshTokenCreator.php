@@ -22,7 +22,7 @@ class RandomRefreshTokenCreator implements RefreshTokenCreator
         $token = new RefreshToken(
             $this->random->getRandomString(64),
             $user,
-            $this->clock->now()->add(new \DateInterval(sprintf('%d seconds', $this->ttl))),
+            $this->clock->now()->add(\DateInterval::createFromDateString(sprintf('%d seconds', $this->ttl))),
         );
         $this->refreshTokenRepository->save($token);
 

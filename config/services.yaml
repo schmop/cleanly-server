@@ -28,6 +28,13 @@ services:
     App\Auth\RandomRefreshTokenCreator:
         arguments:
             $ttl: 7776000 # 90 days
+    
+    App\EventListener\AttachRefreshTokenOnSuccessListener:
+        tags:
+            -
+                name: kernel.event_listener
+                event: lexik_jwt_authentication.on_authentication_success
+                method: attachRefreshToken
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
