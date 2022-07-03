@@ -26,7 +26,7 @@ class LoginRefreshController extends AbstractController
     ): Response {
         $token = $request->request->get('refresh_token');
         $refreshToken = $refreshTokenRepository->findByToken($token);
-        if (null === $refreshToken || $refreshToken->getUser() !== $this->getUser()) {
+        if (null === $refreshToken) {
             return JsonErrorResponse::create(
                 ['error' => 'Invalid refresh token!'], 
                 Response::HTTP_BAD_REQUEST
@@ -40,6 +40,6 @@ class LoginRefreshController extends AbstractController
         }
         $refreshToken->refresh($clock);
         $refreshTokenRepository->save($refreshToken);
-        return new JsonResponse(['token' => $jWTTokenManager->create($this->getUser())]);
+        return new JsonResponse(['token' => $jWTTokenManager->create($refreshToken->getUser())]);
     }
 }

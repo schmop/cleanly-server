@@ -30,7 +30,7 @@ class RefreshToken
 
     public function isOutdated(Clock $clock): bool
     {
-        return $this->validUntil->getTimestamp() >= $clock->now()->getTimestamp();
+        return $this->validUntil->getTimestamp() <= $clock->now()->getTimestamp();
     }
 
     public function getToken(): string
