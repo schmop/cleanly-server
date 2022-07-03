@@ -2,13 +2,12 @@
 
 namespace App\Auth\Entity;
 
+use App\Auth\RefreshTokenRepository;
 use App\Utils\Clock;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\User;
 
-/**
- * @ORM\Entity(repositoryClass=RefreshTokenRepository::class)
- */
+#[ORM\Entity(repositoryClass: RefreshTokenRepository::class)]
 class RefreshToken
 {
     
@@ -16,7 +15,7 @@ class RefreshToken
         #[ORM\Column(type: "string")]
         #[ORM\Id]
         private string $token,
-        #[ORM\ManyToOne(targetEntity: "User")]
+        #[ORM\ManyToOne(targetEntity: User::class)]
         #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", onDelete: 'cascade')]
         private User $user,
         #[ORM\Column(type: "datetime_immutable", nullable: true)]
