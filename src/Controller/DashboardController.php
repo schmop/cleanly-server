@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class DashboardController extends AbstractController
 {
-    public function __invoke(HouseholdRepository $householdRepository): Response
+    public function __invoke(): Response
     {
         /**
          * @var User $user

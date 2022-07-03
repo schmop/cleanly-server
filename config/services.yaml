@@ -25,5 +25,9 @@ services:
         resource: '../src/Controller'
         tags: [ 'controller.service_arguments' ]
 
+    App\Auth\RandomRefreshTokenCreator:
+        arguments:
+            $ttl: 7776000 # 90 days
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
