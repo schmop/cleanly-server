@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class HouseHoldController extends AbstractController
 {
@@ -75,8 +76,10 @@ class HouseHoldController extends AbstractController
         Request $request,
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
-            throw new \InvalidArgumentException('Insufficient privileges!');
-        }
+            return JsonErrorResponse::create([
+                'status' => 'error', 
+                'reason' => 'Insufficient privileges!'
+            ], Response::HTTP_FORBIDDEN);        }
         $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {
@@ -93,6 +96,7 @@ class HouseHoldController extends AbstractController
     }
 
     /**
+     * @deprecated Use household_invite instead
      * @Route("/api/household/invite/generate/{id}", name="household_generate_invite", methods={"POST"})
      */
     public function generateInvite(
@@ -101,7 +105,10 @@ class HouseHoldController extends AbstractController
         Base64UrlInterface $base64Url
     ): JsonResponse {
         if ($household->getAdmin()->getId() !== $this->getUser()->getUserIdentifier()) {
-            throw new \InvalidArgumentException('Insufficient privileges!');
+            return JsonErrorResponse::create([
+                'status' => 'error', 
+                'reason' => 'Insufficient privileges!'
+            ], Response::HTTP_FORBIDDEN);
         }
         try {
             $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household);
@@ -127,7 +134,10 @@ class HouseHoldController extends AbstractController
         EntityManagerInterface $entityManager
     ): JsonResponse {
         if ($invite->getValidUntil()->getTimestamp() <= (new \DateTime())->getTimestamp()) {
-            return JsonErrorResponse::create(['status' => 'error', 'reason' => 'Outdated invite!']);
+            return JsonErrorResponse::create([
+                'status' => 'error', 
+                'reason' => 'Outdated invite!'
+            ]);
         }
         $alreadyMember = $invite->getHousehold()->getMembers()->exists(function (int $id, User $member) {
             return $member === $this->getUser();
@@ -254,7 +264,7 @@ class HouseHoldController extends AbstractController
                 'reason' => 'You cannot kick yourself.',
             ]);
         }
-        $household->removeMember($user);
+        $household->removeMember($kicked);
         $entityManager->flush();
 
         return JsonSuccessResponse::create(['status' => 'success']);
