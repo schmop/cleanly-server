@@ -179,7 +179,7 @@ class Household implements \JsonSerializable
             'tasks' => $this->getTasks()->map(static function (Task $task) {
                 return $task->jsonSerialize();
             })->toArray(),
-            'admin' => $this->getAdmin()->getMail() // @TODO: Use uuids
+            'admin' => $this->getAdmin()->getId()
         ];
     }
 }
