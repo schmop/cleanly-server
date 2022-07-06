@@ -44,7 +44,7 @@ class Task implements \JsonSerializable
 
     /**
      * @ORM\ManyToOne(targetEntity="Household", inversedBy="tasks")
-     * @ORM\JoinColumn(name="household_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="household_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private Household $household;
 
