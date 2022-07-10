@@ -8,6 +8,7 @@ use App\Entity\Task;
 use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Repository\TaskRepository;
 use App\Task\TaskFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,6 +30,30 @@ class TaskController extends AbstractController
 
         $task = $taskFactory->createTaskFromRequest($request, $user);
         $entityManager->persist($task);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create(['status' => 'success']);
+    }
+
+    /**
+     * @Route("/api/task/edit/{id}", "task_edit", methods={"POST"})
+     */
+    public function editTask(Task $task, Request $request, TaskRepository $taskRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /**
+         * @var User $user
+         */
+        $user = $this->getUser();
+
+        if ($task?->getHousehold()?->getAdmin() !== $user) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You do not have sufficient privileges to edit this task!'
+            ]);
+        }
+        $task->setName($request->request->get('name'));
+        $task->setDuration((int) $request->request->get('duration'));
+        $task->setIcon($request->request->get('icon'));
         $entityManager->flush();
 
         return JsonSuccessResponse::create(['status' => 'success']);
