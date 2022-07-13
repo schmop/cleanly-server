@@ -37,14 +37,15 @@ class TodoController extends AbstractController
             return Todo::createFromData($rawTodo, $weight++, $household);
         }, $todos);
         // Some were removed
-        $household->getChecklist()->forAll(function (int $index, Todo $todo) use ($household, $todos) {
+        foreach ($household->getChecklist() as $todo) {
             foreach ($todos as $newTodo) {
                 if ($todo->getUuid() === $newTodo->getUuid()) {
-                    return;
+                    continue 2;
                 }
             }
-            $household->getCheckList->remove($todo);
-        });
+            $household->getChecklist()->removeElement($todo);
+        }
+        
         // some are new
         foreach ($todos as $newTodo) {
             foreach ($household->getChecklist() as $todo) {
@@ -55,7 +56,7 @@ class TodoController extends AbstractController
                 }
             }
             $entityManager->persist($newTodo);
-        }        
+        }
         $entityManager->flush();
 
         return JsonSuccessResponse::create();

@@ -65,7 +65,7 @@ class Household implements \JsonSerializable
     private Collection $tasks;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Todo\Entity\Todo", mappedBy="household", cascade={"all"})
+     * @ORM\OneToMany(targetEntity="App\Todo\Entity\Todo", mappedBy="household", cascade={"all"}, orphanRemoval=true)
      *
      * @var Collection<Todo>
      */
