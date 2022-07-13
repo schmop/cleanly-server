@@ -21,8 +21,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Response;
+use App\Todo\Entity\Todo;
 
-class HouseHoldController extends AbstractController
+class HouseholdController extends AbstractController
 {
     private const HEX_COLOR_FORMAT = '/^#[a-fA-F0-9]{6}$/';
 
@@ -37,7 +38,7 @@ class HouseHoldController extends AbstractController
         $entityManager->persist($household);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
     }
 
     /**
@@ -62,7 +63,7 @@ class HouseHoldController extends AbstractController
         $entityManager->persist($household);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
     }
 
     /**
@@ -76,23 +77,20 @@ class HouseHoldController extends AbstractController
         Request $request,
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create([
-                'status' => 'error', 
-                'reason' => 'Insufficient privileges!'
-            ], Response::HTTP_FORBIDDEN);        }
+            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);        }
         $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {
             try {
                 $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee);
             } catch (\Exception $e) {
-                return JsonErrorResponse::create(['status' => 'error', 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+                return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
             }
             $entityManager->persist($inviteToken);
         }
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
     }
 
     /**
@@ -105,15 +103,12 @@ class HouseHoldController extends AbstractController
         Base64UrlInterface $base64Url
     ): JsonResponse {
         if ($household->getAdmin()->getId() !== $this->getUser()->getUserIdentifier()) {
-            return JsonErrorResponse::create([
-                'status' => 'error', 
-                'reason' => 'Insufficient privileges!'
-            ], Response::HTTP_FORBIDDEN);
+            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);
         }
         try {
             $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household);
         } catch (\Exception $e) {
-            return JsonErrorResponse::create(['status' => 'error', 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
         $entityManager->persist($inviteToken);
         $entityManager->flush();
@@ -122,7 +117,7 @@ class HouseHoldController extends AbstractController
          */
         //$url = $urlGenerator->generate('household_join', ['token' => $inviteToken->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        return JsonSuccessResponse::create(['status' => 'success', 'token' => $inviteToken->getToken()]);
+        return JsonSuccessResponse::create(['token' => $inviteToken->getToken()]);
     }
 
 
@@ -134,16 +129,13 @@ class HouseHoldController extends AbstractController
         EntityManagerInterface $entityManager
     ): JsonResponse {
         if ($invite->getValidUntil()->getTimestamp() <= (new \DateTime())->getTimestamp()) {
-            return JsonErrorResponse::create([
-                'status' => 'error', 
-                'reason' => 'Outdated invite!'
-            ]);
+            return JsonErrorResponse::create(['reason' => 'Outdated invite!']);
         }
         $alreadyMember = $invite->getHousehold()->getMembers()->exists(function (int $id, User $member) {
             return $member === $this->getUser();
         });
         if ($alreadyMember) {
-            return JsonErrorResponse::create(['status' => 'error', 'reason' => 'Already member of this household!']);
+            return JsonErrorResponse::create(['reason' => 'Already member of this household!']);
         }
         $household = $invite->getHousehold();
         $household->addMember($this->getUser());
@@ -151,7 +143,7 @@ class HouseHoldController extends AbstractController
         $entityManager->remove($invite);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
     }
 
 
@@ -164,10 +156,7 @@ class HouseHoldController extends AbstractController
     ): JsonResponse {
         $user = $this->getUser();
         if ($household->getMembers()->contains($user)) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You are already a member of this household!'
-            ]);
+            return JsonErrorResponse::create(['reason' => 'You are already a member of this household!']);
         }
         $invites = $household->getInvites();
         foreach ($invites as $invite) {
@@ -178,16 +167,12 @@ class HouseHoldController extends AbstractController
                 $entityManager->flush();
 
                 return JsonSuccessResponse::create([
-                    'status' => 'success', 
                     'household' => $household->jsonSerialize()
                 ]);
             }
         }
 
-        return JsonErrorResponse::create([
-            'status' => 'error',
-            'reason' => 'You did not receive an invite to this household!'
-        ]);
+        return JsonErrorResponse::create(['reason' => 'You did not receive an invite to this household!']);
     }
 
     /**
@@ -204,16 +189,11 @@ class HouseHoldController extends AbstractController
                 $entityManager->remove($invite);
                 $entityManager->flush();
 
-                return JsonSuccessResponse::create([
-                    'status' => 'success'
-                ]);
+                return JsonSuccessResponse::create();
             }
         }
 
-        return JsonErrorResponse::create([
-            'status' => 'error',
-            'reason' => 'You did not receive an invite to this household!'
-        ]);
+        return JsonErrorResponse::create(['reason' => 'You did not receive an invite to this household!']);
     }
 
     /**
@@ -225,21 +205,15 @@ class HouseHoldController extends AbstractController
     ): JsonResponse {
         $user = $this->getUser();
         if (!$household->getMembers()->contains($user)) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'Cannot leave, you are not a member.',
-            ]);
+            return JsonErrorResponse::create(['reason' => 'Cannot leave, you are not a member.',]);
         }
         if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You cannot leave this household as an admin.',
-            ]);
+            return JsonErrorResponse::create(['reason' => 'You cannot leave this household as an admin.',]);
         }
         $household->removeMember($user);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
     }
 
     /**
@@ -253,21 +227,40 @@ class HouseHoldController extends AbstractController
     ): JsonResponse {
         $user = $this->getUser();
         if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You do not have sufficient privileges to kick members.',
-            ]);
+            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to kick members.',]);
         }
         if ($user === $kicked) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You cannot kick yourself.',
-            ]);
+            return JsonErrorResponse::create(['reason' => 'You cannot kick yourself.',]);
         }
         $household->removeMember($kicked);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
+    }
+
+    /**
+     * @Route("/api/household/transfer-ownership/{id}/{user_id}", name="household_transfer_ownership", methods={"POST"})
+     * @Entity("newOwner", expr="repository.find(user_id)")
+     */
+    public function transferOwnership(
+        Household $household,
+        User $newOwner,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$household->getAdmin() === $user) {
+            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to transfer ownership.',]);
+        }
+        if ($user === $newOwner) {
+            return JsonErrorResponse::create(['reason' => 'You are already the owner.',]);
+        }
+        if (!$household->getMembers()->contains($newOwner)) {
+            return JsonErrorResponse::create(['reason' => 'The new owner must be a member of the household.',]);
+        }
+        $household->setAdmin($newOwner);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create();
     }
 
     /**
@@ -278,14 +271,11 @@ class HouseHoldController extends AbstractController
         EntityManagerInterface $entityManager
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You do not have sufficient privileges to remove this task!'
-            ]);
+            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to remove this task!']);
         }
         $entityManager->remove($household);
         $entityManager->flush();
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create();
     }
 }

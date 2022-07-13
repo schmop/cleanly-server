@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
+use App\Todo\Entity\Todo;
 
 /**
  * @ORM\Entity(repositoryClass=HouseholdRepository::class)
@@ -62,6 +63,13 @@ class Household implements \JsonSerializable
      * @var Collection<Task>
      */
     private Collection $tasks;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Todo\Entity\Todo", mappedBy="household", cascade={"all"})
+     *
+     * @var Collection<Todo>
+     */
+    private Collection $checklist;
 
     public function __construct()
     {
@@ -166,6 +174,21 @@ class Household implements \JsonSerializable
         return $this->tasks;
     }
 
+    public function getChecklist(): Collection
+    {
+        return $this->checklist;
+    }
+
+    public function getSortedChecklist(): Collection
+    {
+        $checklist = $this->checklist->toArray();
+        usort($checklist, function (Todo $a, Todo $b) {
+            return $a->getWeight() - $b->getWeight();
+        });
+        
+        return new ArrayCollection($checklist);
+    }
+
     public function jsonSerialize(): array
     {
         return [
@@ -179,7 +202,10 @@ class Household implements \JsonSerializable
             'tasks' => $this->getTasks()->map(static function (Task $task) {
                 return $task->jsonSerialize();
             })->toArray(),
-            'admin' => $this->getAdmin()->getId()
+            'admin' => $this->getAdmin()->getId(),
+            'checklist' => $this->getSortedChecklist()->map(static function (Todo $todo) {
+                return $todo->jsonSerialize();
+            })->toArray(),
         ];
     }
 }

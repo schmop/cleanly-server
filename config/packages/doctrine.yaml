@@ -22,3 +22,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Auth/Entity'
                 prefix: 'App\Auth\Entity'
                 alias: Auth
+            Todo:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Todo/Entity'
+                prefix: 'App\Todo\Entity'
+                alias: Todo
