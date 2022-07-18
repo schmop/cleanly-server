@@ -182,11 +182,21 @@ class Household implements \JsonSerializable
     public function getSortedChecklist(): Collection
     {
         $checklist = $this->checklist->toArray();
-        usort($checklist, function (Todo $a, Todo $b) {
-            return $a->getWeight() - $b->getWeight();
-        });
+        $sortedChecklist = [];
+        $nextUuid = null;
+        while (!empty($checklist)) {
+            foreach ($checklist as $index => $todo) {
+                if ($todo->getNext() === $nextUuid) {
+                    array_unshift($sortedChecklist, $todo);
+                    array_splice($checklist, $index, 1);
+                    $nextUuid = $todo->getUuid();
+                    continue 2;
+                }
+            }
+            throw new \LogicException('Checklist is not sortable, the chain is broken');
+        }
         
-        return new ArrayCollection($checklist);
+        return new ArrayCollection($sortedChecklist);
     }
 
     public function jsonSerialize(): array

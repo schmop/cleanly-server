@@ -26,6 +26,8 @@ GRANT ALL PRIVILEGES ON cleanly TO username;
 Also you need composer installed:
 https://getcomposer.org/download/
 
+Also you will need docker-compose: 
+https://docs.docker.com/compose/install/
 
 ### Installation
 
@@ -47,3 +49,16 @@ And create the tables needed for doctine:
 ./bin/console doctrine:migrations:migrate
 ```
 Finally let your webserver serve the `public` folder, and you're good to go!
+
+#### Install Mercure
+For push to work, you need to install mercure.
+You will need JWTs. For them you will need secrets, that
+Create JWT Secrets and the JWTs and put them into a `.env` file:
+```
+
+```
+Create the docker:
+```
+cd docker
+docker-compose up -d
+```

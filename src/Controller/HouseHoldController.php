@@ -9,6 +9,7 @@ use App\Entity\HouseholdInvite;
 use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Invite\InvitePublisher;
 use App\Repository\HouseholdInviteRepository;
 use App\Repository\UserRepository;
 use App\User\UserFetcher;
@@ -75,6 +76,7 @@ class HouseholdController extends AbstractController
         UserRepository $userRepository,
         Base64UrlInterface $base64Url,
         Request $request,
+        InvitePublisher $invitePublisher,
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
             return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);        }
@@ -87,6 +89,7 @@ class HouseholdController extends AbstractController
                 return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
             }
             $entityManager->persist($inviteToken);
+            $invitePublisher->publish($inviteToken);
         }
         $entityManager->flush();
 

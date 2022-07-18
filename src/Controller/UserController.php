@@ -23,7 +23,7 @@ class UserController extends AbstractController
     /**
      * @Route("/api/user/lookup", name="user_lookup", methods={"POST"})
      */
-    public function createHouseHold(Request $request, UserRepository $userRepository): JsonResponse
+    public function createHousehold(Request $request, UserRepository $userRepository): JsonResponse
     {
         $search = (string)$request->request->get('search');
         if (strlen($search) < 3) {

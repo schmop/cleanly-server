@@ -10,6 +10,7 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Repository\TaskRepository;
 use App\Task\TaskFactory;
+use App\Task\TaskPublisher;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,8 +22,12 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/create", "task_create", methods={"POST"})
      */
-    public function createTask(Request $request, TaskFactory $taskFactory, EntityManagerInterface $entityManager): JsonResponse
-    {
+    public function createTask(
+        Request $request, 
+        TaskFactory $taskFactory, 
+        EntityManagerInterface $entityManager,
+        TaskPublisher $taskPublisher,
+    ): JsonResponse {
         /**
          * @var User $user
          */
@@ -31,6 +36,7 @@ class TaskController extends AbstractController
         $task = $taskFactory->createTaskFromRequest($request, $user);
         $entityManager->persist($task);
         $entityManager->flush();
+        $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
     }
@@ -38,7 +44,7 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/edit/{id}", "task_edit", methods={"POST"})
      */
-    public function editTask(Task $task, Request $request, TaskRepository $taskRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function editTask(Task $task, Request $request, EntityManagerInterface $entityManager, TaskPublisher $taskPublisher): JsonResponse
     {
         /**
          * @var User $user
@@ -55,6 +61,7 @@ class TaskController extends AbstractController
         $task->setDuration((int) $request->request->get('duration'));
         $task->setIcon($request->request->get('icon'));
         $entityManager->flush();
+        $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
     }
@@ -62,7 +69,7 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/mark-done/{id}", "task_mark_done", methods={"POST"})
      */
-    public function markTaskDone(Task $task, EntityManagerInterface $entityManager): JsonResponse
+    public function markTaskDone(Task $task, EntityManagerInterface $entityManager, TaskPublisher $taskPublisher): JsonResponse
     {
         /**
          * @var User $user
@@ -77,6 +84,7 @@ class TaskController extends AbstractController
 
         $task->setLastCompleted(new \DateTimeImmutable());
         $entityManager->flush();
+        $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success', 'timestamp' => $task->getLastCompleted()?->getTimestamp()]);
     }
@@ -84,7 +92,7 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/{id}", "task_delete", methods={"DELETE"})
      */
-    public function deleteTask(Task $task, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteTask(Task $task, EntityManagerInterface $entityManager, TaskPublisher $taskPublisher): JsonResponse
     {
         /**
          * @var User $user
@@ -99,6 +107,7 @@ class TaskController extends AbstractController
 
         $entityManager->remove($task);
         $entityManager->flush();
+        $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
     }
