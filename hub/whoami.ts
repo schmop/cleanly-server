@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 export async function whoami(token: string): Promise<null|number> {
-    const host = process.env.NODE_ENV === 'production' ? 'https://localhost' : 'http://localhost:8000';
+    const host = process.env.NODE_ENV === 'production' ? 'https://cleanly.schmoppo.de' : 'http://localhost:8000';
     const response = await fetch(`${host}/api/whoami`, {
         headers: {
             'Authorization': `Bearer ${token}`,
