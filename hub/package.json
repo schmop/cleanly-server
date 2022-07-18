@@ -1,7 +1,8 @@
 {
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/hub.js"
+    "start": "tsc && node dist/hub.js",
+    "start:prod": "tsc && NODE_ENV=production node dist/hub.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
