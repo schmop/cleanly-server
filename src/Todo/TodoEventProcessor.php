@@ -37,7 +37,6 @@ class TodoEventProcessor
                         break;
                 }
             }
-            $this->entityManager->flush();
         } catch (\Exception $e) {
             $this->entityManager->rollback();
             throw $e;

@@ -85,10 +85,12 @@ class TodoRepository extends ServiceEntityRepository
     public function removeOutOfList(Todo $todo): void
     {
         $before = $this->findByNextUuid($todo->getUuid(), $todo);
-        if (null !== $before) {
-            $before->setNext($todo->getNext());
-        }
+        $next = $todo->getNext();
         $todo->setNext(null);
         $this->getEntityManager()->flush();
+        if (null !== $before) {
+            $before->setNext($next);
+            $this->getEntityManager()->flush();
+        }
     }
 }
