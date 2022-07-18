@@ -25,3 +25,4 @@ composer.phar
 /docker/.env
 
 /**/node_modules/
+/hub/dist
