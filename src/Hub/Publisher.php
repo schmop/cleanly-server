@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 
 class Publisher
 {
-    private const HOST = 'http://localhost:3333';
+    private const HOST = 'http://localhost:3334';
 
     public function __construct(private HttpClientInterface $client, private LoggerInterface $logger)
     {
