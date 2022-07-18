@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 // app.use(express.urlencoded({ extended: false }));
 
-const PORT = 3333;
+const PORT = 3334;
 const clients = {} as Record<Uuid, {response: Response, userId: number}>;
 
 function forbidden(response: Response, text: string) {
