@@ -1,52 +1,48 @@
 <?php
 
-namespace App\Entity;
+namespace App\Task\Entity;
 
-use App\Repository\TaskRepository;
+use App\Task\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Household;
+use Doctrine\Common\Collections\Collection;
 
-/**
- * @ORM\Entity(repositoryClass=TaskRepository::class)
- */
+
+#[ORM\Entity(repositoryClass: TaskRepository::class)]
+
 class Task implements \JsonSerializable
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type:"integer")]
     private int $id;
 
-    /**
-     * @ORM\Column(type="datetime_immutable", nullable=true)
-     */
+    
+    #[ORM\Column(type:"datetime_immutable", nullable:true)]
     private ?\DateTimeImmutable $lastCompleted;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type:"integer")]
     private int $duration;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type:"string", length:255)]
     private string $name;
 
-    /**
-     * @ORM\Column(type="string", length=510, nullable=true)
-     */
+    #[ORM\Column(type:"string", length:510, nullable:true)]
     private ?string $description;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type:"string", length:255, nullable:true)]
     private ?string $icon;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Household", inversedBy="tasks")
-     * @ORM\JoinColumn(name="household_id", referencedColumnName="id", onDelete="CASCADE")
-     */
+    #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"tasks")]
+    #[ORM\JoinColumn(name:"household_id", referencedColumnName:"id", onDelete:"CASCADE")]
     private Household $household;
+
+    #[ORM\OneToMany(targetEntity:TaskLog::class, mappedBy:"task")]
+    /**
+     * @var Collection<TaskLog>
+     */
+    private Collection $logs;
 
     public function getId(): int
     {
@@ -133,5 +129,16 @@ class Task implements \JsonSerializable
             'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),
         ];
+    }
+
+	/**
+	 * @return Collection<TaskLog>
+	 */
+	public function getLogs(): Collection {
+		return $this->logs;
+	}
+
+    public function addLog(TaskLog $taskLog): void {
+        $this->logs->add($taskLog);
     }
 }

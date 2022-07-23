@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Task;
+use App\Task\Entity\Task;
 use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
-use App\Repository\TaskRepository;
+use App\Task\TaskRepository;
 use App\Task\TaskFactory;
 use App\Task\TaskPublisher;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +16,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Task\TaskLogFactory;
+use App\Entity\Household;
+use App\Task\TaskLogRepository;
 
 class TaskController extends AbstractController
 {
@@ -69,8 +72,12 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/mark-done/{id}", "task_mark_done", methods={"POST"})
      */
-    public function markTaskDone(Task $task, EntityManagerInterface $entityManager, TaskPublisher $taskPublisher): JsonResponse
-    {
+    public function markTaskDone(
+        Task $task, 
+        EntityManagerInterface $entityManager, 
+        TaskPublisher $taskPublisher,
+        TaskLogFactory $taskLogFactory,
+    ): JsonResponse {
         /**
          * @var User $user
          */
@@ -83,10 +90,36 @@ class TaskController extends AbstractController
         }
 
         $task->setLastCompleted(new \DateTimeImmutable());
+        $taskLog = $taskLogFactory->createTaskLog($user, $task);
+        $task->addLog($taskLog);
+        $entityManager->persist($taskLog);
         $entityManager->flush();
         $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success', 'timestamp' => $task->getLastCompleted()?->getTimestamp()]);
+    }
+
+    /**
+     * @Route("/api/task/log/{id}", "task_log", methods={"GET"})
+     */
+    public function fetchTaskLog(
+        Household $household, 
+        TaskLogRepository $taskLogRepository,
+    ): JsonResponse {
+        /**
+         * @var User $user
+         */
+        $user = $this->getUser();
+        if (!$household->getMembers()->contains($user)) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You are not a member of this household!'
+            ]);
+        }
+
+        $taskLogs = $taskLogRepository->findByHousehold($household);
+
+        return JsonSuccessResponse::create(['status' => 'success', 'logs' => $taskLogs]);
     }
 
     /**

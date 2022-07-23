@@ -3,7 +3,7 @@
 namespace App\Task;
 use App\Hub\Publisher;
 use App\Entity\Household;
-use App\Entity\Task;
+use App\Task\Entity\Task;
 
 class TaskPublisher
 {

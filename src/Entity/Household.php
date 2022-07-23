@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use App\Todo\Entity\Todo;
+use App\Task\Entity\Task;
 
 /**
  * @ORM\Entity(repositoryClass=HouseholdRepository::class)
@@ -58,7 +59,7 @@ class Household implements \JsonSerializable
     private Collection $invites;
 
     /**
-     * @ORM\OneToMany(targetEntity="Task", mappedBy="household")
+     * @ORM\OneToMany(targetEntity="App\Task\Entity\Task", mappedBy="household")
      *
      * @var Collection<Task>
      */

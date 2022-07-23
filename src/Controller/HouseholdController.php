@@ -79,7 +79,8 @@ class HouseholdController extends AbstractController
         InvitePublisher $invitePublisher,
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);        }
+            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);
+        }
         $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {

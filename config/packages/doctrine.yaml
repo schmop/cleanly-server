@@ -28,3 +28,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Todo/Entity'
                 prefix: 'App\Todo\Entity'
                 alias: Todo
+            Task:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Task/Entity'
+                prefix: 'App\Task\Entity'
+                alias: Task

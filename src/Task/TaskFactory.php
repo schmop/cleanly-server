@@ -2,7 +2,7 @@
 
 namespace App\Task;
 
-use App\Entity\Task;
+use App\Task\Entity\Task;
 use App\Entity\User;
 use App\Repository\HouseholdRepository;
 use Symfony\Component\HttpFoundation\Request;
