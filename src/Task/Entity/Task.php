@@ -20,7 +20,7 @@ class Task implements \JsonSerializable
 
     
     #[ORM\Column(type:"datetime_immutable", nullable:true)]
-    private ?\DateTimeImmutable $lastCompleted;
+    private ?\DateTimeImmutable $lastCompleted = null;
 
     #[ORM\Column(type:"integer")]
     private int $duration;
@@ -29,10 +29,10 @@ class Task implements \JsonSerializable
     private string $name;
 
     #[ORM\Column(type:"string", length:510, nullable:true)]
-    private ?string $description;
+    private ?string $description = null;
 
     #[ORM\Column(type:"string", length:255, nullable:true)]
-    private ?string $icon;
+    private ?string $icon = null;
 
     #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"tasks")]
     #[ORM\JoinColumn(name:"household_id", referencedColumnName:"id", onDelete:"CASCADE")]
