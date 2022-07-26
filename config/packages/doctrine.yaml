@@ -34,3 +34,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Task/Entity'
                 prefix: 'App\Task\Entity'
                 alias: Task
+            PasswordReset:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/PasswordReset/Entity'
+                prefix: 'App\PasswordReset\Entity'
+                alias: PasswordReset

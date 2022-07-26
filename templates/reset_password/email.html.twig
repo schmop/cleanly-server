@@ -1,0 +1,12 @@
+<p>Hello!</p>
+
+<p>A password reset for cleanly was requested, please confirm this by clicking the following link:</p>
+<p>
+    <a href="{{url('app_reset_password', {'token': resetToken.token})}}">
+        {{url('app_reset_password', {'token': resetToken.token})}}
+    </a>
+</p>
+<p><b>If you did not request a password reset, please ignore this mail!</b></p>
+
+<p>Greetings,</br>
+Cleanly.</p>

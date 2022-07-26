@@ -1,0 +1,7 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    {{ parent() }}
+    Password reset was sent, please check your mails!
+    The password reset request will expire on {{resetToken.expiresAt|date}}
+{% endblock %}
