@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Invite\InvitePublisher;
+use App\Push\Pusher;
 use App\Repository\HouseholdInviteRepository;
 use App\Repository\UserRepository;
 use App\User\UserFetcher;
@@ -77,6 +78,7 @@ class HouseholdController extends AbstractController
         Base64UrlInterface $base64Url,
         Request $request,
         InvitePublisher $invitePublisher,
+        Pusher $pusher,
     ): JsonResponse {
         if ($household->getAdmin() !== $this->getUser()) {
             return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);
@@ -93,37 +95,14 @@ class HouseholdController extends AbstractController
             $invitePublisher->publish($inviteToken);
         }
         $entityManager->flush();
+        $pusher->publishToUsers(
+            $invitees, 
+            "Einladung in Haushalt", 
+            sprintf("Einladung von %s in den Haushalt %s erhalten", $this->getUser()->getName(), $household->getName())
+        );
 
         return JsonSuccessResponse::create();
     }
-
-    /**
-     * @deprecated Use household_invite instead
-     * @Route("/api/household/invite/generate/{id}", name="household_generate_invite", methods={"POST"})
-     */
-    public function generateInvite(
-        Household $household,
-        EntityManagerInterface $entityManager,
-        Base64UrlInterface $base64Url
-    ): JsonResponse {
-        if ($household->getAdmin()->getId() !== $this->getUser()->getUserIdentifier()) {
-            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);
-        }
-        try {
-            $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household);
-        } catch (\Exception $e) {
-            return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        $entityManager->persist($inviteToken);
-        $entityManager->flush();
-        /**
-         * @TODO: If this will be an App using JWT, links will not be as easy. Use Links or QR-Codes.
-         */
-        //$url = $urlGenerator->generate('household_join', ['token' => $inviteToken->getToken()], UrlGeneratorInterface::ABSOLUTE_URL);
-
-        return JsonSuccessResponse::create(['token' => $inviteToken->getToken()]);
-    }
-
 
     /**
      * @Route("/api/household/join-by-token/{token}", name="household_join")

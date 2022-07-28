@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Task\TaskLogFactory;
 use App\Entity\Household;
+use App\Push\Pusher;
 use App\Task\TaskLogRepository;
 
 class TaskController extends AbstractController
@@ -77,6 +78,7 @@ class TaskController extends AbstractController
         EntityManagerInterface $entityManager, 
         TaskPublisher $taskPublisher,
         TaskLogFactory $taskLogFactory,
+        Pusher $pusher,
     ): JsonResponse {
         /**
          * @var User $user
@@ -95,6 +97,16 @@ class TaskController extends AbstractController
         $entityManager->persist($taskLog);
         $entityManager->flush();
         $taskPublisher->publish($task->getHousehold());
+        $pusher->publishInHousehold(
+            $task->getHousehold(), 
+            sprintf('%s wurde erledigt!', $task->getName()),
+            sprintf(
+                '%s hat in %s gerade %s erledigt!', 
+                $user->getName(),
+                $task->getHousehold()->getName(), 
+                $task->getName()
+            ),
+        );
 
         return JsonSuccessResponse::create(['status' => 'success', 'timestamp' => $task->getLastCompleted()?->getTimestamp()]);
     }

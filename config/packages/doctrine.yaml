@@ -40,3 +40,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/PasswordReset/Entity'
                 prefix: 'App\PasswordReset\Entity'
                 alias: PasswordReset
+            Push:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Push/Entity'
+                prefix: 'App\Push\Entity'
+                alias: Push

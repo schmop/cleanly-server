@@ -13,6 +13,7 @@
         "doctrine/doctrine-bundle": "^2.4",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.9",
+        "kreait/firebase-bundle": "^4.1",
         "lexik/jwt-authentication-bundle": "^2.13",
         "nelmio/cors-bundle": "^2.1",
         "sensio/framework-extra-bundle": "^6.2",
@@ -82,7 +83,7 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "5.3.*",
+            "require": "5.4.*",
             "docker": false
         }
     }
