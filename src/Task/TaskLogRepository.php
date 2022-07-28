@@ -54,4 +54,11 @@ class TaskLogRepository extends ServiceEntityRepository
     {
         return $this->findBy(['user' => $user]);
     }
+
+    public function save(TaskLog $tasklog): void
+    {
+        $em = $this->getEntityManager();
+        $em->persist($tasklog);
+        $em->flush();
+    }
 }

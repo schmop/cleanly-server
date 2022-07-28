@@ -24,7 +24,6 @@ class TodoController extends AbstractController
         TodoEventProcessor $todoEventProcessor,
         TodoPublisher $todoPublisher,
     ): JsonResponse {
-        // @TODO: Use a service for this logic
         $user = $this->getUser();
         if (!$household->getMembers()->contains($user)) {
             return JsonErrorResponse::create(['reason' => 'You cannot edit this checklist, you are not a member of this household!',]);

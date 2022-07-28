@@ -11,7 +11,6 @@ use App\HttpFoundation\JsonSuccessResponse;
 use App\Task\TaskRepository;
 use App\Task\TaskFactory;
 use App\Task\TaskPublisher;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +18,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Task\TaskLogFactory;
 use App\Entity\Household;
 use App\Push\Pusher;
+use App\Task\TaskCompleter;
 use App\Task\TaskLogRepository;
+use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends AbstractController
 {
@@ -29,7 +30,7 @@ class TaskController extends AbstractController
     public function createTask(
         Request $request, 
         TaskFactory $taskFactory, 
-        EntityManagerInterface $entityManager,
+        TaskRepository $taskRepository,
         TaskPublisher $taskPublisher,
     ): JsonResponse {
         /**
@@ -38,8 +39,7 @@ class TaskController extends AbstractController
         $user = $this->getUser();
 
         $task = $taskFactory->createTaskFromRequest($request, $user);
-        $entityManager->persist($task);
-        $entityManager->flush();
+        $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
@@ -48,7 +48,7 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/edit/{id}", "task_edit", methods={"POST"})
      */
-    public function editTask(Task $task, Request $request, EntityManagerInterface $entityManager, TaskPublisher $taskPublisher): JsonResponse
+    public function editTask(Task $task, Request $request, TaskRepository $taskRepository, TaskPublisher $taskPublisher): JsonResponse
     {
         /**
          * @var User $user
@@ -64,7 +64,7 @@ class TaskController extends AbstractController
         $task->setName($request->request->get('name'));
         $task->setDuration((int) $request->request->get('duration'));
         $task->setIcon($request->request->get('icon'));
-        $entityManager->flush();
+        $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
@@ -74,11 +74,10 @@ class TaskController extends AbstractController
      * @Route("/api/task/mark-done/{id}", "task_mark_done", methods={"POST"})
      */
     public function markTaskDone(
-        Task $task, 
-        EntityManagerInterface $entityManager, 
+        Task $task,
         TaskPublisher $taskPublisher,
-        TaskLogFactory $taskLogFactory,
         Pusher $pusher,
+        TaskCompleter $taskCompleter,
     ): JsonResponse {
         /**
          * @var User $user
@@ -90,12 +89,11 @@ class TaskController extends AbstractController
                 'reason' => 'You are not a member of this household!'
             ]);
         }
-
-        $task->setLastCompleted(new \DateTimeImmutable());
-        $taskLog = $taskLogFactory->createTaskLog($user, $task);
-        $task->addLog($taskLog);
-        $entityManager->persist($taskLog);
-        $entityManager->flush();
+        if (!$taskCompleter->markAsComplete($task, $user)) {
+            return JsonErrorResponse::create([
+                'reason' => 'Completed twice too soon',
+            ], Response::HTTP_TOO_MANY_REQUESTS);
+        }
         $taskPublisher->publish($task->getHousehold());
         $pusher->publishInHousehold(
             $task->getHousehold(), 

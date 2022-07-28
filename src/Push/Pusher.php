@@ -35,7 +35,6 @@ class Pusher
      */
     public function publishToDevices(array $devices, string $title, string $content, ?string $imageUrl = null): void
     {
-        dump($devices);
         if (empty($devices)) {
             return;
         }

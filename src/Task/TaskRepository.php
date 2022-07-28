@@ -23,4 +23,11 @@ class TaskRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['id' => $id]);
     }
+
+    public function save(Task $task): void
+    {
+        $em = $this->getEntityManager();
+        $em->persist($task);
+        $em->flush();
+    }
 }
