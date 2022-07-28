@@ -19,17 +19,21 @@ class RefreshToken
         #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", onDelete: 'cascade')]
         private User $user,
         #[ORM\Column(type: "datetime_immutable", nullable: true)]
-        private \DateTimeImmutable $validUntil
+        private ?\DateTimeImmutable $validUntil = null,
     ) {
     }
 
-    public function refresh(Clock $clock): void
+    public function refresh(\DateTimeImmutable $validUntil): void
     {
-        $this->validUntil = $clock->now();
+        $this->validUntil = $validUntil;
     }
 
     public function isOutdated(Clock $clock): bool
     {
+        if (null === $this->validUntil) {
+            return true;
+        }
+
         return $this->validUntil->getTimestamp() <= $clock->now()->getTimestamp();
     }
 

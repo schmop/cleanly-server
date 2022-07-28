@@ -31,7 +31,7 @@ services:
         resource: '../src/Controller'
         tags: [ 'controller.service_arguments' ]
 
-    App\Auth\RandomRefreshTokenCreator:
+    App\Auth\RefreshTokenTtlProvider:
         arguments:
             $ttl: 7776000 # 90 days
     

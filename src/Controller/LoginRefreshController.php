@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Auth\RefreshTokenRefresher;
 
 
 #[Route(path: "/api/login_refresh", name: "login_refresh", methods:["POST"])]
@@ -21,6 +22,7 @@ class LoginRefreshController extends AbstractController
     public function __invoke(
         Request $request,
         RefreshTokenRepository $refreshTokenRepository,
+        RefreshTokenRefresher $refreshTokenRefresher,
         Clock $clock,
         JWTTokenManagerInterface $jWTTokenManager,
     ): Response {
@@ -38,7 +40,7 @@ class LoginRefreshController extends AbstractController
                 Response::HTTP_FORBIDDEN
             );
         }
-        $refreshToken->refresh($clock);
+        $refreshTokenRefresher->refresh($refreshToken);
         $refreshTokenRepository->save($refreshToken);
         return new JsonResponse(['token' => $jWTTokenManager->create($refreshToken->getUser())]);
     }

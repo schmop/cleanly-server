@@ -10,7 +10,8 @@ use App\Utils\Clock;
 class RandomRefreshTokenCreator implements RefreshTokenCreator
 {
     function __construct(
-        private int $ttl, 
+        private RefreshTokenTtlProvider $ttlProvider,
+        private RefreshTokenRefresher $tokenRefresher,
         private Random $random,
         private Clock $clock,
         private RefreshTokenRepository $refreshTokenRepository
@@ -22,8 +23,8 @@ class RandomRefreshTokenCreator implements RefreshTokenCreator
         $token = new RefreshToken(
             $this->random->getRandomString(64),
             $user,
-            $this->clock->now()->add(\DateInterval::createFromDateString(sprintf('%d seconds', $this->ttl))),
         );
+        $this->tokenRefresher->refresh($token);
         $this->refreshTokenRepository->save($token);
 
         return $token;
