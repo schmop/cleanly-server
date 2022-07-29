@@ -9,6 +9,8 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\SignUp\SignUpCommand;
 use Doctrine\ORM\EntityManagerInterface;
+use Egulias\EmailValidator\EmailValidator;
+use Egulias\EmailValidator\Validation\RFCValidation;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -17,7 +19,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 /**
- * @Route("/signup", "signup")
+ * @Route("/signup", "signup", methods={"POST"})
  *
  * Validates a sign up request and creates a new user
  *
@@ -31,22 +33,22 @@ class SignUpController
         Request $request,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        ValidatorInterface $validator
-    ): JsonResponse
-    {
+        ValidatorInterface $validator,
+    ): JsonResponse {
         $command = SignUpCommand::fromRequest($request);
+        $emailValidator = new EmailValidator();
         $errors = $validator->validate($command);
+        if (!$emailValidator->isValid($command->mail, new RFCValidation())) {
+            $emailValidator->getError();
+        }
         if (count($errors) > 0) {
-            return JsonErrorResponse::create(
-                ['status' => 'error', 'errors' => (string)$errors],
-                JsonResponse::HTTP_BAD_REQUEST,
-                ['Access-Control-Allow-Origin' => '*']
-            );
+            return JsonErrorResponse::create([
+                'errors' => (string)$errors
+            ]);
         }
 
-
-        $user = new User($command->getMail(), $command->getName());
-        $user->setPassword($passwordHasher->hashPassword($user, $command->getPassword()));
+        $user = new User($command->mail, $command->name);
+        $user->setPassword($passwordHasher->hashPassword($user, $command->password));
 
         $entityManager->persist($user);
         $entityManager->flush();

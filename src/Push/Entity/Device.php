@@ -27,18 +27,23 @@ class Device
         $this->pushId = $pushId;
     }
 
-	function getId(): string
+	public function getId(): string
     {
-		return $this->id;
+        return $this->id;
     }
 
-	function getPushId(): string
+    public function getPushId(): string
     {
-		return $this->pushId;
-	}
-    
-	function getUser(): User
+        return $this->pushId;
+    }
+
+    public function getUser(): User
     {
-		return $this->user;
-	}
+        return $this->user;
+    }
+
+    public function setPushId(string $pushId): void 
+    {
+        $this->pushId = $pushId;
+    }
 }

@@ -13,6 +13,7 @@
         "doctrine/doctrine-bundle": "^2.4",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.9",
+        "egulias/email-validator": "^3.2",
         "kreait/firebase-bundle": "^4.1",
         "lexik/jwt-authentication-bundle": "^2.13",
         "nelmio/cors-bundle": "^2.1",

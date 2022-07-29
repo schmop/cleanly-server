@@ -12,26 +12,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class SignUpCommand
 {
-    /**
-     * @Assert\NotBlank
-     */
-    private string $name;
-
-    /**
-     * @Assert\Email
-     */
-    private string $mail;
-
-    /* TODO: Readd this in production
-     * @Assert\NotCompromisedPassword
-     */
-    private string $passwd;
-
-    public function __construct(string $name, string $mail, string $passwd)
-    {
-        $this->name = $name;
-        $this->mail = $mail;
-        $this->passwd = $passwd;
+    public function __construct(
+        #[Assert\NotBlank]
+        public readonly string $name,
+        #[Assert\Email]
+        public readonly string $mail,
+        #[Assert\NotCompromisedPassword]
+        public readonly string $passwd,
+    ) {
     }
 
     public static function fromRequest(Request $request): self
@@ -46,20 +34,5 @@ class SignUpCommand
 
 
         return new self($name, $mail, $password);
-    }
-
-    public function getMail(): string
-    {
-        return $this->mail;
-    }
-
-    public function getPassword(): string
-    {
-        return $this->passwd;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
     }
 }

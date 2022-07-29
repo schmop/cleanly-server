@@ -33,6 +33,7 @@ class PushController extends AbstractController
             return JsonErrorResponse::create(['error' => 'Push registration invalid!']);
         }
         $device = $deviceRepository->findByDeviceId($deviceId) ?? new Device($deviceId, $pushId, $user);
+        $device->setPushId($pushId);
         $entityManager->persist($device);
         $entityManager->flush();
 
