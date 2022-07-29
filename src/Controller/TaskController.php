@@ -15,7 +15,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Task\TaskLogFactory;
 use App\Entity\Household;
 use App\Push\Pusher;
 use App\Task\TaskCompleter;
@@ -135,7 +134,7 @@ class TaskController extends AbstractController
     /**
      * @Route("/api/task/{id}", "task_delete", methods={"DELETE"})
      */
-    public function deleteTask(Task $task, EntityManagerInterface $entityManager, TaskPublisher $taskPublisher): JsonResponse
+    public function deleteTask(Task $task, TaskRepository $taskRepository, TaskPublisher $taskPublisher): JsonResponse
     {
         /**
          * @var User $user
@@ -148,8 +147,7 @@ class TaskController extends AbstractController
             ]);
         }
 
-        $entityManager->remove($task);
-        $entityManager->flush();
+        $taskRepository->remove($task);
         $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
