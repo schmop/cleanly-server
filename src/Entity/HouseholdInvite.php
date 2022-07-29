@@ -23,13 +23,13 @@ class HouseholdInvite implements \JsonSerializable
 
     /**
      * @ORM\ManyToOne(targetEntity="Household", inversedBy="invites")
-     * @ORM\JoinColumn(name="household_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="household_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private Household $household;
 
     /**
      * @ORM\ManyToOne(targetEntity="User", inversedBy="invites")
-     * @ORM\JoinColumn(name="invitee_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="invitee_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private ?User $invitee;
 

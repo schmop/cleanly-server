@@ -10,7 +10,6 @@ use App\Entity\User;
 #[ORM\Entity(repositoryClass: RefreshTokenRepository::class)]
 class RefreshToken
 {
-    
     public function __construct(
         #[ORM\Column(type: "string")]
         #[ORM\Id]
