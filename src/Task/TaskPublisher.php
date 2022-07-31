@@ -22,6 +22,6 @@ class TaskPublisher
                     ->map(fn(Task $task) => $task->jsonSerialize())
                     ->toArray()
             ]
-            );
+        );
     }
 }

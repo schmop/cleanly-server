@@ -7,55 +7,71 @@ namespace App\Controller;
 use App\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
-use App\SignUp\SignUpCommand;
-use Doctrine\ORM\EntityManagerInterface;
-use Egulias\EmailValidator\EmailValidator;
-use Egulias\EmailValidator\Validation\RFCValidation;
+use App\Registration\RegistrationFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Registration\RegistrationException;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Address;
+use App\Registration\RegistrationRepository;
+use App\Repository\UserRepository;
+use Symfony\Component\HttpFoundation\Response;
+use Twig\Environment;
 
-
-/**
- * @Route("/signup", "signup", methods={"POST"})
- *
- * Validates a sign up request and creates a new user
- *
- * The request needs to contain the following to be valid:
- *  - an email-address
- *  - a password that has be deemed "secure"
- */
 class SignUpController
 {
-    public function __invoke(
+    #[Route("/signup", "signup", methods: ["POST"])]
+    public function signup(
         Request $request,
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher,
-        ValidatorInterface $validator,
+        RegistrationFactory $registrationFactory,
+        MailerInterface $mailer,
     ): JsonResponse {
-        $command = SignUpCommand::fromRequest($request);
-        $emailValidator = new EmailValidator();
-        $errors = $validator->validate($command);
-        if (!$emailValidator->isValid($command->mail, new RFCValidation())) {
-            $emailValidator->getError();
-        }
-        if (count($errors) > 0) {
+        try {
+            $registration = $registrationFactory->createRegistrationFromRequest($request);
+        } catch (RegistrationException $e) {
             return JsonErrorResponse::create([
-                'errors' => (string)$errors
+                'errors' => json_encode($e->errors),
             ]);
         }
 
-        $user = new User($command->mail, $command->name);
-        $user->setPassword($passwordHasher->hashPassword($user, $command->password));
+        $email = (new TemplatedEmail())
+            ->from(new Address('noreply@schmoppo.de', 'Cleanly Bot'))
+            ->to($registration->mail)
+            ->subject('Your registration on cleanly')
+            ->htmlTemplate('registration/email.html.twig')
+            ->context([
+                'registration' => $registration,
+            ])
+        ;
 
-        $entityManager->persist($user);
-        $entityManager->flush();
+        $mailer->send($email);
 
         return JsonSuccessResponse::create(
-            ["status" => "success", "user" => [$user->getId(), $user->getMail()]],
-            ['Access-Control-Allow-Origin' => '*']
+            ["status" => "success"],
         );
+    }
+
+    #[Route("/verify/{uuid}/{token}", "verify", methods: ["GET"])]
+    public function verify(
+        string $uuid,
+        string $token,
+        RegistrationRepository $registrationRepository,
+        UserRepository $userRepository,
+        Environment $twig,
+    ): Response {
+        $registration = $registrationRepository->findByUuid($uuid);
+        if (null === $registration || $registration->token !== $token) {
+            return JsonErrorResponse::create([
+                'error' => 'Invalid registration token!'
+            ], JsonResponse::HTTP_FORBIDDEN);
+        }
+        $user = new User($registration->mail, $registration->name);
+        $user->setPassword($registration->password);
+        $userRepository->save($user);
+        $registrationRepository->remove($registration);
+
+        return new Response($twig->render('registration/registration_success.html.twig'));
     }
 }
