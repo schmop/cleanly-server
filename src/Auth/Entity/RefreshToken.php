@@ -5,7 +5,7 @@ namespace App\Auth\Entity;
 use App\Auth\RefreshTokenRepository;
 use App\Utils\Clock;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\User;
+use App\User\Entity\User;
 
 #[ORM\Entity(repositoryClass: RefreshTokenRepository::class)]
 class RefreshToken

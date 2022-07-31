@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\User;
+use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Registration\RegistrationFactory;
@@ -16,7 +16,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
 use App\Registration\RegistrationRepository;
-use App\Repository\UserRepository;
+use App\User\UserRepository;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
 

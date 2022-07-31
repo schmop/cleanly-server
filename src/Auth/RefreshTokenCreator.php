@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Auth;
 
 use App\Auth\Entity\RefreshToken;
-use App\Entity\User;
+use App\User\Entity\User;
 
 interface RefreshTokenCreator
 {

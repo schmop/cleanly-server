@@ -5,7 +5,7 @@ namespace App\Todo;
 use App\Todo\Entity\Todo;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 
 /**
  * @method Todo|null find($id, $lockMode = null, $lockVersion = null)

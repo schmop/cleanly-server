@@ -3,7 +3,7 @@
 namespace App\Push\Entity;
 
 use App\Push\DeviceRepository;
-use App\Entity\User;
+use App\User\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DeviceRepository::class)]
@@ -42,7 +42,7 @@ class Device
         return $this->user;
     }
 
-    public function setPushId(string $pushId): void 
+    public function setPushId(string $pushId): void
     {
         $this->pushId = $pushId;
     }

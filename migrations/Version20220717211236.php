@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use App\Todo\Entity\Todo;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
@@ -21,7 +21,7 @@ final class Version20220717211236 extends AbstractMigration implements Container
     public function setContainer(ContainerInterface $container = null) {
         $this->container = $container;
     }
-    
+
     public function getDescription(): string
     {
         return '';

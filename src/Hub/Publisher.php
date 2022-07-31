@@ -3,7 +3,7 @@
 namespace App\Hub;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use App\Entity\User;
+use App\User\Entity\User;
 use Psr\Log\LoggerInterface;
 
 class Publisher

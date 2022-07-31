@@ -4,7 +4,7 @@ namespace App\Task\Entity;
 
 use App\Task\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use Doctrine\Common\Collections\Collection;
 
 
@@ -12,13 +12,13 @@ use Doctrine\Common\Collections\Collection;
 
 class Task implements \JsonSerializable
 {
-    
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type:"integer")]
     private int $id;
 
-    
+
     #[ORM\Column(type:"datetime_immutable", nullable:true)]
     private ?\DateTimeImmutable $lastCompleted = null;
 

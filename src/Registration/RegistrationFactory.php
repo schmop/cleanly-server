@@ -13,10 +13,10 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints\NotCompromisedPassword;
 use App\Utils\Random;
-use App\Repository\UserRepository;
+use App\User\UserRepository;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
-use App\Entity\User;
+use App\User\Entity\User;
 
 class RegistrationFactory
 {

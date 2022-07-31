@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Task\Entity\Task;
-use App\Entity\User;
+use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Task\TaskRepository;
@@ -15,7 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use App\Push\Pusher;
 use App\Task\TaskCompleter;
 use App\Task\TaskLogRepository;
@@ -27,8 +27,8 @@ class TaskController extends AbstractController
      * @Route("/api/task/create", "task_create", methods={"POST"})
      */
     public function createTask(
-        Request $request, 
-        TaskFactory $taskFactory, 
+        Request $request,
+        TaskFactory $taskFactory,
         TaskRepository $taskRepository,
         TaskPublisher $taskPublisher,
     ): JsonResponse {
@@ -95,12 +95,12 @@ class TaskController extends AbstractController
         }
         $taskPublisher->publish($task->getHousehold());
         $pusher->publishInHousehold(
-            $task->getHousehold(), 
+            $task->getHousehold(),
             sprintf('%s wurde erledigt!', $task->getName()),
             sprintf(
-                '%s hat in %s gerade %s erledigt!', 
+                '%s hat in %s gerade %s erledigt!',
                 $user->getName(),
-                $task->getHousehold()->getName(), 
+                $task->getHousehold()->getName(),
                 $task->getName()
             ),
         );
@@ -112,7 +112,7 @@ class TaskController extends AbstractController
      * @Route("/api/task/log/{id}", "task_log", methods={"GET"})
      */
     public function fetchTaskLog(
-        Household $household, 
+        Household $household,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
         /**

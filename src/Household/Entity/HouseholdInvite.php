@@ -1,36 +1,27 @@
 <?php
 
-namespace App\Entity;
+namespace App\Household\Entity;
 
-use App\Repository\HouseholdInviteRepository;
+use App\Household\HouseholdInviteRepository;
+use App\User\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=HouseholdInviteRepository::class)
- */
+ #[ORM\Entity(repositoryClass:HouseholdInviteRepository::class)]
 class HouseholdInvite implements \JsonSerializable
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="string")
-     */
+     #[ORM\Id]
+     #[ORM\Column(type:"string")]
     private string $token;
 
-    /**
-     * @ORM\Column(type="datetime_immutable")
-     */
+     #[ORM\Column(type:"datetime_immutable")]
     private \DateTimeImmutable $validUntil;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Household", inversedBy="invites")
-     * @ORM\JoinColumn(name="household_id", referencedColumnName="id", onDelete="CASCADE")
-     */
+     #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"invites")]
+     #[ORM\JoinColumn(name:"household_id", referencedColumnName:"id", onDelete:"CASCADE")]
     private Household $household;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="User", inversedBy="invites")
-     * @ORM\JoinColumn(name="invitee_id", referencedColumnName="id", onDelete="CASCADE")
-     */
+     #[ORM\ManyToOne(targetEntity:User::class, inversedBy:"invites")]
+     #[ORM\JoinColumn(name:"invitee_id", referencedColumnName:"id", onDelete:"CASCADE")]
     private ?User $invitee;
 
     public function __construct(string $token, Household $household, ?User $invitee = null)

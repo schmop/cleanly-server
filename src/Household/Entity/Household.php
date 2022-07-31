@@ -1,75 +1,52 @@
 <?php
 
-namespace App\Entity;
+namespace App\Household\Entity;
 
-use App\Repository\HouseholdRepository;
+use App\Household\HouseholdRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use App\Todo\Entity\Todo;
 use App\Task\Entity\Task;
+use App\User\Entity\User;
 
-/**
- * @ORM\Entity(repositoryClass=HouseholdRepository::class)
- */
+ #[ORM\Entity(repositoryClass:HouseholdRepository::class)]
 class Household implements \JsonSerializable
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+     #[ORM\Id]
+     #[ORM\GeneratedValue]
+     #[ORM\Column(type:"integer")]
     private int $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+     #[ORM\Column(type:"string", length:255)]
     private string $name;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+     #[ORM\Column(type:"string", length:255, nullable:true)]
     private ?string $picture;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+     #[ORM\Column(type:"string", length:255)]
     private string $color;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="User")
-     * @ORM\JoinColumn(name="admin_id", referencedColumnName="id")
-     */
+     #[ORM\ManyToOne(targetEntity:User::class)]
+     #[ORM\JoinColumn(name:"admin_id", referencedColumnName:"id")]
     private ?User $admin;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="User", inversedBy="households")
-     * @ORM\JoinTable(name="household_members")
-     *
-     * @var Collection<User>
-     */
+    /** @var Collection<User> */
+     #[ORM\ManyToMany(targetEntity:User::class, inversedBy:"households")]
+     #[ORM\JoinTable(name:"household_members")]
     private Collection $members;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HouseholdInvite", mappedBy="household")
-     *
-     * @var Collection<HouseholdInvite>
-     */
+    /** @var Collection<HouseholdInvite> */
+     #[ORM\OneToMany(targetEntity:HouseholdInvite::class, mappedBy:"household")]
     private Collection $invites;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Task\Entity\Task", mappedBy="household")
-     *
-     * @var Collection<Task>
-     */
+    /** @var Collection<Task> */
+     #[ORM\OneToMany(targetEntity:Task::class, mappedBy:"household")]
     private Collection $tasks;
 
-    /**
-     * @ORM\OneToMany(targetEntity="App\Todo\Entity\Todo", mappedBy="household", cascade={"all"}, orphanRemoval=true)
-     *
-     * @var Collection<Todo>
-     */
+    /** @var Collection<Todo> */
+     #[ORM\OneToMany(targetEntity:Todo::class, mappedBy:"household", cascade:["all"], orphanRemoval:true)]
     private Collection $checklist;
 
     public function __construct()
@@ -196,7 +173,7 @@ class Household implements \JsonSerializable
             }
             throw new \LogicException('Checklist is not sortable, the chain is broken');
         }
-        
+
         return new ArrayCollection($sortedChecklist);
     }
 

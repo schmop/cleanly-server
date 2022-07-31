@@ -3,18 +3,18 @@
 namespace App\Task\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\User;
+use App\User\Entity\User;
 
 
 #[ORM\Entity(repositoryClass: TaskLogRepository::class)]
 
 class TaskLog implements \JsonSerializable
 {
-    
+
     #[ORM\Id]
     #[ORM\Column(type:"string")]
     private string $uuid;
-    
+
     #[ORM\Column(type:"datetime_immutable", nullable:true)]
     private \DateTimeImmutable $timestamp;
 

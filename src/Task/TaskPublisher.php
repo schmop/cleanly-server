@@ -2,7 +2,7 @@
 
 namespace App\Task;
 use App\Hub\Publisher;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use App\Task\Entity\Task;
 
 class TaskPublisher

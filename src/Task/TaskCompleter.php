@@ -2,7 +2,7 @@
 
 namespace App\Task;
 use App\Task\Entity\Task;
-use App\Entity\User;
+use App\User\Entity\User;
 use App\Utils\Clock;
 
 class TaskCompleter

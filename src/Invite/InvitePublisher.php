@@ -2,7 +2,7 @@
 
 namespace App\Invite;
 
-use App\Entity\HouseholdInvite;
+use App\Household\Entity\HouseholdInvite;
 use App\Hub\Publisher;
 
 class InvitePublisher

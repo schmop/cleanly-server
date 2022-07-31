@@ -3,7 +3,7 @@
 namespace App\Todo\Entity;
 
 use App\Todo\TodoRepository;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TodoRepository::class)]
@@ -40,12 +40,12 @@ class Todo implements \JsonSerializable
     {
         $this->nextUuid = $nextUuid;
     }
-    
+
     public function getNext(): ?string
     {
         return $this->nextUuid;
     }
-    
+
     public function getUuid(): string
     {
         return $this->uuid;

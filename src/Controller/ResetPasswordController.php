@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
+use App\User\Entity\User;
 use App\PasswordReset\ChangePasswordFormType;
 use App\PasswordReset\ResetPasswordRequestFormType;
 use Doctrine\ORM\EntityManagerInterface;

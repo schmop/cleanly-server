@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Repository;
+namespace App\Household;
 
-use App\Entity\HouseholdInvite;
+use App\Household\Entity\HouseholdInvite;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

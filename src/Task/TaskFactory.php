@@ -3,8 +3,8 @@
 namespace App\Task;
 
 use App\Task\Entity\Task;
-use App\Entity\User;
-use App\Repository\HouseholdRepository;
+use App\User\Entity\User;
+use App\Household\HouseholdRepository;
 use Symfony\Component\HttpFoundation\Request;
 
 final class TaskFactory

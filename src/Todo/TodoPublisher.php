@@ -2,10 +2,10 @@
 
 namespace App\Todo;
 use App\Todo\Entity\Todo;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Hub\Publisher;
-use App\Entity\User;
+use App\User\Entity\User;
 
 class TodoPublisher
 {
@@ -20,15 +20,15 @@ class TodoPublisher
     {
         $membersWithoutSender = array_values(
             array_udiff(
-                $household->getMembers()->toArray(), 
-                [$updater], 
+                $household->getMembers()->toArray(),
+                [$updater],
                 fn(User $a, User $b) => $a->getId() - $b->getId()
             )
         );
 
         $this->publisher->publish(
             $membersWithoutSender,
-            'checklist', 
+            'checklist',
             [
                 'household_id' => $household->getId(),
                 'events' => $events,

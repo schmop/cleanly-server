@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Household;
-use App\Entity\HouseholdInvite;
-use App\Entity\User;
-use App\Repository\HouseholdRepository;
+use App\Household\Entity\Household;
+use App\Household\Entity\HouseholdInvite;
+use App\User\Entity\User;
+use App\Household\HouseholdRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,6 +33,7 @@ class DashboardController extends AbstractController
                 return $invite->jsonSerialize();
             }, $user->getInvites()),
             'user' => $user->jsonSerialize(),
+            'settings' => $user->getUserSettings()?->jsonSerialize() ?? [],
         ]);
     }
 }

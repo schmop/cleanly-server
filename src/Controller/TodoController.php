@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use Symfony\Component\HttpFoundation\Request;
 use App\HttpFoundation\JsonErrorResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;

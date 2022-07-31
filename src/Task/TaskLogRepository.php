@@ -5,10 +5,10 @@ namespace App\Task;
 use App\Task\Entity\TaskLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use App\Entity\User;
+use App\User\Entity\User;
 use App\Task\Entity\Task;
 use Doctrine\ORM\Query\Expr\Join;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 
 /**
  * @method TaskLog|null find($id, $lockMode = null, $lockVersion = null)

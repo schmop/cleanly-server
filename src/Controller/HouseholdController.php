@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Household;
-use App\Entity\HouseholdInvite;
-use App\Entity\User;
+use App\Household\Entity\Household;
+use App\Household\Entity\HouseholdInvite;
+use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Invite\InvitePublisher;
 use App\Push\Pusher;
-use App\Repository\HouseholdInviteRepository;
-use App\Repository\UserRepository;
+use App\Household\HouseholdInviteRepository;
+use App\User\UserRepository;
 use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -96,8 +96,8 @@ class HouseholdController extends AbstractController
         }
         $entityManager->flush();
         $pusher->publishToUsers(
-            $invitees, 
-            "Einladung in Haushalt", 
+            $invitees,
+            "Einladung in Haushalt",
             sprintf("Einladung von %s in den Haushalt %s erhalten", $this->getUser()->getName(), $household->getName())
         );
 

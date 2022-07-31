@@ -3,11 +3,11 @@
 namespace App\Push;
 
 use Kreait\Firebase\Contract\Messaging;
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Psr\Log\LoggerInterface;
-use App\Entity\User;
+use App\User\Entity\User;
 
 class Pusher
 {
@@ -43,7 +43,7 @@ class Pusher
             $this->messaging->sendMulticast($message, $devices);
         } catch (\Exception $e) {
             $this->logger->error('Could not send push notifications, reason: {message}!', [
-                'message' => $e->getMessage(), 
+                'message' => $e->getMessage(),
                 'exception' => $e
             ]);
         }

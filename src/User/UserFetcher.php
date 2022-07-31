@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\User;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
+use App\User\Entity\User;
+use App\User\UserRepository;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 class UserFetcher {
@@ -20,7 +20,7 @@ class UserFetcher {
             throw new \RuntimeException('Could not load user');
         }
         $user = $this->userRepository->findOneBy(['mail' => $user->getUserIdentifier()]);
-        
+
         if (null === $user) {
             throw new \RuntimeException('Could not load user');
         }

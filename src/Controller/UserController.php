@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Household;
-use App\Entity\HouseholdInvite;
+use App\Household\Entity\Household;
+use App\Household\Entity\HouseholdInvite;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
-use App\Repository\UserRepository;
+use App\User\UserRepository;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

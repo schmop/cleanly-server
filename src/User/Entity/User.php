@@ -1,60 +1,48 @@
 <?php
 
-namespace App\Entity;
+namespace App\User\Entity;
 
-use App\Repository\UserRepository;
+use App\User\UserRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use App\User\Entity\UserSettings;
+use App\Household\Entity\HouseholdInvite;
+use App\Household\Entity\Household;
 
-/**
- * @ORM\Entity(repositoryClass=UserRepository::class)
- * @ORM\Table(name="`user`")
- */
+ #[ORM\Entity(repositoryClass: UserRepository::class)]
+ #[ORM\Table(name: "`user`")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSerializable
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+     #[ORM\Id]
+     #[ORM\GeneratedValue]
+     #[ORM\Column(type: "integer")]
     private $id;
 
-    /**
-     * @ORM\Column(name="email", type="string", length=180, unique=true)
-     */
+     #[ORM\Column(name: "email", type: "string", length: 180, unique: true)]
     private string $mail;
 
-    /**
-     * @ORM\Column(type="string")
-     */
+     #[ORM\Column(type: "string")]
     private string $name;
 
-    /**
-     * @ORM\Column(type="json")
-     */
+     #[ORM\Column(type: "json")]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     * @ORM\Column(type="string")
-     */
+     #[ORM\Column(type: "string")]
     private string $password;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="Household", mappedBy="members")
-     *
-     * @var Household[]|Collection
-     */
-    private $households;
+    /** @var Collection<Household> */
+     #[ORM\ManyToMany(targetEntity: Household::class, mappedBy: "members")]
+    private Collection $households;
 
-    /**
-     * @ORM\OneToMany(targetEntity="HouseholdInvite", mappedBy="invitee")
-     * 
-     * @var HouseholdInvite[]|Collection
-     */
-    private $invites;
+
+    /** @var Collection<HouseholdInvite> */
+    #[ORM\OneToMany(targetEntity: HouseholdInvite::class, mappedBy: "invitee")]
+    private Collection $invites;
+
+    #[ORM\OneToOne(targetEntity: UserSettings::class, mappedBy: "user")]
+    private null|UserSettings $userSettings;
 
     public function __construct(string $mail, string $name)
     {
@@ -180,4 +168,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
             'name' => $this->getName(),
         ];
     }
+
+	function getUserSettings(): ?UserSettings {
+		return $this->userSettings;
+	}
 }

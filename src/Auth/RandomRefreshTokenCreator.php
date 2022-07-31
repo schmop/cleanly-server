@@ -3,7 +3,7 @@
 namespace App\Auth;
 use App\Auth\RefreshTokenCreator;
 use App\Auth\Entity\RefreshToken;
-use App\Entity\User;
+use App\User\Entity\User;
 use App\Utils\Random;
 use App\Utils\Clock;
 

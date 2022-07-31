@@ -5,8 +5,8 @@ namespace App\Push;
 use App\Push\Entity\Device;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use App\Entity\User;
-use App\Entity\Household;
+use App\User\Entity\User;
+use App\Household\Entity\Household;
 
 /**
  * @method Device|null find($id, $lockMode = null, $lockVersion = null)

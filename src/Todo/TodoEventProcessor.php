@@ -2,7 +2,7 @@
 
 namespace App\Todo;
 
-use App\Entity\Household;
+use App\Household\Entity\Household;
 use App\Todo\Entity\Todo;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -11,7 +11,7 @@ class TodoEventProcessor
     public function __construct(
         private TodoRepository $todoRepository,
         private EntityManagerInterface $entityManager,
-    ) {        
+    ) {
     }
 
     /**
