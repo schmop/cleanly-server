@@ -22,6 +22,10 @@ class Task implements \JsonSerializable
     #[ORM\Column(type:"datetime_immutable", nullable:true)]
     private ?\DateTimeImmutable $lastCompleted = null;
 
+
+    #[ORM\Column(type:"datetime_immutable", options: ['default' => 'CURRENT_TIMESTAMP'])]
+    private \DateTimeImmutable $lastNotifiedAt;
+
     #[ORM\Column(type:"integer")]
     private int $duration;
 
@@ -118,6 +122,14 @@ class Task implements \JsonSerializable
 
         return $this;
     }
+
+    public function getLastNotifiedAt(): ?\DateTimeImmutable {
+		return $this->lastNotifiedAt;
+	}
+
+	public function setLastNotifiedAt(\DateTimeImmutable $lastNotifiedAt): void {
+		$this->lastNotifiedAt = $lastNotifiedAt;
+	}
 
     public function jsonSerialize(): array
     {

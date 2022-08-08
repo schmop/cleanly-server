@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Command;
+
+use App\Push\Pusher;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use App\Household\HouseholdRepository;
+use App\Task\Entity\Task;
+use App\Task\TaskSecretary;
+use Psr\Log\LoggerInterface;
+
+use function Lambdish\Phunctional\filter;
+
+#[AsCommand('cleanly:notify-task-due')]
+class NotifyTaskDueCommand extends Command
+{
+    public function __construct(
+        private readonly Pusher $pusher,
+        private readonly HouseholdRepository $householdRepository,
+        private readonly TaskSecretary $taskSecretary,
+        private readonly LoggerInterface $logger,
+    ) {
+        parent::__construct();
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        try {
+            $households = $this->householdRepository->findAll();
+            foreach ($households as $household) {
+                $dueTasks = filter(
+                    fn (Task $task) => $this->taskSecretary->isTaskDue($task) && !$this->taskSecretary->wasAlreadyNotified($task),
+                    $household->getTasks(),
+                );
+                if (empty($dueTasks)) {
+                    continue;
+                }
+                foreach ($dueTasks as $task) {
+                    $this->pusher->publishTaskDue(
+                        $household,
+                        'Aufgabe wird dringend!',
+                        sprintf('%s sollte in %s bald erledigt werden!', $task->getName(), $household->getName()),
+                    );
+                    $this->taskSecretary->markTaskAsNotified($task);
+                }
+                $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Could not notify task as due, {message}', [
+                'message' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+            $output->writeln(sprintf(
+                '[ERROR]: %s, callstack:\n %s',
+                $e->getMessage(),
+                $e->getTraceAsString()
+            ));
+        }
+        return Command::SUCCESS;
+    }
+}

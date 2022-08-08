@@ -95,7 +95,7 @@ class HouseholdController extends AbstractController
             $invitePublisher->publish($inviteToken);
         }
         $entityManager->flush();
-        $pusher->publishToUsers(
+        $pusher->publishInvites(
             $invitees,
             "Einladung in Haushalt",
             sprintf("Einladung von %s in den Haushalt %s erhalten", $this->getUser()->getName(), $household->getName())

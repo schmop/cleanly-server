@@ -41,14 +41,13 @@ class DeviceRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('d');
         $qb
-            ->select('d.pushId')
             ->innerJoin('d.user', 'u')
             ->innerJoin('u.households', 'h')
             ->where('h.id = :household')
             ->setParameter('household', $household->getId())
         ;
 
-        return $qb->getQuery()->getSingleColumnResult();
+        return $qb->getQuery()->getResult();
     }
 
     /**
@@ -61,12 +60,11 @@ class DeviceRepository extends ServiceEntityRepository
 
         $qb = $this->createQueryBuilder('d');
         $qb
-            ->select('d.pushId')
             ->innerJoin('d.user', 'u')
             ->where('u.id in (:users)')
             ->setParameter('users', $userIds)
         ;
 
-        return $qb->getQuery()->getSingleColumnResult();
+        return $qb->getQuery()->getResult();
     }
 }

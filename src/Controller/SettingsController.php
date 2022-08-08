@@ -20,7 +20,7 @@ class SettingsController
     public function __invoke(Request $request, UserFetcher $userFetcher, UserSettingsRepository $userSettingsRepository): Response
     {
         $user = $userFetcher->getUser();
-        $settings = $user->getUserSettings() ?? new UserSettings($user);
+        $settings = $user->getUserSettings();
         try {
             $settingsData = UserSettingsData::createFromArray(json_decode($request->request->get('settings', '{}'), true, flags: JSON_THROW_ON_ERROR));
             $settingsData->applyTo($settings);

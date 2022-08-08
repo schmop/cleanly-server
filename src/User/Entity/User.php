@@ -169,7 +169,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
         ];
     }
 
-	function getUserSettings(): ?UserSettings {
-		return $this->userSettings;
+	function getUserSettings(): UserSettings {
+        // TODO: Service to create missing usersettings?
+		return $this->userSettings ?? new UserSettings($this);
 	}
 }

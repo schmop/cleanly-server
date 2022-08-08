@@ -33,7 +33,7 @@ class DashboardController extends AbstractController
                 return $invite->jsonSerialize();
             }, $user->getInvites()),
             'user' => $user->jsonSerialize(),
-            'settings' => $user->getUserSettings()?->jsonSerialize() ?? [],
+            'settings' => $user->getUserSettings()->jsonSerialize() ?? [],
         ]);
     }
 }

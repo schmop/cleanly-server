@@ -15,6 +15,7 @@
         "doctrine/orm": "^2.9",
         "egulias/email-validator": "^3.2",
         "kreait/firebase-bundle": "^4.1",
+        "lambdish/phunctional": "^2.1",
         "lexik/jwt-authentication-bundle": "^2.13",
         "nelmio/cors-bundle": "^2.1",
         "sensio/framework-extra-bundle": "^6.2",

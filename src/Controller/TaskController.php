@@ -94,7 +94,7 @@ class TaskController extends AbstractController
             ], Response::HTTP_TOO_MANY_REQUESTS);
         }
         $taskPublisher->publish($task->getHousehold());
-        $pusher->publishInHousehold(
+        $pusher->publishTaskDone(
             $task->getHousehold(),
             sprintf('%s wurde erledigt!', $task->getName()),
             sprintf(

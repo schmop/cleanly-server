@@ -5,15 +5,15 @@ namespace App\Task;
 use App\Task\Entity\Task;
 use App\User\Entity\User;
 use App\Household\HouseholdRepository;
+use App\Utils\Clock;
 use Symfony\Component\HttpFoundation\Request;
 
 final class TaskFactory
 {
-    private HouseholdRepository $householdRepository;
-
-    public function __construct(HouseholdRepository $householdRepository)
-    {
-        $this->householdRepository = $householdRepository;
+    public function __construct(
+        private HouseholdRepository $householdRepository,
+        private Clock $clock,
+    ) {
     }
 
     public function createTaskFromRequest(Request $request, User $user): Task
@@ -21,6 +21,7 @@ final class TaskFactory
         $task = new Task();
         $task->setName($request->request->get('name'));
         $task->setDuration((int) $request->request->get('duration'));
+        $task->setLastNotifiedAt($this->clock->now());
         if (null !== $description = $request->request->get('description')) {
             $task->setDescription($description);
         }
