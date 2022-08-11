@@ -12,6 +12,7 @@ use App\Push\Pusher;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Symfony\Component\Console\Input\InputArgument;
 
 #[AsCommand('cleanly:test-send-push')]
 class TestSendPushNotificationCommand extends Command
@@ -23,9 +24,13 @@ class TestSendPushNotificationCommand extends Command
         parent::__construct();
     }
 
+    protected function configure(): void {
+        $this->addArgument('id', InputArgument::REQUIRED, 'Something to debug');
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $userId = $input->getFirstArgument();
+        $userId = $input->getArgument('id');
         if (null === $userId) {
             $output->writeln('No userid given!');
             return Command::FAILURE;
