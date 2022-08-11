@@ -26,7 +26,7 @@ class DeviceRepository extends ServiceEntityRepository
      */
     public function findByUser(User $user): array
     {
-        return $this->findAll(['user' => $user]);
+        return $this->findBy(['user' => $user]);
     }
 
     public function findByDeviceId(string $deviceId): null|Device

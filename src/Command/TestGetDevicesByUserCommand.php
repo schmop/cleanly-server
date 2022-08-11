@@ -33,7 +33,7 @@ class TestGetDevicesByUserCommand extends Command
         }
         dump(
             $this->deviceRepository->findBy([
-                'user_id' => $userId
+                'user' => $userId
             ])
         );
         return Command::SUCCESS;

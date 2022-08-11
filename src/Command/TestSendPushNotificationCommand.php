@@ -35,7 +35,7 @@ class TestSendPushNotificationCommand extends Command
             $output->writeln('No userid given!');
             return Command::FAILURE;
         }
-        $devices = $this->deviceRepository->findBy(['user_id' => $userId]);
+        $devices = $this->deviceRepository->findBy(['user' => $userId]);
         $message = CloudMessage::new ()->withNotification(Notification::create("Testnotification", "I am a test notification", ));
         $this->messaging->sendMulticast($message, $devices);
 
