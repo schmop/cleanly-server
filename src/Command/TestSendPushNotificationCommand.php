@@ -14,6 +14,9 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Symfony\Component\Console\Input\InputArgument;
 
+use function Lambdish\Phunctional\map;
+use App\Push\Entity\Device;
+
 #[AsCommand('cleanly:test-send-push')]
 class TestSendPushNotificationCommand extends Command
 {
@@ -35,7 +38,10 @@ class TestSendPushNotificationCommand extends Command
             $output->writeln('No userid given!');
             return Command::FAILURE;
         }
-        $devices = $this->deviceRepository->findBy(['user' => $userId]);
+        $devices = map(
+            fn (Device $device) => $device->getPushId(),
+            $this->deviceRepository->findBy(['user' => $userId]),
+        );
         dump($devices);
         $message = CloudMessage::new()->withNotification(Notification::create("Testnotification", "I am a test notification", ));
         $this->messaging->sendMulticast($message, $devices);
