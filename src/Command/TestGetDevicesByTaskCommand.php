@@ -10,7 +10,7 @@ use App\Push\DeviceRepository;
 use App\Task\TaskRepository;
 use Symfony\Component\Console\Input\InputArgument;
 
-#[AsCommand('cleanly:test-get-devices-by-household')]
+#[AsCommand('cleanly:test-get-devices-by-task')]
 class TestGetDevicesByHouseholdCommand extends Command
 {
     public function __construct(
