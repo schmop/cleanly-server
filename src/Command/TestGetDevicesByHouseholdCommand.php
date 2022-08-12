@@ -11,7 +11,7 @@ use App\Push\DeviceRepository;
 use Symfony\Component\Console\Input\InputArgument;
 
 #[AsCommand('cleanly:test-get-devices-by-household')]
-class TestGetDevicesCommand extends Command
+class TestGetDevicesByHouseholdCommand extends Command
 {
     public function __construct(
         private readonly DeviceRepository $deviceRepository,
