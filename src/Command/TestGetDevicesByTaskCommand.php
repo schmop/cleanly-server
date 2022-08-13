@@ -11,7 +11,7 @@ use App\Task\TaskRepository;
 use Symfony\Component\Console\Input\InputArgument;
 
 #[AsCommand('cleanly:test-get-devices-by-task')]
-class TestGetDevicesByHouseholdCommand extends Command
+class TestGetDevicesByTaskCommand extends Command
 {
     public function __construct(
         private readonly DeviceRepository $deviceRepository,

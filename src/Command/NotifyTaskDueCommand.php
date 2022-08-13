@@ -11,6 +11,7 @@ use App\Household\HouseholdRepository;
 use App\Task\Entity\Task;
 use App\Task\TaskSecretary;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 use function Lambdish\Phunctional\filter;
 
@@ -26,6 +27,11 @@ class NotifyTaskDueCommand extends Command
         parent::__construct();
     }
 
+
+    protected function configure(): void {
+        $this->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Just returns the devices and push notifications, but does not send any push notifications!');
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
@@ -38,15 +44,19 @@ class NotifyTaskDueCommand extends Command
                 if (empty($dueTasks)) {
                     continue;
                 }
-                foreach ($dueTasks as $task) {
-                    $this->pusher->publishTaskDue(
-                        $household,
-                        'Aufgabe wird dringend!',
-                        sprintf('%s sollte in %s bald erledigt werden!', $task->getName(), $household->getName()),
-                    );
-                    $this->taskSecretary->markTaskAsNotified($task);
+                if ($input->getOption('dry-run')) {
+                    dump($dueTasks);
+                } else {
+                    foreach ($dueTasks as $task) {
+                        $this->pusher->publishTaskDue(
+                            $household,
+                            'Aufgabe wird dringend!',
+                            sprintf('%s sollte in %s bald erledigt werden!', $task->getName(), $household->getName()),
+                        );
+                        $this->taskSecretary->markTaskAsNotified($task);
+                    }
+                    $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
                 }
-                $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
             }
         } catch (\Exception $e) {
             $this->logger->error('Could not notify task as due, {message}', [
