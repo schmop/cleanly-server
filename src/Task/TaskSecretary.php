@@ -7,8 +7,10 @@ use App\Task\Entity\Task;
 
 class TaskSecretary
 {
-    public function __construct(private readonly Clock $clock)
-    {
+    public function __construct(
+        private readonly Clock $clock,
+        private readonly TaskRepository $taskRepository,
+    ) {
     }
 
     public function isTaskDue(Task $task): bool
@@ -36,5 +38,6 @@ class TaskSecretary
     public function markTaskAsNotified(Task $task): void
     {
         $task->setLastNotifiedAt($this->clock->now());
+        $this->taskRepository->save($task);
     }
 }
