@@ -14,6 +14,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputOption;
 
 use function Lambdish\Phunctional\filter;
+use function Lambdish\Phunctional\map;
 
 #[AsCommand('cleanly:notify-task-due')]
 class NotifyTaskDueCommand extends Command
@@ -45,7 +46,13 @@ class NotifyTaskDueCommand extends Command
                     continue;
                 }
                 if ($input->getOption('dry-run')) {
-                    dump($dueTasks);
+                    dump(map(
+                        fn (Task $task) => [
+                            'household' => $task->getHousehold()->getName(),
+                            'task' => $task->jsonSerialize()
+                        ],
+                        $dueTasks
+                    ));
                 } else {
                     foreach ($dueTasks as $task) {
                         $this->pusher->publishTaskDue(
