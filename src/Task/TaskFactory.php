@@ -29,7 +29,7 @@ final class TaskFactory
             $task->setIcon($icon);
         }
         if (null !== $stars = $request->request->get('stars')) {
-            $task->setStars($stars);
+            $task->setStars((int)$stars);
         }
         if (null == ($household = $this->householdRepository->find($request->request->get('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');

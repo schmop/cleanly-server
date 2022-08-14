@@ -63,7 +63,7 @@ class TaskController extends AbstractController
         $task->setName($request->request->get('name'));
         $task->setDuration((int) $request->request->get('duration'));
         $task->setIcon($request->request->get('icon'));
-        $task->setStars($request->request->get('stars'));
+        $task->setStars((int)$request->request->get('stars'));
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 
