@@ -28,6 +28,9 @@ final class TaskFactory
         if (null !== $icon = $request->request->get('icon')) {
             $task->setIcon($icon);
         }
+        if (null !== $stars = $request->request->get('stars')) {
+            $task->setStars($stars);
+        }
         if (null == ($household = $this->householdRepository->find($request->request->get('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');
         }

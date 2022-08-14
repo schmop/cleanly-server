@@ -12,16 +12,13 @@ use Doctrine\Common\Collections\Collection;
 
 class Task implements \JsonSerializable
 {
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type:"integer")]
     private int $id;
 
-
     #[ORM\Column(type:"datetime_immutable", nullable:true)]
     private ?\DateTimeImmutable $lastCompleted = null;
-
 
     #[ORM\Column(type:"datetime_immutable", options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeImmutable $lastNotifiedAt;
@@ -37,6 +34,9 @@ class Task implements \JsonSerializable
 
     #[ORM\Column(type:"string", length:255, nullable:true)]
     private ?string $icon = null;
+
+    #[ORM\Column(type:"integer", options:['default' => 0])]
+    private int $stars = 0;
 
     #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"tasks")]
     #[ORM\JoinColumn(name:"household_id", referencedColumnName:"id", onDelete:"CASCADE")]
@@ -116,18 +116,18 @@ class Task implements \JsonSerializable
         return $this->icon;
     }
 
-    public function setIcon(?string $icon): self
+    public function setIcon(?string $icon): void
     {
         $this->icon = $icon;
-
-        return $this;
     }
 
-    public function getLastNotifiedAt(): ?\DateTimeImmutable {
+    public function getLastNotifiedAt(): ?\DateTimeImmutable
+    {
 		return $this->lastNotifiedAt;
 	}
 
-	public function setLastNotifiedAt(\DateTimeImmutable $lastNotifiedAt): void {
+	public function setLastNotifiedAt(\DateTimeImmutable $lastNotifiedAt): void
+    {
 		$this->lastNotifiedAt = $lastNotifiedAt;
 	}
 
@@ -140,17 +140,30 @@ class Task implements \JsonSerializable
             'description' => $this->getDescription(),
             'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),
+            'stars' => $this->getStars(),
         ];
     }
 
 	/**
 	 * @return Collection<TaskLog>
 	 */
-	public function getLogs(): Collection {
+	public function getLogs(): Collection
+    {
 		return $this->logs;
 	}
 
-    public function addLog(TaskLog $taskLog): void {
+    public function addLog(TaskLog $taskLog): void
+    {
         $this->logs->add($taskLog);
     }
+
+	public function getStars(): int
+    {
+		return $this->stars;
+	}
+
+	public function setStars(int $stars): void
+    {
+		$this->stars = $stars;
+	}
 }

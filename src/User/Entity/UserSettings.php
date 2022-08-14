@@ -23,6 +23,9 @@ class UserSettings
 
         #[ORM\Column(type: 'boolean')]
         public bool $notifyInvites = true,
+
+        #[ORM\Column(type: 'string', options: ['default' => 'de'])]
+        public string $language = 'de',
     ) {
     }
 
@@ -32,6 +35,7 @@ class UserSettings
             'notifyTaskDone' => $this->notifyTaskDone,
             'notifyTaskDue' => $this->notifyTaskDue,
             'notifyInvites' => $this->notifyInvites,
+            'language' => $this->language,
         ];
     }
 }

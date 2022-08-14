@@ -18,4 +18,23 @@ class HouseholdRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Household::class);
     }
+
+    /**
+     * @return array<string, int>
+     */
+    public function retrieveStars(Household $household): array
+    {
+        $qb = $this->createQueryBuilder('h');
+        $qb
+            ->select('m.id as user, SUM(t.stars) as stars')
+            ->innerJoin('h.members', 'm')
+            ->innerJoin('h.tasks', 't')
+            ->innerJoin('t.logs', 'l')
+            ->where('h.id = :householdId')
+            ->groupBy('m.id')
+            ->setParameter('householdId', $household->getId())
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
 }
