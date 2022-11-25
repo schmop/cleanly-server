@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Household\HouseholdVoter;
 use App\Task\Entity\Task;
 use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
@@ -49,17 +50,8 @@ class TaskController extends AbstractController
      */
     public function editTask(Task $task, Request $request, TaskRepository $taskRepository, TaskPublisher $taskPublisher): JsonResponse
     {
-        /**
-         * @var User $user
-         */
-        $user = $this->getUser();
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_TASKS, $task->getHousehold());
 
-        if ($task?->getHousehold()?->getAdmin() !== $user) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You do not have sufficient privileges to edit this task!'
-            ]);
-        }
         $task->setName($request->request->get('name'));
         $task->setDuration((int) $request->request->get('duration'));
         $task->setIcon($request->request->get('icon'));
@@ -67,7 +59,7 @@ class TaskController extends AbstractController
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create([]);
     }
 
     /**
@@ -79,9 +71,6 @@ class TaskController extends AbstractController
         Pusher $pusher,
         TaskCompleter $taskCompleter,
     ): JsonResponse {
-        /**
-         * @var User $user
-         */
         $user = $this->getUser();
         if (!$task->getHousehold()->getMembers()->contains($user)) {
             return JsonErrorResponse::create([
@@ -137,16 +126,7 @@ class TaskController extends AbstractController
      */
     public function deleteTask(Task $task, TaskRepository $taskRepository, TaskPublisher $taskPublisher): JsonResponse
     {
-        /**
-         * @var User $user
-         */
-        $user = $this->getUser();
-        if ($task->getHousehold()->getAdmin() !== $user) {
-            return JsonErrorResponse::create([
-                'status' => 'error',
-                'reason' => 'You do not have sufficient privileges to remove this task!'
-            ]);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_TASKS, $task->getHousehold());
 
         $taskRepository->remove($task);
         $taskPublisher->publish($task->getHousehold());

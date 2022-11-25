@@ -28,25 +28,25 @@ class Household implements \JsonSerializable
      #[ORM\Column(type:"string", length:255)]
     private string $color;
 
-     #[ORM\ManyToOne(targetEntity:User::class)]
-     #[ORM\JoinColumn(name:"admin_id", referencedColumnName:"id")]
-    private ?User $admin;
-
     /** @var Collection<User> */
-     #[ORM\ManyToMany(targetEntity:User::class, inversedBy:"households")]
-     #[ORM\JoinTable(name:"household_members")]
+    #[ORM\ManyToMany(targetEntity:User::class, inversedBy:"households")]
+    #[ORM\JoinTable(name:"household_members")]
     private Collection $members;
 
+    /** @var Collection<HouseholdPrivilege> */
+    #[ORM\OneToMany(targetEntity:HouseholdPrivilege::class, mappedBy:"household")]
+    private Collection $privileges;
+
     /** @var Collection<HouseholdInvite> */
-     #[ORM\OneToMany(targetEntity:HouseholdInvite::class, mappedBy:"household")]
+    #[ORM\OneToMany(targetEntity:HouseholdInvite::class, mappedBy:"household")]
     private Collection $invites;
 
     /** @var Collection<Task> */
-     #[ORM\OneToMany(targetEntity:Task::class, mappedBy:"household")]
+    #[ORM\OneToMany(targetEntity:Task::class, mappedBy:"household")]
     private Collection $tasks;
 
     /** @var Collection<Todo> */
-     #[ORM\OneToMany(targetEntity:Todo::class, mappedBy:"household", cascade:["all"], orphanRemoval:true)]
+    #[ORM\OneToMany(targetEntity:Todo::class, mappedBy:"household", cascade:["all"], orphanRemoval:true)]
     private Collection $checklist;
 
     public function __construct()
@@ -54,6 +54,8 @@ class Household implements \JsonSerializable
         $this->members = new ArrayCollection();
         $this->invites = new ArrayCollection();
         $this->tasks = new ArrayCollection();
+        $this->privileges = new ArrayCollection();
+        $this->checklist = new ArrayCollection();
         $this->color = '#233662';
     }
 
@@ -64,7 +66,7 @@ class Household implements \JsonSerializable
         }
         $household = new self();
         $household->setName($request->request->get('name'));
-        $household->setAdmin($user);
+        $household->setUserPrivilege($user, HouseholdPrivilege::PRIVILEGE_ADMIN);
         $household->addMember($user);
 
         return $household;
@@ -95,18 +97,6 @@ class Household implements \JsonSerializable
     public function setPicture(?string $picture): self
     {
         $this->picture = $picture;
-
-        return $this;
-    }
-
-    public function getAdmin(): ?User
-    {
-        return $this->admin;
-    }
-
-    public function setAdmin(User $admin): self
-    {
-        $this->admin = $admin;
 
         return $this;
     }
@@ -177,6 +167,42 @@ class Household implements \JsonSerializable
         return new ArrayCollection($sortedChecklist);
     }
 
+
+	public function getPrivileges(): Collection {
+		return $this->privileges;
+	}
+
+	public function setUserPrivilege(User $user, int $level): void
+    {
+        if (!in_array($level, [
+                HouseholdPrivilege::PRIVILEGE_USER,
+                HouseholdPrivilege::PRIVILEGE_MODERATOR,
+                HouseholdPrivilege::PRIVILEGE_ADMIN,
+            ])) {
+            throw new \InvalidArgumentException('Invalid household privilege given!');
+        }
+        foreach ($this->privileges as $privilege) {
+            if ($privilege->user === $user) {
+                $privilege->level = $level;
+
+                return;
+            }
+        }
+
+		$this->privileges->add(new HouseholdPrivilege($this, $user, $level));
+	}
+
+    public function getUserPrivilege(User $user): int
+    {
+        foreach ($this->privileges as $privilege) {
+            if ($privilege->user === $user) {
+                return $privilege->level;
+            }
+        }
+
+        return HouseholdPrivilege::PRIVILEGE_USER;
+    }
+
     public function jsonSerialize(): array
     {
         return [
@@ -184,16 +210,18 @@ class Household implements \JsonSerializable
             'name' => $this->getName(),
             'picture' => $this->getPicture(),
             'color' => $this->getColor(),
-            'users' => $this->getMembers()->map(static function (User $user) {
-                return $user->jsonSerialize();
-            })->toArray(),
-            'tasks' => $this->getTasks()->map(static function (Task $task) {
-                return $task->jsonSerialize();
-            })->toArray(),
-            'admin' => $this->getAdmin()->getId(),
-            'checklist' => $this->getSortedChecklist()->map(static function (Todo $todo) {
-                return $todo->jsonSerialize();
-            })->toArray(),
+            'users' => $this->getMembers()->map(
+                static fn (User $user) => $user->jsonSerialize()
+            )->toArray(),
+            'tasks' => $this->getTasks()->map(
+                static fn (Task $task) => $task->jsonSerialize()
+            )->toArray(),
+            'checklist' => $this->getSortedChecklist()->map(
+                static fn (Todo $todo) => $todo->jsonSerialize()
+            )->toArray(),
+            'privileges' => $this->getPrivileges()->map(
+                static fn (HouseholdPrivilege $privilege) => $privilege->jsonSerialize()
+            )->toArray(),
         ];
     }
 }

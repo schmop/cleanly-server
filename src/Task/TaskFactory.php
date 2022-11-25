@@ -2,6 +2,7 @@
 
 namespace App\Task;
 
+use App\Household\Entity\HouseholdPrivilege;
 use App\Task\Entity\Task;
 use App\User\Entity\User;
 use App\Household\HouseholdRepository;
@@ -34,7 +35,7 @@ final class TaskFactory
         if (null == ($household = $this->householdRepository->find($request->request->get('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');
         }
-        if ($household->getAdmin() !== $user) {
+        if ($household->getUserPrivilege($user) !== HouseholdPrivilege::PRIVILEGE_ADMIN) {
             throw new \InvalidArgumentException('You are not the admin of the household');
         }
         $task->setHousehold($household);

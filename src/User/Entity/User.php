@@ -55,7 +55,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
         return $this->id;
     }
 
-
     public function getMail(): string
     {
         return $this->mail;

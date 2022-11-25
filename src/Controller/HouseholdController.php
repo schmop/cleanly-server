@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdInvite;
+use App\Household\Entity\HouseholdPrivilege;
+use App\Household\HouseholdVoter;
 use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
@@ -20,7 +22,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use App\Todo\Entity\Todo;
@@ -51,15 +52,13 @@ class HouseholdController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $color = $request->request->get('color');
         if ($color === null) {
             throw new \InvalidArgumentException('"color" must be set!');
         }
         if (!preg_match(self::HEX_COLOR_FORMAT, $color)) {
             throw new \InvalidArgumentException('"color" must be in hex color format. Example: "#ff00ad"');
-        }
-        if ($household->getAdmin() !== $this->getUser()) {
-            throw new \InvalidArgumentException('Insufficient privileges!');
         }
         $household->setColor($color);
         $entityManager->persist($household);
@@ -80,9 +79,7 @@ class HouseholdController extends AbstractController
         InvitePublisher $invitePublisher,
         Pusher $pusher,
     ): JsonResponse {
-        if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {
@@ -190,7 +187,7 @@ class HouseholdController extends AbstractController
         if (!$household->getMembers()->contains($user)) {
             return JsonErrorResponse::create(['reason' => 'Cannot leave, you are not a member.',]);
         }
-        if (!$household->getAdmin() === $user) {
+        if ($this->isGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household)) {
             return JsonErrorResponse::create(['reason' => 'You cannot leave this household as an admin.',]);
         }
         $household->removeMember($user);
@@ -209,11 +206,11 @@ class HouseholdController extends AbstractController
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
-        if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to kick members.',]);
-        }
         if ($user === $kicked) {
             return JsonErrorResponse::create(['reason' => 'You cannot kick yourself.',]);
+        }
+        if ($household->getUserPrivilege($user) <= $household->getUserPrivilege($kicked)) {
+            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to kick this member.',]);
         }
         $household->removeMember($kicked);
         $entityManager->flush();
@@ -222,25 +219,46 @@ class HouseholdController extends AbstractController
     }
 
     /**
-     * @Route("/api/household/transfer-ownership/{id}/{user_id}", name="household_transfer_ownership", methods={"POST"})
-     * @Entity("newOwner", expr="repository.find(user_id)")
+     * @Route("/api/household/promote/{id}/{user_id}", name="household_member_promote", methods={"POST"})
+     * @Entity("promotedUser", expr="repository.find(user_id)")
      */
-    public function transferOwnership(
+    public function promote(
         Household $household,
-        User $newOwner,
+        User $promotedUser,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
-        if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to transfer ownership.',]);
+        if ($user === $promotedUser) {
+            return JsonErrorResponse::create(['reason' => 'You cannot promote yourself!',]);
         }
-        if ($user === $newOwner) {
-            return JsonErrorResponse::create(['reason' => 'You are already the owner.',]);
+        if (!$household->getMembers()->contains($promotedUser)) {
+            return JsonErrorResponse::create(['reason' => 'You cannot promote users that aren\'t members of this household!',]);
         }
-        if (!$household->getMembers()->contains($newOwner)) {
-            return JsonErrorResponse::create(['reason' => 'The new owner must be a member of the household.',]);
+        $household->setUserPrivilege($promotedUser, HouseholdPrivilege::PRIVILEGE_MODERATOR);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create();
+    }
+
+    /**
+     * @Route("/api/household/demote/{id}/{user_id}", name="household_member_demote", methods={"POST"})
+     * @Entity("demotedUser", expr="repository.find(user_id)")
+     */
+    public function demote(
+        Household $household,
+        User $demotedUser,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
+        $user = $this->getUser();
+        if ($user === $demotedUser) {
+            return JsonErrorResponse::create(['reason' => 'You cannot demote yourself!',]);
         }
-        $household->setAdmin($newOwner);
+        if (!$household->getMembers()->contains($demotedUser)) {
+            return JsonErrorResponse::create(['reason' => 'You cannot promote users that aren\'t members of this household!',]);
+        }
+        $household->setUserPrivilege($demotedUser, HouseholdPrivilege::PRIVILEGE_USER);
         $entityManager->flush();
 
         return JsonSuccessResponse::create();
@@ -253,9 +271,7 @@ class HouseholdController extends AbstractController
         Household $household,
         EntityManagerInterface $entityManager
     ): JsonResponse {
-        if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to remove this task!']);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $entityManager->remove($household);
         $entityManager->flush();
 
