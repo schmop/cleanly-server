@@ -1,6 +1,6 @@
 # cleanly-server
 
-This is the backend for the App [**Cleanly**](https://git.schmoppo.com/schmop/cleanly).
+This is the backend for the App [**Cleanly**](https://git.schmoppo.de/schmop/cleanly).
 
 Cleanly is a tool to organize recurring tasks in households, assign them, track the status and get them done properly!
 

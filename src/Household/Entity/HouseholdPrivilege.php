@@ -17,12 +17,14 @@ class HouseholdPrivilege implements \JsonSerializable
     public const PRIVILEGE_ADMIN = 2;
 
     public function __construct(
-        #[ORM\ManyToOne(targetEntity:Household::class, mappedBy:"privileges")]
-        #[ORM\JoinTable(name:"household", referencedColumnName: 'id')]
+        #[ORM\Id]
+        #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"privileges")]
+        #[ORM\JoinColumn(name:"household", referencedColumnName: 'id')]
         public Household $household,
 
+        #[ORM\Id]
         #[ORM\ManyToOne(targetEntity:User::class)]
-        #[ORM\JoinTable(name:"`user`", referencedColumnName: 'id')]
+        #[ORM\JoinColumn(name:"`user`", referencedColumnName: 'id')]
         public User $user,
 
         #[ORM\Column(type:"integer")]
