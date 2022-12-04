@@ -9,17 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\User\Entity\User;
 
-/**
- * @Route("/api/whoami", "whoami")
- */
+#[Route(path: '/api/whoami')]
 class WhoAmIController extends AbstractController
 {
     public function __invoke(): Response
     {
-        /**
-         * @var User $user
-         */
-        $user = $this->getUser();
-        return new Response((string)$user->getId());
+        return new Response((string)$user = $this->getUser()->getId());
     }
 }

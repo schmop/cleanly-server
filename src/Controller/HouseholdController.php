@@ -18,21 +18,20 @@ use App\User\UserRepository;
 use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use App\Todo\Entity\Todo;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 class HouseholdController extends AbstractController
 {
     private const HEX_COLOR_FORMAT = '/^#[a-fA-F0-9]{6}$/';
 
-    /**
-     * @Route("/api/household/create", name="create_household", methods={"POST"})
-     */
+    #[Route(path: '/api/household/create', name: 'create_household', methods: ['POST'])]
     public function createHouseHold(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User $user */
@@ -44,9 +43,7 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/{id}/color", name="household_set_color", methods={"POST"})
-     */
+    #[Route(path: '/api/household/{id}/color', name: 'household_set_color', methods: ['POST'])]
     public function changeColor(
         Household $household,
         Request $request,
@@ -67,9 +64,7 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/invite/{id}", name="household_invite", methods={"POST"})
-     */
+    #[Route(path: '/api/household/invite/{id}', name: 'household_invite', methods: ['POST'])]
     public function invite(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -101,9 +96,7 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/join-by-token/{token}", name="household_join")
-     */
+    #[Route(path: '/api/household/join-by-token/{token}', name: 'household_join')]
     public function join(
         HouseholdInvite $invite,
         EntityManagerInterface $entityManager
@@ -127,9 +120,7 @@ class HouseholdController extends AbstractController
     }
 
 
-    /**
-     * @Route("/api/household/accept-invite/{id}", name="household_accept_invite")
-     */
+    #[Route(path: '/api/household/accept-invite/{id}', name: 'household_accept_invite')]
     public function acceptInvite(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -155,9 +146,7 @@ class HouseholdController extends AbstractController
         return JsonErrorResponse::create(['reason' => 'You did not receive an invite to this household!']);
     }
 
-    /**
-     * @Route("/api/household/decline-invite/{id}", name="household_decline_invite")
-     */
+    #[Route(path: '/api/household/decline-invite/{id}', name: 'household_decline_invite')]
     public function declineInvite(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -176,9 +165,7 @@ class HouseholdController extends AbstractController
         return JsonErrorResponse::create(['reason' => 'You did not receive an invite to this household!']);
     }
 
-    /**
-     * @Route("/api/household/leave/{id}", name="household_leave", methods={"POST"})
-     */
+    #[Route(path: '/api/household/leave/{id}', name: 'household_leave', methods: ['POST'])]
     public function leaveHousehold(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -196,13 +183,10 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/kick/{id}/{user_id}", name="household_kick", methods={"POST"})
-     * @Entity("kicked", expr="repository.find(user_id)")
-     */
+    #[Route(path: '/api/household/kick/{id}/{user_id}', name: 'household_kick', methods: ['POST'])]
     public function kickMember(
         Household $household,
-        User $kicked,
+        #[MapEntity(expr: "repository.find(user_id)")] User $kicked,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
@@ -218,13 +202,10 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/promote/{id}/{user_id}", name="household_member_promote", methods={"POST"})
-     * @Entity("promotedUser", expr="repository.find(user_id)")
-     */
+    #[Route(path: '/api/household/promote/{id}/{user_id}', name: 'household_member_promote', methods: ['POST'])]
     public function promote(
         Household $household,
-        User $promotedUser,
+        #[MapEntity(expr: "repository.find(user_id)")] User $promotedUser,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
@@ -241,13 +222,10 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/demote/{id}/{user_id}", name="household_member_demote", methods={"POST"})
-     * @Entity("demotedUser", expr="repository.find(user_id)")
-     */
+    #[Route(path: '/api/household/demote/{id}/{user_id}', name: 'household_member_demote', methods: ['POST'])]
     public function demote(
         Household $household,
-        User $demotedUser,
+        #[MapEntity(expr: "repository.find(user_id)")] User $demotedUser,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
@@ -264,9 +242,7 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/{id}", name="delete_household", methods={"DELETE"})
-     */
+    #[Route(path: '/api/household/{id}', name: 'delete_household', methods: ['DELETE'])]
     public function deleteHousehold(
         Household $household,
         EntityManagerInterface $entityManager

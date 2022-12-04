@@ -26,7 +26,7 @@ class Household implements \JsonSerializable
     private ?string $picture;
 
      #[ORM\Column(type:"string", length:255)]
-    private string $color;
+    private string $color = '#233662';
 
     /** @var Collection<User> */
     #[ORM\ManyToMany(targetEntity:User::class, inversedBy:"households")]
@@ -56,7 +56,6 @@ class Household implements \JsonSerializable
         $this->tasks = new ArrayCollection();
         $this->privileges = new ArrayCollection();
         $this->checklist = new ArrayCollection();
-        $this->color = '#233662';
     }
 
     public static function createFromRequest(Request $request, User $user): self
@@ -189,8 +188,8 @@ class Household implements \JsonSerializable
             }
         }
 
-		$this->privileges->add(new HouseholdPrivilege($this, $user, $level));
-	}
+        $this->privileges->add(new HouseholdPrivilege($this, $user, $level));
+    }
 
     public function getUserPrivilege(User $user): int
     {

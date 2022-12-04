@@ -13,9 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("/api/dashboard", "dashboard")
- */
+#[Route(path: '/api/dashboard')]
 class DashboardController extends AbstractController
 {
     public function __invoke(): Response

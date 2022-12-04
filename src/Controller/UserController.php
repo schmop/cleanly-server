@@ -20,9 +20,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class UserController extends AbstractController
 {
-    /**
-     * @Route("/api/user/lookup", name="user_lookup", methods={"POST"})
-     */
+    #[Route(path: '/api/user/lookup', name: 'user_lookup', methods: ['POST'])]
     public function createHousehold(Request $request, UserRepository $userRepository): JsonResponse
     {
         $search = (string)$request->request->get('search');

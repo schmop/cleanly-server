@@ -17,7 +17,7 @@ class Todo implements \JsonSerializable
     private string $content;
 
     #[ORM\Column(type: "string", nullable: true, unique: true)]
-    private ?string $nextUuid;
+    private ?string $nextUuid = null;
 
      #[ORM\ManyToOne(targetEntity: Household::class, inversedBy: "checklist")]
      #[ORM\JoinColumn(name: "household_id", referencedColumnName: "id", onDelete: "CASCADE")]
@@ -28,7 +28,6 @@ class Todo implements \JsonSerializable
         $this->uuid = $uuid;
         $this->content = $content;
         $this->household = $household;
-        $this->nextUuid = null;
     }
 
     public function setContent(string $content): void

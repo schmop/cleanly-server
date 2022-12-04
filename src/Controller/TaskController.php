@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use App\Household\HouseholdVoter;
 use App\Task\Entity\Task;
-use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Task\TaskRepository;
@@ -17,6 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Household\Entity\Household;
+use App\Household\HouseholdRepository;
 use App\Push\Pusher;
 use App\Task\TaskCompleter;
 use App\Task\TaskLogRepository;
@@ -24,30 +24,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends AbstractController
 {
-    /**
-     * @Route("/api/task/create", "task_create", methods={"POST"})
-     */
+    #[Route(path: '/api/task/create', name: 'task_create', methods: ['POST'])]
     public function createTask(
         Request $request,
         TaskFactory $taskFactory,
         TaskRepository $taskRepository,
         TaskPublisher $taskPublisher,
     ): JsonResponse {
-        /**
-         * @var User $user
-         */
-        $user = $this->getUser();
+        $task = $taskFactory->createTaskFromRequest($request, $this->getUser());
 
-        $task = $taskFactory->createTaskFromRequest($request, $user);
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 
         return JsonSuccessResponse::create(['status' => 'success']);
     }
 
-    /**
-     * @Route("/api/task/edit/{id}", "task_edit", methods={"POST"})
-     */
+    #[Route(path: '/api/task/edit/{id}', name: 'task_edit', methods: ['POST'])]
     public function editTask(Task $task, Request $request, TaskRepository $taskRepository, TaskPublisher $taskPublisher): JsonResponse
     {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_TASKS, $task->getHousehold());
@@ -62,9 +54,7 @@ class TaskController extends AbstractController
         return JsonSuccessResponse::create([]);
     }
 
-    /**
-     * @Route("/api/task/mark-done/{id}", "task_mark_done", methods={"POST"})
-     */
+    #[Route(path: '/api/task/mark-done/{id}', name: 'task_mark_done', methods: ['POST'])]
     public function markTaskDone(
         Task $task,
         TaskPublisher $taskPublisher,
@@ -98,18 +88,12 @@ class TaskController extends AbstractController
         return JsonSuccessResponse::create(['status' => 'success', 'timestamp' => $task->getLastCompleted()?->getTimestamp()]);
     }
 
-    /**
-     * @Route("/api/task/log/{id}", "task_log", methods={"GET"})
-     */
+    #[Route(path: '/api/task/log/{id}', name: 'task_log', methods: ['GET'])]
     public function fetchTaskLog(
         Household $household,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
-        /**
-         * @var User $user
-         */
-        $user = $this->getUser();
-        if (!$household->getMembers()->contains($user)) {
+        if (!$household->getMembers()->contains($this->getUser())) {
             return JsonErrorResponse::create([
                 'status' => 'error',
                 'reason' => 'You are not a member of this household!'
@@ -121,9 +105,7 @@ class TaskController extends AbstractController
         return JsonSuccessResponse::create(['status' => 'success', 'logs' => $taskLogs]);
     }
 
-    /**
-     * @Route("/api/task/{id}", "task_delete", methods={"DELETE"})
-     */
+    #[Route(path: '/api/task/{id}', name: 'task_delete', methods: ['DELETE'])]
     public function deleteTask(Task $task, TaskRepository $taskRepository, TaskPublisher $taskPublisher): JsonResponse
     {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_TASKS, $task->getHousehold());
