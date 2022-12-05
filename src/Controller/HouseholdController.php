@@ -13,7 +13,6 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Invite\InvitePublisher;
 use App\Push\Pusher;
-use App\Household\HouseholdInviteRepository;
 use App\User\UserRepository;
 use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
@@ -75,11 +74,13 @@ class HouseholdController extends AbstractController
         Pusher $pusher,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
+        /** @var User $user */
+        $user = $this->getUser();
         $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {
             try {
-                $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee);
+                $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee, $user);
             } catch (\Exception $e) {
                 return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -90,7 +91,7 @@ class HouseholdController extends AbstractController
         $pusher->publishInvites(
             $invitees,
             "Einladung in Haushalt",
-            sprintf("Einladung von %s in den Haushalt %s erhalten", $this->getUser()->getName(), $household->getName())
+            sprintf("Einladung von %s in den Haushalt %s erhalten", $user->getName(), $household->getName())
         );
 
         return JsonSuccessResponse::create();
@@ -174,8 +175,14 @@ class HouseholdController extends AbstractController
         if (!$household->getMembers()->contains($user)) {
             return JsonErrorResponse::create(['reason' => 'Cannot leave, you are not a member.',]);
         }
-        if ($this->isGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household)) {
-            return JsonErrorResponse::create(['reason' => 'You cannot leave this household as an admin.',]);
+
+        if ($household->getUserPrivilege($user) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
+            $numberAdmins = $household->getPrivileges()->filter(
+                static fn (HouseholdPrivilege $householdPrivilege) => $householdPrivilege->level === HouseholdPrivilege::PRIVILEGE_ADMIN
+            )->count();
+            if ($numberAdmins === 1) {
+                return JsonErrorResponse::create(['reason' => 'You cannot abandon this household as the last admin.',]);
+            }
         }
         $household->removeMember($user);
         $entityManager->flush();
@@ -189,12 +196,13 @@ class HouseholdController extends AbstractController
         #[MapEntity(expr: "repository.find(user_id)")] User $kicked,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
         if ($user === $kicked) {
             return JsonErrorResponse::create(['reason' => 'You cannot kick yourself.',]);
         }
-        if ($household->getUserPrivilege($user) <= $household->getUserPrivilege($kicked)) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to kick this member.',]);
+        if ($household->getUserPrivilege($kicked) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
+            return JsonErrorResponse::create(['reason' => 'You cannot kick admins.',]);
         }
         $household->removeMember($kicked);
         $entityManager->flush();
@@ -202,41 +210,28 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    #[Route(path: '/api/household/promote/{id}/{user_id}', name: 'household_member_promote', methods: ['POST'])]
-    public function promote(
+    #[Route(path: '/api/household/privilege/{id}/{user_id}/{privilege}', name: 'household_member_privilege', methods: ['POST'])]
+    public function privilege(
         Household $household,
-        #[MapEntity(expr: "repository.find(user_id)")] User $promotedUser,
+        #[MapEntity(expr: "repository.find(user_id)")] User $targetUser,
+        int $privilege,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
-        if ($user === $promotedUser) {
-            return JsonErrorResponse::create(['reason' => 'You cannot promote yourself!',]);
+        if ($user === $targetUser) {
+            return JsonErrorResponse::create(['reason' => 'You cannot change your own privileges!',]);
         }
-        if (!$household->getMembers()->contains($promotedUser)) {
-            return JsonErrorResponse::create(['reason' => 'You cannot promote users that aren\'t members of this household!',]);
+        if (!$household->getMembers()->contains($targetUser)) {
+            return JsonErrorResponse::create(['reason' => 'You cannot change privileges of users that aren\'t members of this household!',]);
         }
-        $household->setUserPrivilege($promotedUser, HouseholdPrivilege::PRIVILEGE_MODERATOR);
-        $entityManager->flush();
-
-        return JsonSuccessResponse::create();
-    }
-
-    #[Route(path: '/api/household/demote/{id}/{user_id}', name: 'household_member_demote', methods: ['POST'])]
-    public function demote(
-        Household $household,
-        #[MapEntity(expr: "repository.find(user_id)")] User $demotedUser,
-        EntityManagerInterface $entityManager,
-    ): JsonResponse {
-        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
-        $user = $this->getUser();
-        if ($user === $demotedUser) {
-            return JsonErrorResponse::create(['reason' => 'You cannot demote yourself!',]);
+        if (!in_array($privilege, HouseholdPrivilege::PRIVILEGES)) {
+            return JsonErrorResponse::create(['reason' => 'Invalid privilege given!']);
         }
-        if (!$household->getMembers()->contains($demotedUser)) {
-            return JsonErrorResponse::create(['reason' => 'You cannot promote users that aren\'t members of this household!',]);
+        if ($household->getUserPrivilege($targetUser) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
+            return JsonErrorResponse::create(['reason' => 'You cannot overthrow another admin!']);
         }
-        $household->setUserPrivilege($demotedUser, HouseholdPrivilege::PRIVILEGE_USER);
+        $household->setUserPrivilege($targetUser, $privilege);
         $entityManager->flush();
 
         return JsonSuccessResponse::create();

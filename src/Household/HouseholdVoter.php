@@ -10,7 +10,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 class HouseholdVoter extends Voter
 {
     public const MANAGE_TASKS = "manage_tasks";
-    public const MANAGE_HOUSEHOLD = "manage_tasks";
+    public const MANAGE_HOUSEHOLD = "manage_household";
 
     protected function supports(string $attribute, $subject): bool
     {

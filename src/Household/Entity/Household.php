@@ -34,7 +34,7 @@ class Household implements \JsonSerializable
     private Collection $members;
 
     /** @var Collection<HouseholdPrivilege> */
-    #[ORM\OneToMany(targetEntity:HouseholdPrivilege::class, mappedBy:"household")]
+    #[ORM\OneToMany(targetEntity:HouseholdPrivilege::class, mappedBy:"household", cascade:["all"], orphanRemoval: true)]
     private Collection $privileges;
 
     /** @var Collection<HouseholdInvite> */
@@ -115,6 +115,12 @@ class Household implements \JsonSerializable
     public function removeMember(User $member): self
     {
         $this->members->removeElement($member);
+        foreach ($this->privileges as $privilege) {
+            if ($privilege->user === $member) {
+                $this->privileges->removeElement($privilege);
+                break;
+            }
+        }
 
         return $this;
     }
@@ -173,11 +179,7 @@ class Household implements \JsonSerializable
 
 	public function setUserPrivilege(User $user, int $level): void
     {
-        if (!in_array($level, [
-                HouseholdPrivilege::PRIVILEGE_USER,
-                HouseholdPrivilege::PRIVILEGE_MODERATOR,
-                HouseholdPrivilege::PRIVILEGE_ADMIN,
-            ])) {
+        if (!in_array($level, HouseholdPrivilege::PRIVILEGES)) {
             throw new \InvalidArgumentException('Invalid household privilege given!');
         }
         foreach ($this->privileges as $privilege) {

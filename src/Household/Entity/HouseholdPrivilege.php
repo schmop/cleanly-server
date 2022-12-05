@@ -16,6 +16,12 @@ class HouseholdPrivilege implements \JsonSerializable
     public const PRIVILEGE_MODERATOR = 1;
     public const PRIVILEGE_ADMIN = 2;
 
+    public const PRIVILEGES = [
+        self::PRIVILEGE_USER,
+        self::PRIVILEGE_MODERATOR,
+        self::PRIVILEGE_ADMIN,
+    ];
+
     public function __construct(
         #[ORM\Id]
         #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"privileges")]
