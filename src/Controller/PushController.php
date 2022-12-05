@@ -16,9 +16,7 @@ use App\Push\Entity\Device;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-/**
- * @Route("/api/push", "push", methods={"POST"})
- */
+#[Route(path: '/api/push', name: 'push', methods: ['POST'])]
 class PushController extends AbstractController
 {
     public function __invoke(Request $request, DeviceRepository $deviceRepository, EntityManagerInterface $entityManager): JsonResponse

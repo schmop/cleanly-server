@@ -15,9 +15,7 @@ use App\Todo\TodoPublisher;
 
 class TodoController extends AbstractController
 {
-    /**
-     * @Route("/api/household/update-checklist/{id}", name="household_update_checklist", methods={"POST"})
-     */
+    #[Route(path: '/api/household/update-checklist/{id}', name: 'household_update_checklist', methods: ['POST'])]
     public function updateChecklist(
         Household $household,
         Request $request,

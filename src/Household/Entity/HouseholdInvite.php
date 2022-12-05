@@ -24,11 +24,16 @@ class HouseholdInvite implements \JsonSerializable
      #[ORM\JoinColumn(name:"invitee_id", referencedColumnName:"id", onDelete:"CASCADE")]
     private ?User $invitee;
 
-    public function __construct(string $token, Household $household, ?User $invitee = null)
+     #[ORM\ManyToOne(targetEntity:User::class)]
+     #[ORM\JoinColumn(name:"inviter_id", referencedColumnName:"id", onDelete:"CASCADE")]
+    private ?User $inviter;
+
+    public function __construct(string $token, Household $household, ?User $invitee = null, ?User $inviter = null)
     {
         $this->household = $household;
         $this->token = $token;
         $this->invitee = $invitee;
+        $this->inviter = $inviter;
         $this->validUntil = (new \DateTimeImmutable())->add(new \DateInterval('PT2H'));
     }
 
@@ -52,12 +57,17 @@ class HouseholdInvite implements \JsonSerializable
         return $this->invitee;
     }
 
+    public function getInviter(): ?User
+    {
+        return $this->inviter;
+    }
+
     public function jsonSerialize(): array
     {
         return [
             'householdId' => $this->household->getId(),
             'householdName' => $this->household->getName(),
-            'inviter' => $this->household->getAdmin()->jsonSerialize(),
+            'inviter' => $this->getInviter()?->jsonSerialize(),
         ];
     }
 }

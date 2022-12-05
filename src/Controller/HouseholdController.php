@@ -6,32 +6,31 @@ namespace App\Controller;
 
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdInvite;
+use App\Household\Entity\HouseholdPrivilege;
+use App\Household\HouseholdVoter;
 use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Invite\InvitePublisher;
 use App\Push\Pusher;
-use App\Household\HouseholdInviteRepository;
 use App\User\UserRepository;
 use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use App\Todo\Entity\Todo;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 class HouseholdController extends AbstractController
 {
     private const HEX_COLOR_FORMAT = '/^#[a-fA-F0-9]{6}$/';
 
-    /**
-     * @Route("/api/household/create", name="create_household", methods={"POST"})
-     */
+    #[Route(path: '/api/household/create', name: 'create_household', methods: ['POST'])]
     public function createHouseHold(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User $user */
@@ -43,23 +42,19 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/{id}/color", name="household_set_color", methods={"POST"})
-     */
+    #[Route(path: '/api/household/{id}/color', name: 'household_set_color', methods: ['POST'])]
     public function changeColor(
         Household $household,
         Request $request,
         EntityManagerInterface $entityManager
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $color = $request->request->get('color');
         if ($color === null) {
             throw new \InvalidArgumentException('"color" must be set!');
         }
         if (!preg_match(self::HEX_COLOR_FORMAT, $color)) {
             throw new \InvalidArgumentException('"color" must be in hex color format. Example: "#ff00ad"');
-        }
-        if ($household->getAdmin() !== $this->getUser()) {
-            throw new \InvalidArgumentException('Insufficient privileges!');
         }
         $household->setColor($color);
         $entityManager->persist($household);
@@ -68,9 +63,7 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/invite/{id}", name="household_invite", methods={"POST"})
-     */
+    #[Route(path: '/api/household/invite/{id}', name: 'household_invite', methods: ['POST'])]
     public function invite(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -80,14 +73,14 @@ class HouseholdController extends AbstractController
         InvitePublisher $invitePublisher,
         Pusher $pusher,
     ): JsonResponse {
-        if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create(['reason' => 'Insufficient privileges!'], Response::HTTP_FORBIDDEN);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
+        /** @var User $user */
+        $user = $this->getUser();
         $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {
             try {
-                $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee);
+                $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee, $user);
             } catch (\Exception $e) {
                 return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -98,15 +91,13 @@ class HouseholdController extends AbstractController
         $pusher->publishInvites(
             $invitees,
             "Einladung in Haushalt",
-            sprintf("Einladung von %s in den Haushalt %s erhalten", $this->getUser()->getName(), $household->getName())
+            sprintf("Einladung von %s in den Haushalt %s erhalten", $user->getName(), $household->getName())
         );
 
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/join-by-token/{token}", name="household_join")
-     */
+    #[Route(path: '/api/household/join-by-token/{token}', name: 'household_join')]
     public function join(
         HouseholdInvite $invite,
         EntityManagerInterface $entityManager
@@ -130,9 +121,7 @@ class HouseholdController extends AbstractController
     }
 
 
-    /**
-     * @Route("/api/household/accept-invite/{id}", name="household_accept_invite")
-     */
+    #[Route(path: '/api/household/accept-invite/{id}', name: 'household_accept_invite')]
     public function acceptInvite(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -158,9 +147,7 @@ class HouseholdController extends AbstractController
         return JsonErrorResponse::create(['reason' => 'You did not receive an invite to this household!']);
     }
 
-    /**
-     * @Route("/api/household/decline-invite/{id}", name="household_decline_invite")
-     */
+    #[Route(path: '/api/household/decline-invite/{id}', name: 'household_decline_invite')]
     public function declineInvite(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -179,9 +166,7 @@ class HouseholdController extends AbstractController
         return JsonErrorResponse::create(['reason' => 'You did not receive an invite to this household!']);
     }
 
-    /**
-     * @Route("/api/household/leave/{id}", name="household_leave", methods={"POST"})
-     */
+    #[Route(path: '/api/household/leave/{id}', name: 'household_leave', methods: ['POST'])]
     public function leaveHousehold(
         Household $household,
         EntityManagerInterface $entityManager,
@@ -190,8 +175,14 @@ class HouseholdController extends AbstractController
         if (!$household->getMembers()->contains($user)) {
             return JsonErrorResponse::create(['reason' => 'Cannot leave, you are not a member.',]);
         }
-        if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create(['reason' => 'You cannot leave this household as an admin.',]);
+
+        if ($household->getUserPrivilege($user) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
+            $numberAdmins = $household->getPrivileges()->filter(
+                static fn (HouseholdPrivilege $householdPrivilege) => $householdPrivilege->level === HouseholdPrivilege::PRIVILEGE_ADMIN
+            )->count();
+            if ($numberAdmins === 1) {
+                return JsonErrorResponse::create(['reason' => 'You cannot abandon this household as the last admin.',]);
+            }
         }
         $household->removeMember($user);
         $entityManager->flush();
@@ -199,21 +190,19 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/kick/{id}/{user_id}", name="household_kick", methods={"POST"})
-     * @Entity("kicked", expr="repository.find(user_id)")
-     */
+    #[Route(path: '/api/household/kick/{id}/{user_id}', name: 'household_kick', methods: ['POST'])]
     public function kickMember(
         Household $household,
-        User $kicked,
+        #[MapEntity(expr: "repository.find(user_id)")] User $kicked,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
-        if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to kick members.',]);
-        }
         if ($user === $kicked) {
             return JsonErrorResponse::create(['reason' => 'You cannot kick yourself.',]);
+        }
+        if ($household->getUserPrivilege($kicked) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
+            return JsonErrorResponse::create(['reason' => 'You cannot kick admins.',]);
         }
         $household->removeMember($kicked);
         $entityManager->flush();
@@ -221,41 +210,39 @@ class HouseholdController extends AbstractController
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/transfer-ownership/{id}/{user_id}", name="household_transfer_ownership", methods={"POST"})
-     * @Entity("newOwner", expr="repository.find(user_id)")
-     */
-    public function transferOwnership(
+    #[Route(path: '/api/household/privilege/{id}/{user_id}/{privilege}', name: 'household_member_privilege', methods: ['POST'])]
+    public function privilege(
         Household $household,
-        User $newOwner,
+        #[MapEntity(expr: "repository.find(user_id)")] User $targetUser,
+        int $privilege,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
-        if (!$household->getAdmin() === $user) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to transfer ownership.',]);
+        if ($user === $targetUser) {
+            return JsonErrorResponse::create(['reason' => 'You cannot change your own privileges!',]);
         }
-        if ($user === $newOwner) {
-            return JsonErrorResponse::create(['reason' => 'You are already the owner.',]);
+        if (!$household->getMembers()->contains($targetUser)) {
+            return JsonErrorResponse::create(['reason' => 'You cannot change privileges of users that aren\'t members of this household!',]);
         }
-        if (!$household->getMembers()->contains($newOwner)) {
-            return JsonErrorResponse::create(['reason' => 'The new owner must be a member of the household.',]);
+        if (!in_array($privilege, HouseholdPrivilege::PRIVILEGES)) {
+            return JsonErrorResponse::create(['reason' => 'Invalid privilege given!']);
         }
-        $household->setAdmin($newOwner);
+        if ($household->getUserPrivilege($targetUser) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
+            return JsonErrorResponse::create(['reason' => 'You cannot overthrow another admin!']);
+        }
+        $household->setUserPrivilege($targetUser, $privilege);
         $entityManager->flush();
 
         return JsonSuccessResponse::create();
     }
 
-    /**
-     * @Route("/api/household/{id}", name="delete_household", methods={"DELETE"})
-     */
+    #[Route(path: '/api/household/{id}', name: 'delete_household', methods: ['DELETE'])]
     public function deleteHousehold(
         Household $household,
         EntityManagerInterface $entityManager
     ): JsonResponse {
-        if ($household->getAdmin() !== $this->getUser()) {
-            return JsonErrorResponse::create(['reason' => 'You do not have sufficient privileges to remove this task!']);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $entityManager->remove($household);
         $entityManager->flush();
 

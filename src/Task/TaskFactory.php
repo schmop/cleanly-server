@@ -2,16 +2,20 @@
 
 namespace App\Task;
 
+use App\Household\Entity\HouseholdPrivilege;
 use App\Task\Entity\Task;
 use App\User\Entity\User;
 use App\Household\HouseholdRepository;
+use App\Household\HouseholdVoter;
 use App\Utils\Clock;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 final class TaskFactory
 {
     public function __construct(
         private HouseholdRepository $householdRepository,
+        private AuthorizationCheckerInterface $authorizationChecker,
         private Clock $clock,
     ) {
     }
@@ -34,8 +38,8 @@ final class TaskFactory
         if (null == ($household = $this->householdRepository->find($request->request->get('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');
         }
-        if ($household->getAdmin() !== $user) {
-            throw new \InvalidArgumentException('You are not the admin of the household');
+        if (!$this->authorizationChecker->isGranted(HouseholdVoter::MANAGE_TASKS, $household)) {
+            throw new \InvalidArgumentException('Not enough privileges to create task in this household!');
         }
         $task->setHousehold($household);
 

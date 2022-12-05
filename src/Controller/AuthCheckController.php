@@ -8,9 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-/**
- * @Route("/api/auth_check", "auth_check")
- */
+#[Route(path: '/api/auth_check')]
 class AuthCheckController extends AbstractController
 {
     public function __invoke(): Response
