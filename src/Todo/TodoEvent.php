@@ -2,6 +2,8 @@
 
 namespace App\Todo;
 
+use App\Json\Json;
+
 class TodoEvent
 {
     public const TYPE_CREATE = 'create';
@@ -16,29 +18,24 @@ class TodoEvent
     ];
 
     public function __construct(
-        public string $type, 
-        public string $uuid, 
+        public string $type,
+        public string $uuid,
         public null|string $data
     ) {
     }
 
-    /**
-     * @param array<mixed> $data
-     */
-    public static function createFromData(array $data): self
+    public static function createFromJson(Json $json): self
     {
-        if (!in_array($data['type'], self::ALL_TYPES)) {
+        if (!in_array($json->string('type'), self::ALL_TYPES)) {
             throw new InconsistentChecklistEventException(
-                sprintf('Checklist event has an unknown type "%s"!', $data['type']),
+                sprintf('Checklist event has an unknown type "%s"!', $json->string('type')),
             );
         }
-        if (!is_string($data['uuid'])) {
-            throw new InconsistentChecklistEventException('Checklist event needs a uuid!');
-        }
-        if (in_array($data['type'], [self::TYPE_UPDATE]) && !is_string($data['data'])) {
-            throw new InconsistentChecklistEventException('Checklist event is missing additional information!');
-        }
 
-        return new self($data['type'], $data['uuid'], $data['data'] ?? null);
+        return new self(
+            $json->string('type'),
+            $json->string('uuid'),
+            $json->tryString('data'),
+        );
     }
 }

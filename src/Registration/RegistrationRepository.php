@@ -11,6 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Registration|null findOneBy(array $criteria, array $orderBy = null)
  * @method Registration[]    findAll()
  * @method Registration[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<Registration>
  */
 class RegistrationRepository extends ServiceEntityRepository
 {

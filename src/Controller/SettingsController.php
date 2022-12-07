@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Json\Json;
 use App\User\Entity\UserSettings;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -22,11 +23,11 @@ class SettingsController
         $user = $userFetcher->getUser();
         $settings = $user->getUserSettings();
         try {
-            $settingsData = UserSettingsData::createFromArray(json_decode($request->request->get('settings', '{}'), true, flags: JSON_THROW_ON_ERROR));
+            $settingsData = UserSettingsData::createFromJson(Json::fromRequest($request)->json('settings'));
             $settingsData->applyTo($settings);
             $userSettingsRepository->save($settings);
         } catch (\Exception $e) {
-            return JsonErrorResponse::create(['reason' => 'Invalid settings given!']);
+            return JsonErrorResponse::create(['reason' => $e->getMessage()]);
         }
 
         return JsonSuccessResponse::create([]);

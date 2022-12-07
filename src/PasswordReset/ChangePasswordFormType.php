@@ -9,12 +9,13 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 class ChangePasswordFormType extends AbstractType
 {
-    
-    
+
+
     /**
      * {@inheritdoc}
+     * @param array<string, string> $options
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('plainPassword', RepeatedType::class, [

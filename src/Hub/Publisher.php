@@ -15,7 +15,7 @@ class Publisher
     }
 
     /**
-     * @var User[] $targets
+     * @param User[] $targets
      */
     public function publish(array $targets, string $type, mixed $payload): void
     {

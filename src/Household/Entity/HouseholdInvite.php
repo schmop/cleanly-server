@@ -17,7 +17,7 @@ class HouseholdInvite implements \JsonSerializable
     private \DateTimeImmutable $validUntil;
 
      #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"invites")]
-     #[ORM\JoinColumn(name:"household_id", referencedColumnName:"id", onDelete:"CASCADE")]
+     #[ORM\JoinColumn(name:"household_id", referencedColumnName:"id", nullable: false, onDelete:"CASCADE")]
     private Household $household;
 
      #[ORM\ManyToOne(targetEntity:User::class, inversedBy:"invites")]
@@ -62,6 +62,13 @@ class HouseholdInvite implements \JsonSerializable
         return $this->inviter;
     }
 
+    /**
+     * @return array{
+     *      householdId: int|null,
+     *      householdName: string|null,
+     *      inviter: array<string, mixed>|null
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [

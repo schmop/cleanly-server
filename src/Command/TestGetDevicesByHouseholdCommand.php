@@ -31,11 +31,13 @@ class TestGetDevicesByHouseholdCommand extends Command
             $output->writeln('No householdId given!');
             return Command::FAILURE;
         }
-        dump(
-            $this->deviceRepository->findByHousehold(
-                $this->householdRepository->findOneBy(['id' => $householdId])
-            )
-        );
+        $household = $this->householdRepository->findOneBy(['id' => $householdId]);
+        if (null !== $household) {
+            dump(
+                $this->deviceRepository->findByHousehold($household)
+            );
+        }
+
         return Command::SUCCESS;
     }
 }

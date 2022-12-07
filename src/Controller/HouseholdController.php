@@ -12,51 +12,24 @@ use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Invite\InvitePublisher;
+use App\Json\Json;
 use App\Push\Pusher;
 use App\User\UserRepository;
-use App\User\UserFetcher;
 use App\Utils\Base64UrlInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use App\Todo\Entity\Todo;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
-class HouseholdController extends AbstractController
+class HouseholdController extends UserAwareController
 {
-    private const HEX_COLOR_FORMAT = '/^#[a-fA-F0-9]{6}$/';
-
     #[Route(path: '/api/household/create', name: 'create_household', methods: ['POST'])]
     public function createHouseHold(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
         $household = Household::createFromRequest($request, $user);
-        $entityManager->persist($household);
-        $entityManager->flush();
-
-        return JsonSuccessResponse::create();
-    }
-
-    #[Route(path: '/api/household/{id}/color', name: 'household_set_color', methods: ['POST'])]
-    public function changeColor(
-        Household $household,
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): JsonResponse {
-        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
-        $color = $request->request->get('color');
-        if ($color === null) {
-            throw new \InvalidArgumentException('"color" must be set!');
-        }
-        if (!preg_match(self::HEX_COLOR_FORMAT, $color)) {
-            throw new \InvalidArgumentException('"color" must be in hex color format. Example: "#ff00ad"');
-        }
-        $household->setColor($color);
         $entityManager->persist($household);
         $entityManager->flush();
 
@@ -74,9 +47,9 @@ class HouseholdController extends AbstractController
         Pusher $pusher,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
-        /** @var User $user */
         $user = $this->getUser();
-        $ids = json_decode($request->request->get('ids'), true, flags: JSON_THROW_ON_ERROR);
+        $data = Json::fromRequest($request);
+        $ids = $data->intArray('ids');
         $invitees = $userRepository->findBy(['id' => $ids]);
         foreach ($invitees as $invitee) {
             try {

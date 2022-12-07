@@ -11,6 +11,7 @@ use App\User\Entity\UserSettings;
  * @method UserSettings|null findOneBy(array $criteria, array $orderBy = null)
  * @method UserSettings[]    findAll()
  * @method UserSettings[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<UserSettings>
  */
 class UserSettingsRepository extends ServiceEntityRepository
 {

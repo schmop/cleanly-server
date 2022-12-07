@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use App\User\Entity\UserSettings;
 use App\Household\Entity\HouseholdInvite;
 use App\Household\Entity\Household;
+use Doctrine\Common\Collections\ArrayCollection;
 
  #[ORM\Entity(repositoryClass: UserRepository::class)]
  #[ORM\Table(name: "`user`")]
@@ -18,36 +19,41 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
      #[ORM\Id]
      #[ORM\GeneratedValue]
      #[ORM\Column(type: "integer")]
-    private $id;
+    private int|null $id;
 
-     #[ORM\Column(name: "email", type: "string", length: 180, unique: true)]
+     #[ORM\Column(name: "email", type: "string", length: 180, unique: true, nullable: false)]
     private string $mail;
 
-     #[ORM\Column(type: "string")]
+     #[ORM\Column(type: "string", nullable: false)]
     private string $name;
 
-     #[ORM\Column(type: "json")]
+    /**
+     * @var string[]
+     */
+     #[ORM\Column(type: "json", nullable: false)]
     private array $roles = [];
 
-     #[ORM\Column(type: "string")]
+     #[ORM\Column(type: "string", nullable: false)]
     private string $password;
 
-    /** @var Collection<Household> */
+    /** @var Collection<int, Household> */
      #[ORM\ManyToMany(targetEntity: Household::class, mappedBy: "members")]
     private Collection $households;
 
 
-    /** @var Collection<HouseholdInvite> */
+    /** @var Collection<int, HouseholdInvite> */
     #[ORM\OneToMany(targetEntity: HouseholdInvite::class, mappedBy: "invitee")]
     private Collection $invites;
 
     #[ORM\OneToOne(targetEntity: UserSettings::class, mappedBy: "user")]
-    private null|UserSettings $userSettings;
+    private null|UserSettings $userSettings = null;
 
     public function __construct(string $mail, string $name)
     {
         $this->mail = $mail;
         $this->name = $name;
+        $this->households = new ArrayCollection();
+        $this->invites = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -102,6 +108,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
         return array_unique($roles);
     }
 
+    /**
+     * @param string[] $roles
+     * @return $this
+     */
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
@@ -138,7 +148,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
     /**
      * @see UserInterface
      */
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
@@ -160,6 +170,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
         return $this->invites->getValues();
     }
 
+    /**
+     * @return array{
+     *      id: int|null,
+     *      name: string|null,
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [

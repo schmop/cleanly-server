@@ -2,6 +2,7 @@
 
 namespace App\Household\Entity;
 
+use App\Household\HouseholdInviteRepository;
 use App\User\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -38,6 +39,13 @@ class HouseholdPrivilege implements \JsonSerializable
     ) {
     }
 
+    /**
+     * @return array{
+     *      household: int|null,
+     *      user: int|null,
+     *      privilege: int,
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [

@@ -8,12 +8,13 @@ use Symfony\Component\HttpFoundation\Request;
 use App\HttpFoundation\JsonErrorResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Json\Json;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
 use App\Todo\TodoPublisher;
 
-class TodoController extends AbstractController
+class TodoController extends UserAwareController
 {
     #[Route(path: '/api/household/update-checklist/{id}', name: 'household_update_checklist', methods: ['POST'])]
     public function updateChecklist(
@@ -27,10 +28,10 @@ class TodoController extends AbstractController
             return JsonErrorResponse::create(['reason' => 'You cannot edit this checklist, you are not a member of this household!',]);
         }
         try {
-            $rawEvents = json_decode($request->request->get('events', '[]'), true, flags: JSON_THROW_ON_ERROR);
+            $rawEvents = Json::fromRequest($request)->jsonArray('events');
             $events = [];
             foreach ($rawEvents as $rawEvent) {
-                $events[] = TodoEvent::createFromData($rawEvent);
+                $events[] = TodoEvent::createFromJson($rawEvent);
             }
             $todoEventProcessor->process($events, $household);
             $todoPublisher->publish($user, $events, $household);

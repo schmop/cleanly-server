@@ -11,6 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method HouseholdInvite|null findOneBy(array $criteria, array $orderBy = null)
  * @method HouseholdInvite[]    findAll()
  * @method HouseholdInvite[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<HouseholdInvite>
  */
 class HouseholdInviteRepository extends ServiceEntityRepository
 {

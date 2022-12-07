@@ -4,14 +4,15 @@ namespace App\Todo;
 
 use App\Todo\Entity\Todo;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
-use App\Household\Entity\Household;
 
 /**
  * @method Todo|null find($id, $lockMode = null, $lockVersion = null)
  * @method Todo|null findOneBy(array $criteria, array $orderBy = null)
  * @method Todo[]    findAll()
  * @method Todo[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<Todo>
  */
 class TodoRepository extends ServiceEntityRepository
 {
@@ -48,7 +49,12 @@ class TodoRepository extends ServiceEntityRepository
             ->setMaxResults(1)
         ;
 
-        return $qb->getQuery()->getOneOrNullResult();
+        /**
+         * In order for phpstan to infer the correct return type of getOneOrNullResult
+         * it needs to explicitely have HYDRATE_OBJECT set
+         * @link https://github.com/phpstan/phpstan-doctrine/issues/271
+         * */
+        return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
     public function addToEndOfList(Todo $todo): void

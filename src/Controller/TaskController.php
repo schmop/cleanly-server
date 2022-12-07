@@ -11,18 +11,17 @@ use App\HttpFoundation\JsonSuccessResponse;
 use App\Task\TaskRepository;
 use App\Task\TaskFactory;
 use App\Task\TaskPublisher;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Household\Entity\Household;
-use App\Household\HouseholdRepository;
+use App\Json\Json;
 use App\Push\Pusher;
 use App\Task\TaskCompleter;
 use App\Task\TaskLogRepository;
 use Symfony\Component\HttpFoundation\Response;
 
-class TaskController extends AbstractController
+class TaskController extends UserAwareController
 {
     #[Route(path: '/api/task/create', name: 'task_create', methods: ['POST'])]
     public function createTask(
@@ -31,7 +30,7 @@ class TaskController extends AbstractController
         TaskRepository $taskRepository,
         TaskPublisher $taskPublisher,
     ): JsonResponse {
-        $task = $taskFactory->createTaskFromRequest($request, $this->getUser());
+        $task = $taskFactory->createTaskFromRequest($request);
 
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
@@ -44,10 +43,11 @@ class TaskController extends AbstractController
     {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_TASKS, $task->getHousehold());
 
-        $task->setName($request->request->get('name'));
-        $task->setDuration((int) $request->request->get('duration'));
-        $task->setIcon($request->request->get('icon'));
-        $task->setStars((int)$request->request->get('stars'));
+        $data = Json::fromRequest($request);
+        $task->setName($data->string('name'));
+        $task->setIcon($data->string('icon'));
+        $task->setDuration($data->int('duration'));
+        $task->setStars($data->int('stars'));
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 

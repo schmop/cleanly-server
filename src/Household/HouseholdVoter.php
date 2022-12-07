@@ -12,7 +12,7 @@ class HouseholdVoter extends Voter
     public const MANAGE_TASKS = "manage_tasks";
     public const MANAGE_HOUSEHOLD = "manage_household";
 
-    protected function supports(string $attribute, $subject): bool
+    protected function supports(string $attribute, mixed $subject): bool
     {
         return $subject instanceof Household && in_array($attribute, [self::MANAGE_HOUSEHOLD, self::MANAGE_TASKS]);
     }

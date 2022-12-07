@@ -2,6 +2,7 @@
 
 namespace App\User;
 
+use App\Json\Json;
 use App\User\Entity\UserSettings;
 
 class UserSettingsData
@@ -14,13 +15,14 @@ class UserSettingsData
     ) {
     }
 
-    public static function createFromArray(array $data): self
+    public static function createFromJson(Json $json): self
     {
-        if (!isset($data['notifyTaskDone'], $data['notifyTaskDue'], $data['notifyInvites'])) {
-            throw new \InvalidArgumentException('Data not complete to describe user settings!');
-        }
-
-        return new self($data['notifyTaskDone'], $data['notifyTaskDue'], $data['notifyInvites'], $data['language']);
+        return new self(
+            $json->bool('notifyTaskDone'),
+            $json->bool('notifyTaskDue'),
+            $json->bool('notifyInvites'),
+            $json->string('language'),
+        );
     }
 
     public function applyTo(UserSettings $userSettings): void

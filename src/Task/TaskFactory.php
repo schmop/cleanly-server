@@ -2,11 +2,10 @@
 
 namespace App\Task;
 
-use App\Household\Entity\HouseholdPrivilege;
 use App\Task\Entity\Task;
-use App\User\Entity\User;
 use App\Household\HouseholdRepository;
 use App\Household\HouseholdVoter;
+use App\Json\Json;
 use App\Utils\Clock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -20,22 +19,23 @@ final class TaskFactory
     ) {
     }
 
-    public function createTaskFromRequest(Request $request, User $user): Task
+    public function createTaskFromRequest(Request $request): Task
     {
+        $json = Json::fromRequest($request);
         $task = new Task();
-        $task->setName($request->request->get('name'));
-        $task->setDuration((int) $request->request->get('duration'));
+        $task->setName($json->string('name'));
+        $task->setDuration($json->int('duration'));
         $task->setLastNotifiedAt($this->clock->now());
-        if (null !== $description = $request->request->get('description')) {
+        if (null !== $description = $json->tryString('description')) {
             $task->setDescription($description);
         }
-        if (null !== $icon = $request->request->get('icon')) {
+        if (null !== $icon = $json->tryString('icon')) {
             $task->setIcon($icon);
         }
-        if (null !== $stars = $request->request->get('stars')) {
+        if (null !== $stars = $json->tryInt('stars')) {
             $task->setStars((int)$stars);
         }
-        if (null == ($household = $this->householdRepository->find($request->request->get('household_id')))) {
+        if (null == ($household = $this->householdRepository->find($json->int('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');
         }
         if (!$this->authorizationChecker->isGranted(HouseholdVoter::MANAGE_TASKS, $household)) {

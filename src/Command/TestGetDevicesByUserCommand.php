@@ -6,7 +6,6 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Household\HouseholdRepository;
 use App\Push\DeviceRepository;
 use Symfony\Component\Console\Input\InputArgument;
 
@@ -15,7 +14,6 @@ class TestGetDevicesByUserCommand extends Command
 {
     public function __construct(
         private readonly DeviceRepository $deviceRepository,
-        private readonly HouseholdRepository $householdRepository,
     ) {
         parent::__construct();
     }

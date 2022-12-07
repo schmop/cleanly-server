@@ -9,22 +9,18 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: DeviceRepository::class)]
 class Device
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string')]
-    private $id;
+    public function __construct(
+        #[ORM\Id]
+        #[ORM\Column(type: 'string')]
+        private readonly string $id,
 
-    #[ORM\Column(type: 'string')]
-    private $pushId;
+        #[ORM\Column(type: 'string')]
+        private string $pushId,
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private $user;
-
-    public function __construct(string $id, string $pushId, User $user)
-    {
-        $this->user = $user;
-        $this->id = $id;
-        $this->pushId = $pushId;
+        #[ORM\ManyToOne(targetEntity: User::class)]
+        #[ORM\JoinColumn(nullable: false)]
+        private readonly User $user,
+    ) {
     }
 
 	public function getId(): string

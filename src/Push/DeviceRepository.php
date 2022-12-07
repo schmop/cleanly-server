@@ -13,6 +13,7 @@ use App\Household\Entity\Household;
  * @method Device|null findOneBy(array $criteria, array $orderBy = null)
  * @method Device[]    findAll()
  * @method Device[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<Device>
  */
 class DeviceRepository extends ServiceEntityRepository
 {
@@ -35,7 +36,7 @@ class DeviceRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return string[] All the pushIds to directly publish
+     * @return Device[] All the pushIds to directly publish
      */
     public function findByHousehold(Household $household): array
     {
@@ -52,7 +53,7 @@ class DeviceRepository extends ServiceEntityRepository
 
     /**
      * @param User[] $users
-     * @return string[] All the pushIds to directly publish
+     * @return Device[] All the pushIds to directly publish
      */
     public function findByUsers(array $users): array
     {

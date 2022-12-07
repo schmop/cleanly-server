@@ -2,6 +2,7 @@
 
 namespace App\Task\Entity;
 
+use App\Task\TaskLogRepository;
 use Doctrine\ORM\Mapping as ORM;
 use App\User\Entity\User;
 
@@ -12,18 +13,18 @@ class TaskLog implements \JsonSerializable
 {
 
     #[ORM\Id]
-    #[ORM\Column(type:"string")]
+    #[ORM\Column(type: "string")]
     private string $uuid;
 
-    #[ORM\Column(type:"datetime_immutable", nullable:true)]
+    #[ORM\Column(type: "datetime_immutable", nullable: false)]
     private \DateTimeImmutable $timestamp;
 
-    #[ORM\ManyToOne(targetEntity:Task::class, inversedBy:"logs")]
-    #[ORM\JoinColumn(name:"task_id", referencedColumnName:"id", onDelete:"CASCADE")]
+    #[ORM\ManyToOne(targetEntity: Task::class, inversedBy: "logs")]
+    #[ORM\JoinColumn(name: "task_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private Task $task;
 
-    #[ORM\ManyToOne(targetEntity:User::class)]
-    #[ORM\JoinColumn(name:"user_id", referencedColumnName:"id", onDelete:"CASCADE")]
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private User $user;
 
     public function __construct(string $uuid, \DateTimeImmutable $timestamp, User $user, Task $task)
@@ -34,6 +35,14 @@ class TaskLog implements \JsonSerializable
         $this->task = $task;
     }
 
+    /**
+     * @return array{
+     *      uuid: string,
+     *      timestamp: int,
+     *      user: int|null,
+     *      task: int|null,
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [
@@ -49,15 +58,18 @@ class TaskLog implements \JsonSerializable
         return $this->uuid;
     }
 
-	public function getTimestamp(): \DateTimeImmutable {
-		return $this->timestamp;
-	}
+    public function getTimestamp(): \DateTimeImmutable
+    {
+        return $this->timestamp;
+    }
 
-	public function getTask(): Task {
-		return $this->task;
-	}
+    public function getTask(): Task
+    {
+        return $this->task;
+    }
 
-	public function getUser(): User {
-		return $this->user;
-	}
+    public function getUser(): User
+    {
+        return $this->user;
+    }
 }

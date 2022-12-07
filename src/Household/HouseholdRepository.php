@@ -11,6 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Household|null findOneBy(array $criteria, array $orderBy = null)
  * @method Household[]    findAll()
  * @method Household[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<Household>
  */
 class HouseholdRepository extends ServiceEntityRepository
 {
@@ -20,7 +21,10 @@ class HouseholdRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return array<string, int>
+     * @return array<int, array{
+     *      user: int,
+     *      stars: int|numeric-string|null,
+     * }>
      */
     public function retrieveStars(Household $household): array
     {

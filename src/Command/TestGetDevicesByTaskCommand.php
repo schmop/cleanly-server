@@ -31,11 +31,10 @@ class TestGetDevicesByTaskCommand extends Command
             $output->writeln('No taskId given!');
             return Command::FAILURE;
         }
-        dump(
-            $this->deviceRepository->findByHousehold(
-                $this->taskRepository->findOneBy(['id' => $task])?->getHousehold()
-            )
-        );
+        $household = $this->taskRepository->findOneBy(['id' => $task])?->getHousehold();
+        if (null !== $household) {
+            dump($this->deviceRepository->findByHousehold($household));
+        }
         return Command::SUCCESS;
     }
 }

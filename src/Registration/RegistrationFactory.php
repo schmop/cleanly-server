@@ -2,6 +2,7 @@
 
 namespace App\Registration;
 
+use App\Json\Json;
 use App\Registration\Entity\Registration;
 use App\Utils\Clock;
 use App\Utils\UuidGenerator;
@@ -38,9 +39,10 @@ class RegistrationFactory
 
     public function createRegistrationFromRequest(Request $request): Registration
     {
-        $name = $request->request->get('_name');
-        $mail = $request->request->get('_mail');
-        $password = $request->request->get('_password');
+        $json = Json::fromRequest($request);
+        $name = $json->string('name');
+        $mail = $json->string('mail');
+        $password = $json->string('password');
         // generated possible errors
         $errors = array_map(fn(ConstraintViolationInterface $violation) => $violation->getMessage(), [
             ...$this->validator->validate($password, new NotCompromisedPassword()),
@@ -48,7 +50,10 @@ class RegistrationFactory
             ...$this->validator->validate($mail, new Email()),
         ]);
         if (!$this->emailValidator->isValid($mail, new RFCValidation())) {
-            $errors[] = $this->emailValidator->getError();
+            $error = $this->emailValidator->getError()?->reason()?->description();
+            if (is_string($error)) {
+                $errors[] = $error;
+            }
         }
         if (null !== $this->userRepository->findByMail($mail) || null !== $this->registrationRepository->findByMail($mail)) {
             $errors[] = 'Mail already taken!';

@@ -44,23 +44,26 @@ class TodoEventProcessor
         $this->entityManager->commit();
     }
 
-    private function create(TodoEvent $event, Household $household) {
+    private function create(TodoEvent $event, Household $household): void
+    {
         $todo = new Todo($event->uuid, $event->data ?? '', $household);
         $this->todoRepository->addToEndOfList($todo);
         $household->getChecklist()->add($todo);
         $this->entityManager->flush();
     }
 
-    private function update(TodoEvent $event) {
+    private function update(TodoEvent $event): void
+    {
         $todo = $this->todoRepository->findByUuid($event->uuid);
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot update checklist entries that don't exist!");
         }
-        $todo->setContent($event->data);
+        $todo->setContent($event->data ?? '');
         $this->entityManager->flush();
     }
 
-    private function sort(TodoEvent $event, Household $household) {
+    private function sort(TodoEvent $event, Household $household): void
+    {
         $todo = $this->todoRepository->findByUuid($event->uuid);
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot sort checklist entries that don't exist!");
@@ -68,7 +71,8 @@ class TodoEventProcessor
         $this->todoRepository->moveBefore($todo, $event?->data ?? null);
     }
 
-    private function delete(TodoEvent $event, Household $household) {
+    private function delete(TodoEvent $event, Household $household): void
+    {
         $todo = $this->todoRepository->findByUuid($event->uuid);
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot delete checklist entries that don't exist!");

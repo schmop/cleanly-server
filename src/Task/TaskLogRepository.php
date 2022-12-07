@@ -15,6 +15,7 @@ use App\Household\Entity\Household;
  * @method TaskLog|null findOneBy(array $criteria, array $orderBy = null)
  * @method TaskLog[]    findAll()
  * @method TaskLog[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends ServiceEntityRepository<TaskLog>
  */
 class TaskLogRepository extends ServiceEntityRepository
 {

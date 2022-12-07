@@ -27,17 +27,23 @@ class LoginRefreshController extends AbstractController
         JWTTokenManagerInterface $jWTTokenManager,
     ): Response {
         $token = $request->request->get('refresh_token');
+        if (!is_string($token)) {
+            return JsonErrorResponse::create(
+                ['error' => 'No refresh token given!'],
+                Response::HTTP_BAD_REQUEST,
+            );
+        }
         $refreshToken = $refreshTokenRepository->findByToken($token);
         if (null === $refreshToken) {
             return JsonErrorResponse::create(
-                ['error' => 'Invalid refresh token!'], 
-                Response::HTTP_BAD_REQUEST
+                ['error' => 'Invalid refresh token!'],
+                Response::HTTP_BAD_REQUEST,
             );
         }
         if ($refreshToken->isOutdated($clock)) {
             return JsonErrorResponse::create(
-                ['error' => 'You got logged out due to inactivity. Please login again!'], 
-                Response::HTTP_FORBIDDEN
+                ['error' => 'You got logged out due to inactivity. Please login again!'],
+                Response::HTTP_FORBIDDEN,
             );
         }
         $refreshTokenRefresher->refresh($refreshToken);

@@ -29,6 +29,14 @@ class UserSettings
     ) {
     }
 
+    /**
+     * @return array{
+     *      notifyTaskDone: bool,
+     *      notifyTaskDue: bool,
+     *      notifyInvites: bool,
+     *      language: string,
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [

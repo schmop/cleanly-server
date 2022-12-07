@@ -15,7 +15,7 @@ class UserFetcher {
 
     public function getUser(): User
     {
-        $user = $this->tokenStorage->getToken()->getUser();
+        $user = $this->tokenStorage->getToken()?->getUser();
         if (null === $user) {
             throw new \RuntimeException('Could not load user');
         }

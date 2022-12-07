@@ -15,7 +15,7 @@ class RefreshToken
         #[ORM\Id]
         private string $token,
         #[ORM\ManyToOne(targetEntity: User::class)]
-        #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", onDelete: 'cascade')]
+        #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", nullable: false, onDelete: 'cascade')]
         private User $user,
         #[ORM\Column(type: "datetime_immutable", nullable: true)]
         private ?\DateTimeImmutable $validUntil = null,

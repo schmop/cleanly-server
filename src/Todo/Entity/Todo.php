@@ -13,14 +13,14 @@ class Todo implements \JsonSerializable
      #[ORM\Column(type: "string")]
     private string $uuid;
 
-    #[ORM\Column(type: "string")]
+    #[ORM\Column(type: "string", nullable: false)]
     private string $content;
 
     #[ORM\Column(type: "string", nullable: true, unique: true)]
     private ?string $nextUuid = null;
 
      #[ORM\ManyToOne(targetEntity: Household::class, inversedBy: "checklist")]
-     #[ORM\JoinColumn(name: "household_id", referencedColumnName: "id", onDelete: "CASCADE")]
+     #[ORM\JoinColumn(name: "household_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private Household $household;
 
     public function __construct(string $uuid, string $content, Household $household)
@@ -60,6 +60,12 @@ class Todo implements \JsonSerializable
         return $this->household;
     }
 
+    /**
+     * @return array{
+     *      uuid: string,
+     *      content: string,
+     * }
+     */
     public function jsonSerialize(): array
     {
         return [

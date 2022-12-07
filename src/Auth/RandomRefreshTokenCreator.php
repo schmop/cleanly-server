@@ -5,15 +5,12 @@ use App\Auth\RefreshTokenCreator;
 use App\Auth\Entity\RefreshToken;
 use App\User\Entity\User;
 use App\Utils\Random;
-use App\Utils\Clock;
 
 class RandomRefreshTokenCreator implements RefreshTokenCreator
 {
     function __construct(
-        private RefreshTokenTtlProvider $ttlProvider,
         private RefreshTokenRefresher $tokenRefresher,
         private Random $random,
-        private Clock $clock,
         private RefreshTokenRepository $refreshTokenRepository
     ) {
     }
