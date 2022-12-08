@@ -53,7 +53,7 @@ class SignUpController
         );
     }
 
-    #[Route("/verify/{uuid}/{token}", "verify", methods: ["GET"])]
+    #[Route("/verify/{uuid}/{token}", name: "signup_verify", methods: ["GET"])]
     public function verify(
         string $uuid,
         string $token,

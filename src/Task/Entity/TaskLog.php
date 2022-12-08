@@ -27,12 +27,16 @@ class TaskLog implements \JsonSerializable
     #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private User $user;
 
+    #[ORM\Column(type: "integer", nullable: false)]
+    private int $stars;
+
     public function __construct(string $uuid, \DateTimeImmutable $timestamp, User $user, Task $task)
     {
         $this->uuid = $uuid;
         $this->user = $user;
         $this->timestamp = $timestamp;
         $this->task = $task;
+        $this->stars = $task->getStars();
     }
 
     /**
@@ -41,6 +45,7 @@ class TaskLog implements \JsonSerializable
      *      timestamp: int,
      *      user: int|null,
      *      task: int|null,
+     *      stars: int,
      * }
      */
     public function jsonSerialize(): array
@@ -50,6 +55,7 @@ class TaskLog implements \JsonSerializable
             'timestamp' => $this->timestamp->getTimestamp(),
             'user' => $this->user->getId(),
             'task' => $this->task->getId(),
+            'stars' => $this->stars,
         ];
     }
 

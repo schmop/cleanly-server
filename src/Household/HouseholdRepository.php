@@ -30,7 +30,7 @@ class HouseholdRepository extends ServiceEntityRepository
     {
         $qb = $this->createQueryBuilder('h');
         $qb
-            ->select('u.id as user, SUM(t.stars) as stars')
+            ->select('u.id as user, SUM(l.stars) as stars')
             ->innerJoin('h.tasks', 't')
             ->innerJoin('t.logs', 'l')
             ->innerJoin('l.user', 'u')
