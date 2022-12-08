@@ -35,7 +35,7 @@ class TaskController extends UserAwareController
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create([]);
     }
 
     #[Route(path: '/api/task/edit/{id}', name: 'task_edit', methods: ['POST'])]
@@ -85,12 +85,13 @@ class TaskController extends UserAwareController
             ),
         );
 
-        return JsonSuccessResponse::create(['status' => 'success', 'timestamp' => $task->getLastCompleted()?->getTimestamp()]);
+        return JsonSuccessResponse::create(['timestamp' => $task->getLastCompleted()?->getTimestamp()]);
     }
 
-    #[Route(path: '/api/task/log/{id}', name: 'task_log', methods: ['GET'])]
+    #[Route(path: '/api/task/log/{id}/{fromId}', defaults: ['fromId' => null], name: 'task_log', methods: ['GET'])]
     public function fetchTaskLog(
         Household $household,
+        ?string $fromId,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
         if (!$household->getMembers()->contains($this->getUser())) {
@@ -99,10 +100,10 @@ class TaskController extends UserAwareController
                 'reason' => 'You are not a member of this household!'
             ]);
         }
+        $logs = $taskLogRepository->findByHousehold($household, $fromId);
+        $upToId = (end($logs) ?: null)?->getUuid();
 
-        $taskLogs = $taskLogRepository->findByHousehold($household);
-
-        return JsonSuccessResponse::create(['status' => 'success', 'logs' => $taskLogs]);
+        return JsonSuccessResponse::create(['logs' => $logs, 'upToId' => $upToId]);
     }
 
     #[Route(path: '/api/task/{id}', name: 'task_delete', methods: ['DELETE'])]
@@ -113,6 +114,6 @@ class TaskController extends UserAwareController
         $taskRepository->remove($task);
         $taskPublisher->publish($task->getHousehold());
 
-        return JsonSuccessResponse::create(['status' => 'success']);
+        return JsonSuccessResponse::create([]);
     }
 }

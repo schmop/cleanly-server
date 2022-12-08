@@ -35,15 +35,37 @@ class TaskLogRepository extends ServiceEntityRepository
     /**
      * @return TaskLog[]
      */
-    public function findByHousehold(Household $household): array
+    public function findByHousehold(Household $household, ?string $fromId): array
     {
         $qb = $this->createQueryBuilder('l');
         $qb
             ->innerJoin('l.task', 't')
             ->innerJoin('t.household', 'h')
             ->where('h.id = :household')
+            ->orderBy('l.timestamp', 'DESC')
             ->setParameter(':household', $household->getId())
+            ->setMaxResults(20)
         ;
+        if (null !== $fromId) {
+            /**
+             * Subqueries in Doctrine are working best as DQLs
+             * @link https://stackoverflow.com/a/58567069
+             */
+            $qb
+                ->andWhere(
+                    $qb->expr()->lt(
+                        'l.timestamp',
+                        '(' .
+                        $this->createQueryBuilder('l2')
+                            ->select('l2.timestamp')
+                            ->where('l2.uuid = :fromId')
+                            ->getDQL()
+                        . ')',
+                    ),
+                )
+                ->setParameter(':fromId', $fromId)
+            ;
+        }
 
         return $qb->getQuery()->getResult();
     }
