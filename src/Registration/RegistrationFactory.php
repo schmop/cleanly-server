@@ -19,6 +19,8 @@ use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use App\User\Entity\User;
 
+use function Lambdish\Phunctional\map;
+
 class RegistrationFactory
 {
     public const TOKEN_LENGTH = 64;
@@ -44,7 +46,7 @@ class RegistrationFactory
         $mail = $json->string('mail');
         $password = $json->string('password');
         // generated possible errors
-        $errors = array_map(fn(ConstraintViolationInterface $violation) => $violation->getMessage(), [
+        $errors = map(fn (ConstraintViolationInterface $violation) => $violation->getMessage(), [
             ...$this->validator->validate($password, new NotCompromisedPassword()),
             ...$this->validator->validate($name, new NotBlank()),
             ...$this->validator->validate($mail, new Email()),

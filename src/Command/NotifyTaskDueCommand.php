@@ -53,17 +53,18 @@ class NotifyTaskDueCommand extends Command
                         ],
                         $dueTasks
                     ));
-                } else {
-                    foreach ($dueTasks as $task) {
-                        $this->pusher->publishTaskDue(
-                            $household,
-                            'Aufgabe wird dringend!',
-                            sprintf('%s sollte in %s bald erledigt werden!', $task->getName(), $household->getName()),
-                        );
-                        $this->taskSecretary->markTaskAsNotified($task);
-                    }
-                    $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
+
+                    continue;
                 }
+                foreach ($dueTasks as $task) {
+                    $this->pusher->publishTaskDue(
+                        $household,
+                        'Aufgabe wird dringend!',
+                        sprintf('%s sollte in %s bald erledigt werden!', $task->getName(), $household->getName()),
+                    );
+                    $this->taskSecretary->markTaskAsNotified($task);
+                }
+                $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
             }
         } catch (\Exception $e) {
             $this->logger->error('Could not notify task as due, {message}', [

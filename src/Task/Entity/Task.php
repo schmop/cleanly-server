@@ -24,8 +24,8 @@ class Task implements \JsonSerializable
     #[ORM\Column(type: "datetime_immutable", options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeImmutable $lastNotifiedAt;
 
-    #[ORM\Column(type: "integer")]
-    private int $duration;
+    #[ORM\Column(type: "integer", nullable: true)]
+    private ?int $duration;
 
     #[ORM\Column(type: "string", length: 255)]
     private string $name;
@@ -86,7 +86,7 @@ class Task implements \JsonSerializable
         return $this->duration;
     }
 
-    public function setDuration(int $duration): self
+    public function setDuration(?int $duration): self
     {
         $this->duration = $duration;
 

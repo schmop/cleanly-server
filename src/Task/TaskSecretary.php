@@ -16,7 +16,7 @@ class TaskSecretary
     public function isTaskDue(Task $task): bool
     {
         $lastCompleted = $task->getLastCompleted();
-        if (null === $lastCompleted) {
+        if (null === $lastCompleted || null === $task->getDuration()) {
             return false;
         }
         $dueDate = $lastCompleted->add(

@@ -24,7 +24,7 @@ final class TaskFactory
         $json = Json::fromRequest($request);
         $task = new Task();
         $task->setName($json->string('name'));
-        $task->setDuration($json->int('duration'));
+        $task->setDuration($json->tryInt('duration'));
         $task->setLastNotifiedAt($this->clock->now());
         if (null !== $description = $json->tryString('description')) {
             $task->setDescription($description);

@@ -46,7 +46,7 @@ class TaskController extends UserAwareController
         $data = Json::fromRequest($request);
         $task->setName($data->string('name'));
         $task->setIcon($data->string('icon'));
-        $task->setDuration($data->int('duration'));
+        $task->setDuration($data->tryInt('duration'));
         $task->setStars($data->int('stars'));
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());

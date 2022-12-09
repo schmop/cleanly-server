@@ -6,6 +6,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\User\Entity\User;
 use Psr\Log\LoggerInterface;
 
+use function Lambdish\Phunctional\map;
+
 class Publisher
 {
     private const HOST = 'http://localhost:3334';
@@ -19,7 +21,7 @@ class Publisher
      */
     public function publish(array $targets, string $type, mixed $payload): void
     {
-        $targetIds = array_map(function (User $target) { return $target->getId(); }, $targets);
+        $targetIds = map(fn (User $target) => $target->getId(), $targets);
         $response = $this->client->request('POST', sprintf("%s/publish", self::HOST), [
             'json' => [
                 'targets' => $targetIds,
