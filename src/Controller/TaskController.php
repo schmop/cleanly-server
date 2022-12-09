@@ -76,6 +76,7 @@ class TaskController extends UserAwareController
         $taskPublisher->publish($task->getHousehold());
         $pusher->publishTaskDone(
             $task->getHousehold(),
+            $user,
             sprintf('%s wurde erledigt!', $task->getName()),
             sprintf(
                 '%s hat in %s gerade %s erledigt!',

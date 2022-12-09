@@ -19,11 +19,12 @@ class Pusher
     {
     }
 
-    public function publishTaskDone(Household $household, string $title, string $content): void
+    public function publishTaskDone(Household $household, User $exclude, string $title, string $content): void
     {
         $devices = filter(
-            fn(Device $device) => $device->getUser()->getUserSettings()->notifyTaskDone === true,
-            $this->deviceRepository->findByHousehold($household)
+            fn(Device $device) =>
+                $device->getUser() !== $exclude && $device->getUser()->getUserSettings()->notifyTaskDone === true,
+            $this->deviceRepository->findByHousehold($household),
         );
         $this->publishToDevices($devices, $title, $content);
     }
@@ -32,7 +33,7 @@ class Pusher
     {
         $devices = filter(
             fn(Device $device) => $device->getUser()->getUserSettings()->notifyTaskDue === true,
-            $this->deviceRepository->findByHousehold($household)
+            $this->deviceRepository->findByHousehold($household),
         );
         $this->publishToDevices($devices, $title, $content);
     }
@@ -44,7 +45,7 @@ class Pusher
     {
         $devices = filter(
             fn(Device $device) => $device->getUser()->getUserSettings()->notifyInvites === true,
-            $this->deviceRepository->findByUsers($users)
+            $this->deviceRepository->findByUsers($users),
         );
         $this->publishToDevices($devices, $title, $content);
     }
