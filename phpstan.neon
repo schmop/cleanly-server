@@ -4,3 +4,7 @@ parameters:
 		- src
 	doctrine:
 		objectManagerLoader: tests/ObjectManager.php
+	typeAliases:
+		UserId: 'int'
+		TaskId: 'int'
+		HouseholdId: 'int'

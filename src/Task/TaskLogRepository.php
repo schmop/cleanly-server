@@ -7,8 +7,10 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\User\Entity\User;
 use App\Task\Entity\Task;
-use Doctrine\ORM\Query\Expr\Join;
 use App\Household\Entity\Household;
+use App\Phunctional\Statistics;
+
+use function Lambdish\Phunctional\map;
 
 /**
  * @method TaskLog|null find($id, $lockMode = null, $lockVersion = null)
@@ -35,7 +37,7 @@ class TaskLogRepository extends ServiceEntityRepository
     /**
      * @return TaskLog[]
      */
-    public function findByHousehold(Household $household, ?string $fromId): array
+    public function findByHouseholdPaginated(Household $household, ?string $fromId): array
     {
         $qb = $this->createQueryBuilder('l');
         $qb
@@ -73,6 +75,23 @@ class TaskLogRepository extends ServiceEntityRepository
     /**
      * @return TaskLog[]
      */
+    public function findByHousehold(Household $household): array
+    {
+        $qb = $this->createQueryBuilder('l');
+        $qb
+            ->innerJoin('l.task', 't')
+            ->innerJoin('t.household', 'h')
+            ->where('h.id = :household')
+            ->orderBy('l.timestamp', 'ASC')
+            ->setParameter(':household', $household->getId())
+        ;
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return TaskLog[]
+     */
     public function findByUser(User $user): array
     {
         return $this->findBy(['user' => $user]);
@@ -83,5 +102,73 @@ class TaskLogRepository extends ServiceEntityRepository
         $em = $this->getEntityManager();
         $em->persist($tasklog);
         $em->flush();
+    }
+
+    /**
+     * @return array<TaskId, array<UserId, int>>
+     */
+    public function getUserParticipations(Household $household): array
+    {
+        /** @param TaskLog[] $logs */
+        return map(function (array $logs) {
+            $userParticipations = [];
+            foreach ($logs as $log) {
+                $userId = $log->getUser()?->getId();
+                if (null === $userId) {
+                    continue;
+                }
+                if (!array_key_exists($userId, $userParticipations)) {
+                    $userParticipations[$userId] = 0;
+                }
+                $userParticipations[$userId]++;
+            }
+
+            return $userParticipations;
+        }, $this->getLogsPerTaskFromHousehold($household));
+    }
+
+    /**
+     * @return array<
+     *      TaskId,
+     *      array{
+     *          average: int,
+     *          min: int,
+     *          max: int,
+     *      }
+     *  >
+     */
+    public function getDurationStats(Household $household): array
+    {
+        /** @param TaskLog[] $logs */
+        return map(function (array $logs) {
+            $timestamps = map(fn (TaskLog $log) => $log->getTimestamp()->getTimestamp(), $logs);
+            $deltas = Statistics::delta($timestamps);
+
+            return [
+                'average' => Statistics::average($deltas),
+                'min' => Statistics::min($deltas),
+                'max' => Statistics::max($deltas),
+                'num' => count($deltas),
+            ];
+        }, $this->getLogsPerTaskFromHousehold($household));
+    }
+
+    /**
+     * @return array<TaskId, TaskLog[]>
+     */
+    private function getLogsPerTaskFromHousehold(Household $household): array
+    {
+        $logsPerTask = [];
+        $num = 0;
+        foreach ($this->findByHousehold($household) as $log) {
+            $taskId = $log->getTask()->getId();
+            if (!array_key_exists($taskId, $logsPerTask)) {
+                $logsPerTask[$taskId] = [];
+            }
+            $logsPerTask[$taskId][] = $log;
+            $num++;
+        }
+
+        return $logsPerTask;
     }
 }

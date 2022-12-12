@@ -23,7 +23,7 @@ class Pusher
     {
         $devices = filter(
             fn(Device $device) =>
-                $device->getUser() !== $exclude && $device->getUser()->getUserSettings()->notifyTaskDone === true,
+            $device->getUser() !== $exclude && $device->getUser()->getUserSettings()->notifyTaskDone === true,
             $this->deviceRepository->findByHousehold($household),
         );
         $this->publishToDevices($devices, $title, $content);
@@ -60,7 +60,7 @@ class Pusher
         }
         $deviceIds = map(fn(Device $device) => $device->getPushId(), $devices);
         try {
-            $message = CloudMessage::new ()->withNotification(Notification::create($title, $content, $imageUrl));
+            $message = CloudMessage::new()->withNotification(Notification::create($title, $content, $imageUrl));
             $this->messaging->sendMulticast($message, $deviceIds);
         } catch (\Exception $e) {
             $this->logger->error('Could not send push notifications, reason: {message}!', [

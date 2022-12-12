@@ -101,10 +101,28 @@ class TaskController extends UserAwareController
                 'reason' => 'You are not a member of this household!'
             ]);
         }
-        $logs = $taskLogRepository->findByHousehold($household, $fromId);
+        $logs = $taskLogRepository->findByHouseholdPaginated($household, $fromId);
         $upToId = (end($logs) ?: null)?->getUuid();
 
         return JsonSuccessResponse::create(['logs' => $logs, 'upToId' => $upToId]);
+    }
+
+    #[Route(path: '/api/task/stats/{id}', name: 'task_stats', methods: ['GET'])]
+    public function fetchStats(
+        Household $household,
+        TaskLogRepository $taskLogRepository,
+    ): JsonResponse {
+        if (!$household->getMembers()->contains($this->getUser())) {
+            return JsonErrorResponse::create([
+                'status' => 'error',
+                'reason' => 'You are not a member of this household!'
+            ]);
+        }
+
+        return JsonSuccessResponse::create([
+            'durations' => $taskLogRepository->getDurationStats($household),
+            'userParticipations' => $taskLogRepository->getUserParticipations($household),
+        ]);
     }
 
     #[Route(path: '/api/task/{id}', name: 'task_delete', methods: ['DELETE'])]
