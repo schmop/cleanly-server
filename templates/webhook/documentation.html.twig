@@ -1,0 +1,125 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    {{ parent() }}
+	<h1 id="post-https-your_domain-cleanly-v1-webhook">POST https://<code>&lt;your_domain&gt;</code>/cleanly/v1/webhook</h1>
+<p>This endpoint will be called when a task was completed in a registered household. You can register a webhook for your household in your household settings.</p>
+<h2 id="authentication">Authentication</h2>
+<p>You will receive the <code>AuthToken</code> when registering <code>&lt;your_domain&gt;</code> in the household settings.</p>
+<pre><code><span class="hljs-symbol">Authorization:</span> Bearer <span class="hljs-params">&lt;AuthToken&gt;</span>
+</code></pre><h2 id="body-data">Body Data</h2>
+<table class="table">
+<thead>
+<tr>
+<th>key</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>action</td>
+<td>&quot;task_done&quot;</td>
+</tr>
+<tr>
+<td>household</td>
+<td>Household</td>
+</tr>
+<tr>
+<td>task</td>
+<td>Task</td>
+</tr>
+<tr>
+<td>done_by</td>
+<td>User</td>
+</tr>
+</tbody>
+</table>
+<h3 id="household">Household</h3>
+<table class="table">
+<thead>
+<tr>
+<th>key</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>number</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+<h3 id="task">Task</h3>
+<table class="table">
+<thead>
+<tr>
+<th>key</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>number</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+</tr>
+<tr>
+<td>stars</td>
+<td>number</td>
+</tr>
+</tbody>
+</table>
+<h3 id="user">User</h3>
+<table class="table">
+<thead>
+<tr>
+<th>key</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>number</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+</tr>
+</tbody>
+</table>
+<div class="card">
+  <div class="card-header">
+    Example Request
+  </div>
+  <div class="card-body">
+    <pre><code class="lang-json">{
+    <span class="hljs-attr">"action"</span>: <span class="hljs-string">"task_done"</span>,
+    <span class="hljs-attr">"household"</span>: {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">2</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Flat"</span>
+    },
+    <span class="hljs-attr">"task"</span>: {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Clean fridge"</span>,
+        <span class="hljs-attr">"stars"</span>: <span class="hljs-number">6</span>
+    },
+    <span class="hljs-attr">"done_by"</span>: {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">13</span>,
+        <span class="hljs-attr">"name"</span>: <span class="hljs-string">"John Doe"</span>
+    }
+}
+</code></pre>
+  </div>
+</div>
+
+
+
+{% endblock %}

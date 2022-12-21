@@ -16,6 +16,8 @@ use App\Json\Json;
 use App\Push\Pusher;
 use App\User\UserRepository;
 use App\Utils\Base64UrlInterface;
+use App\Webhook\WebhookSecretGenerator;
+use App\Webhook\WebhookValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -220,5 +222,30 @@ class HouseholdController extends UserAwareController
         $entityManager->flush();
 
         return JsonSuccessResponse::create();
+    }
+
+
+
+    #[Route(path: '/api/household/webhook/{id}', name: 'household_webhook', methods: ['POST'])]
+    public function setWebhook(
+        Household $household,
+        EntityManagerInterface $entityManager,
+        WebhookValidator $webhookValidator,
+        WebhookSecretGenerator $webhookSecretGenerator,
+        Request $request,
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
+        $data = Json::fromRequest($request);
+        $url = $data->string('webhook_url');
+        if (!$webhookValidator->isWebhookUrlValid($url)) {
+            return JsonErrorResponse::create(['reason' => 'Invalid domain given for webhook. Domain needs to match this format: "https://<domain-with-subdomains>"',]);
+        }
+        $household->setWebhookSecret($webhookSecretGenerator->generate());
+        $household->setWebhookUrl($url);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create([
+            'secret' => $household->getWebhookSecret(),
+        ]);
     }
 }

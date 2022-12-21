@@ -23,7 +23,10 @@ class Household implements \JsonSerializable
     private string $name;
 
      #[ORM\Column(type:"string", length:255, nullable:true)]
-    private ?string $picture;
+    private ?string $webhookUrl;
+
+     #[ORM\Column(type:"string", length:255, nullable:true)]
+    private ?string $webhookSecret;
 
     /** @var Collection<int, User> */
     #[ORM\ManyToMany(targetEntity:User::class, inversedBy:"households")]
@@ -86,14 +89,26 @@ class Household implements \JsonSerializable
         return $this;
     }
 
-    public function getPicture(): ?string
+    public function getWebhookSecret(): ?string
     {
-        return $this->picture;
+        return $this->webhookSecret;
     }
 
-    public function setPicture(?string $picture): self
+    public function setWebhookSecret(?string $webhookSecret): self
     {
-        $this->picture = $picture;
+        $this->webhookSecret = $webhookSecret;
+
+        return $this;
+    }
+
+    public function getWebhookUrl(): ?string
+    {
+        return $this->webhookUrl;
+    }
+
+    public function setWebhookUrl(?string $webhookUrl): self
+    {
+        $this->webhookUrl = $webhookUrl;
 
         return $this;
     }
@@ -211,7 +226,7 @@ class Household implements \JsonSerializable
      * @return array{
      *     id: int|null,
      *     name: string|null,
-     *     picture: string|null,
+     *     webhookUrl: string|null,
      *     users: array<int, mixed>,
      *     tasks: array<int, mixed>,
      *     checklist: array<int, mixed>,
@@ -223,7 +238,7 @@ class Household implements \JsonSerializable
         return [
             'id' => $this->getId(),
             'name' => $this->getName(),
-            'picture' => $this->getPicture(),
+            'webhookUrl' => $this->getWebhookUrl(),
             'users' => $this->getMembers()->map(
                 static fn (User $user) => $user->jsonSerialize()
             )->toArray(),

@@ -19,6 +19,7 @@ use App\Json\Json;
 use App\Push\Pusher;
 use App\Task\TaskCompleter;
 use App\Task\TaskLogRepository;
+use App\Webhook\WebhookNotifier;
 use Symfony\Component\HttpFoundation\Response;
 
 class TaskController extends UserAwareController
@@ -60,6 +61,7 @@ class TaskController extends UserAwareController
         TaskPublisher $taskPublisher,
         Pusher $pusher,
         TaskCompleter $taskCompleter,
+        WebhookNotifier $webhookNotifier,
     ): JsonResponse {
         $user = $this->getUser();
         if (!$task->getHousehold()->getMembers()->contains($user)) {
@@ -85,6 +87,7 @@ class TaskController extends UserAwareController
                 $task->getName()
             ),
         );
+        $webhookNotifier->notify($task, $user);
 
         return JsonSuccessResponse::create(['timestamp' => $task->getLastCompleted()?->getTimestamp()]);
     }
