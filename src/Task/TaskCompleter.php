@@ -19,7 +19,9 @@ class TaskCompleter
 
     public function markAsComplete(Task $task, User $user): bool
     {
-        if (($this->clock->now()->getTimestamp() - $task->getLastCompleted()?->getTimestamp()) < self::RATE_LIMIT) {
+        $lastTaskLogOfUserAndTask = $this->taskLogRepository->findLastByTaskAndUser($task, $user);
+        $lastCompleted = $lastTaskLogOfUserAndTask?->getTimestamp()?->getTimestamp();
+        if (null !== $lastCompleted && ($this->clock->now()->getTimestamp() - $lastCompleted) < self::RATE_LIMIT) {
             return false;
         }
 

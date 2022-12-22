@@ -34,6 +34,11 @@ class TaskLogRepository extends ServiceEntityRepository
         return $this->findBy(['task' => $task]);
     }
 
+    public function findLastByTaskAndUser(Task $task, User $user): ?TaskLog
+    {
+        return $this->findOneBy(['task' => $task, 'user' => $user], ['timestamp' => 'DESC']);
+    }
+
     /**
      * @return TaskLog[]
      */
