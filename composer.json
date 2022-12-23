@@ -14,6 +14,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.13",
         "egulias/email-validator": "^3.2",
+        "erusev/parsedown": "^1.7",
         "kreait/firebase-bundle": "^4.1",
         "lambdish/phunctional": "^2.1",
         "lexik/jwt-authentication-bundle": "^2.13",
