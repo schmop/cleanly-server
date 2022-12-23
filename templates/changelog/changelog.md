@@ -10,6 +10,10 @@ Absturz behoben beim Aufrufen der App aus dem Hintergrund bei offener Login-Mask
 
 Changelogs sind nun nicht mehr in der App ausgeliefert, sondern über https://cleanly.schmoppo.de/changelog erreichbar. Das reduziert die App-Größe nachhaltig und verschnellert das aktualisieren der App.
 
+Die Aufgabenfarben können nun nach fließenden Farbtönen eingestellt werden. Außerdem sind die Kontraste der Farben im Lightmode und im Darkmode so angepasst, dass sie lesbar bleiben.
+
+![color-picker](assets/changelog/color-picker.png)
+
 ## 1.12 - 23.12.2022
 
 Die erzwungene Wartezeit zwischen dem mehrmaligen Erledigen derselben Aufgabe ist nun benutzerbezogen.
@@ -23,7 +27,6 @@ Fehler behoben, bei dem man die Login-Maske durch Aktualisieren der Seite vor de
 Die Fortschrittsanzeigen bei Aufgaben mit Wiederholungsintervall wurden durch farbige Balken mit einstellbaren Farben ersetzt.
 
 ![task-colors](assets/changelog/task-colors.png)
-
 
 ## 1.11 - 22.12.2022
 
