@@ -17,7 +17,7 @@ class ChangelogController extends AbstractController
     public function changelog(Environment $twig, Kernel $kernel): Response
     {
         $parseDown = new Parsedown();
-        $changelogMarkdown = file_get_contents($kernel->getProjectDir().'./templates/changelog/changelog.md');
+        $changelogMarkdown = file_get_contents($kernel->getProjectDir().'/templates/changelog/changelog.md');
 
         return new Response($twig->render('changelog/changelog.html.twig', [
             'content' => $parseDown->parse($changelogMarkdown),
