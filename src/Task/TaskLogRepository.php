@@ -136,7 +136,7 @@ class TaskLogRepository extends ServiceEntityRepository
      * @return array<
      *      TaskId,
      *      array{
-     *          average: int,
+     *          average: float,
      *          min: int,
      *          max: int,
      *      }

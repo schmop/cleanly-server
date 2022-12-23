@@ -61,7 +61,7 @@ class Statistics
     /**
      * @param array<int> $values
      */
-    static function average(array $values): ?int
+    static function average(array $values): ?float
     {
         if (count($values) === 0) {
             return null;
