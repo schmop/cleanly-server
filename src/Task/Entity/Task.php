@@ -34,6 +34,9 @@ class Task implements \JsonSerializable
     private ?string $description = null;
 
     #[ORM\Column(type: "string", length: 255, nullable: true)]
+    private ?string $color = null;
+
+    #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $icon = null;
 
     #[ORM\Column(type: "integer", options: ['default' => 0])]
@@ -127,6 +130,16 @@ class Task implements \JsonSerializable
         $this->icon = $icon;
     }
 
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(?string $color): void
+    {
+        $this->color = $color;
+    }
+
     public function getLastNotifiedAt(): ?\DateTimeImmutable
     {
         return $this->lastNotifiedAt;
@@ -142,6 +155,7 @@ class Task implements \JsonSerializable
      *      id: int,
      *      name: string|null,
      *      icon: string|null,
+     *      color: string|null,
      *      description: string|null,
      *      lastComplete: int|null,
      *      duration: int|null,
@@ -154,6 +168,7 @@ class Task implements \JsonSerializable
             'id' => $this->getId(),
             'name' => $this->getName(),
             'icon' => $this->getIcon(),
+            'color' => $this->getColor(),
             'description' => $this->getDescription(),
             'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),

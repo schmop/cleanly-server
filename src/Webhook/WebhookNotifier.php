@@ -47,7 +47,7 @@ class WebhookNotifier
                     ],
                 ],
                 'headers' => [
-                    'authorization' => "Bearer ${secret}",
+                    'authorization' => "Bearer $secret",
                 ],
             ]);
         } catch (ClientException $exception) {

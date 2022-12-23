@@ -22,25 +22,20 @@ final class TaskFactory
     public function createTaskFromRequest(Request $request): Task
     {
         $json = Json::fromRequest($request);
-        $task = new Task();
-        $task->setName($json->string('name'));
-        $task->setDuration($json->tryInt('duration'));
-        $task->setLastNotifiedAt($this->clock->now());
-        if (null !== $description = $json->tryString('description')) {
-            $task->setDescription($description);
-        }
-        if (null !== $icon = $json->tryString('icon')) {
-            $task->setIcon($icon);
-        }
-        if (null !== $stars = $json->tryInt('stars')) {
-            $task->setStars((int)$stars);
-        }
         if (null == ($household = $this->householdRepository->find($json->int('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');
         }
         if (!$this->authorizationChecker->isGranted(HouseholdVoter::MANAGE_TASKS, $household)) {
             throw new \InvalidArgumentException('Not enough privileges to create task in this household!');
         }
+        $task = new Task();
+        $task->setName($json->string('name'));
+        $task->setDuration($json->tryInt('duration'));
+        $task->setLastNotifiedAt($this->clock->now());
+        $task->setDescription($json->tryString('description'));
+        $task->setIcon($json->tryString('icon'));
+        $task->setColor($json->tryString('color'));
+        $task->setStars($json->tryInt('stars') ?? 0);
         $task->setHousehold($household);
 
         return $task;
