@@ -34,7 +34,7 @@ final class TaskFactory
         $task->setLastNotifiedAt($this->clock->now());
         $task->setDescription($json->tryString('description'));
         $task->setIcon($json->tryString('icon'));
-        $task->setColor($json->tryString('color'));
+        $task->setHue($json->tryInt('hue'));
         $task->setStars($json->tryInt('stars') ?? 0);
         $task->setHousehold($household);
 

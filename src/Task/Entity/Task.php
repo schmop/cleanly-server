@@ -33,8 +33,8 @@ class Task implements \JsonSerializable
     #[ORM\Column(type: "string", length: 510, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(type: "string", length: 255, nullable: true)]
-    private ?string $color = null;
+    #[ORM\Column(type: "integer", nullable: true)]
+    private ?int $hue = null;
 
     #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $icon = null;
@@ -130,14 +130,14 @@ class Task implements \JsonSerializable
         $this->icon = $icon;
     }
 
-    public function getColor(): ?string
+    public function getHue(): ?int
     {
-        return $this->color;
+        return $this->hue;
     }
 
-    public function setColor(?string $color): void
+    public function setHue(?int $hue): void
     {
-        $this->color = $color;
+        $this->hue = $hue;
     }
 
     public function getLastNotifiedAt(): ?\DateTimeImmutable
@@ -155,7 +155,8 @@ class Task implements \JsonSerializable
      *      id: int,
      *      name: string|null,
      *      icon: string|null,
-     *      color: string|null,
+     *      color: null,
+     *      hue: int|null,
      *      description: string|null,
      *      lastComplete: int|null,
      *      duration: int|null,
@@ -168,7 +169,8 @@ class Task implements \JsonSerializable
             'id' => $this->getId(),
             'name' => $this->getName(),
             'icon' => $this->getIcon(),
-            'color' => $this->getColor(),
+            'color' => null, // @TODO: Remove after version 1.15
+            'hue' => $this->getHue(),
             'description' => $this->getDescription(),
             'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),
