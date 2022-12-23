@@ -8,6 +8,10 @@ Web: https://schmoppo.de
 
 Absturz behoben beim Aufrufen der App aus dem Hintergrund bei offener Login-Maske.
 
+Wenn man Mitglied in exakt einem Haushalt ist, wird dieser als Startseite genommen, statt der Übersicht aller Haushalte.
+
+In der Übersicht aller Haushalte wurden die redundanten Aktionen hinter dem Kontextmenü entfernt.
+
 Changelogs sind nun nicht mehr in der App ausgeliefert, sondern über https://cleanly.schmoppo.de/changelog erreichbar. Das reduziert die App-Größe nachhaltig und verschnellert das aktualisieren der App.
 
 Die Aufgabenfarben können nun nach fließenden Farbtönen eingestellt werden. Außerdem sind die Kontraste der Farben im Lightmode und im Darkmode so angepasst, dass sie lesbar bleiben.
