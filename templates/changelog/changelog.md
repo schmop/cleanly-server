@@ -4,7 +4,15 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.14 - Aktuell
+## 1.15 - Aktuell
+
+Pull-To-Refresh wird nicht mehr versehentlich ausgelöst.
+
+Aufgaben können schneller gefunden werden, indem nach ihrem Icon gefiltert werden kann.
+
+![category](assets/changelog/category.png)
+
+## 1.14 - 26.12.2022
 
 Das Wechseln des Farbschemas wird nun auch bei Aufgabenfarben direkt widergespiegelt.
 
