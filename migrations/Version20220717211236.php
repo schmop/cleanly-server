@@ -9,6 +9,7 @@ use App\Todo\Entity\Todo;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use App\Todo\TodoRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,8 +18,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class Version20220717211236 extends AbstractMigration implements ContainerAwareInterface
 {
-    private ContainerInterface $container;
-    public function setContainer(ContainerInterface $container = null) {
+    private ?ContainerInterface $container;
+    public function setContainer(?ContainerInterface $container = null): void {
         $this->container = $container;
     }
 
@@ -29,12 +30,13 @@ final class Version20220717211236 extends AbstractMigration implements Container
 
     public function up(Schema $schema): void
     {
-        $entityManager = $this->container->get('doctrine.orm.default_entity_manager');
+        $entityManager = $this->container?->get('doctrine.orm.default_entity_manager');
+        if (!($entityManager instanceof EntityManagerInterface)) {
+            throw new \LogicException('Cannot migrate without entity manager!');
+        }
         $entityManager->beginTransaction();
         try {
             $householdRepository = $entityManager->getRepository(Household::class);
-            /** @var TodoRepository $todoRepository */
-            $todoRepository = $entityManager->getRepository(Todo::class);
             $households = $householdRepository->findAll();
             foreach ($households as $household) {
                 $checklist = $household->getChecklist();

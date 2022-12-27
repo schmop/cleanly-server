@@ -4,7 +4,15 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.13 - Aktuell
+## 1.14 - Aktuell
+
+Das Wechseln des Farbschemas wird nun auch bei Aufgabenfarben direkt widergespiegelt.
+
+Die den Nutzer zugeordneten Farben in den Haushaltstatistiken sind nun über alle Aufgaben konsistent.
+
+Das Iconset "ionicons" wurde mit dem Iconset "tabler-icons" ersetzt.
+
+## 1.13 - 24.12.2022
 
 Absturz behoben beim Aufrufen der App aus dem Hintergrund bei offener Login-Maske.
 
