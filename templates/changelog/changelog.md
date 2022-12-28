@@ -4,7 +4,11 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.15 - Aktuell
+## 1.16 - Aktuell
+
+Bei (noch) leeren Ansichten werden Hinweise angezeigt, was man auf den Ansichten sehen könnte.
+
+## 1.15 - 27.12.2022
 
 Pull-To-Refresh wird nicht mehr versehentlich ausgelöst.
 
