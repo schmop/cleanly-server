@@ -224,8 +224,6 @@ class HouseholdController extends UserAwareController
         return JsonSuccessResponse::create();
     }
 
-
-
     #[Route(path: '/api/household/webhook/{id}', name: 'household_webhook', methods: ['POST'])]
     public function setWebhook(
         Household $household,

@@ -2,10 +2,10 @@
 
 namespace App\Task;
 
-use App\Task\Entity\Task;
 use App\Household\HouseholdRepository;
 use App\Household\HouseholdVoter;
 use App\Json\Json;
+use App\Task\Entity\Task;
 use App\Utils\Clock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
@@ -13,16 +13,16 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 final class TaskFactory
 {
     public function __construct(
-        private HouseholdRepository $householdRepository,
-        private AuthorizationCheckerInterface $authorizationChecker,
-        private Clock $clock,
+        private readonly HouseholdRepository           $householdRepository,
+        private readonly AuthorizationCheckerInterface $authorizationChecker,
+        private readonly Clock                         $clock,
     ) {
     }
 
     public function createTaskFromRequest(Request $request): Task
     {
         $json = Json::fromRequest($request);
-        if (null == ($household = $this->householdRepository->find($json->int('household_id')))) {
+        if (null === ($household = $this->householdRepository->find($json->int('household_id')))) {
             throw new \InvalidArgumentException('Task must be linked to household!');
         }
         if (!$this->authorizationChecker->isGranted(HouseholdVoter::MANAGE_TASKS, $household)) {

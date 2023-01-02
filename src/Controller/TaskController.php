@@ -4,32 +4,34 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Household\Entity\Household;
 use App\Household\HouseholdVoter;
-use App\Task\Entity\Task;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
-use App\Task\TaskRepository;
-use App\Task\TaskFactory;
-use App\Task\TaskPublisher;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
-use App\Household\Entity\Household;
 use App\Json\Json;
 use App\Push\Pusher;
+use App\Task\Entity\Task;
 use App\Task\TaskCompleter;
+use App\Task\TaskFactory;
 use App\Task\TaskLogRepository;
+use App\Task\TaskPublisher;
+use App\Task\TaskRepository;
+use App\User\UserRepository;
 use App\Webhook\WebhookNotifier;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
 class TaskController extends UserAwareController
 {
     #[Route(path: '/api/task/create', name: 'task_create', methods: ['POST'])]
     public function createTask(
-        Request $request,
-        TaskFactory $taskFactory,
+        Request        $request,
+        TaskFactory    $taskFactory,
         TaskRepository $taskRepository,
-        TaskPublisher $taskPublisher,
+        TaskPublisher  $taskPublisher,
     ): JsonResponse {
         $task = $taskFactory->createTaskFromRequest($request);
 
@@ -58,16 +60,15 @@ class TaskController extends UserAwareController
 
     #[Route(path: '/api/task/mark-done/{id}', name: 'task_mark_done', methods: ['POST'])]
     public function markTaskDone(
-        Task $task,
-        TaskPublisher $taskPublisher,
-        Pusher $pusher,
-        TaskCompleter $taskCompleter,
+        Task            $task,
+        TaskPublisher   $taskPublisher,
+        Pusher          $pusher,
+        TaskCompleter   $taskCompleter,
         WebhookNotifier $webhookNotifier,
     ): JsonResponse {
         $user = $this->getUser();
         if (!$task->getHousehold()->getMembers()->contains($user)) {
             return JsonErrorResponse::create([
-                'status' => 'error',
                 'reason' => 'You are not a member of this household!'
             ]);
         }
@@ -95,13 +96,12 @@ class TaskController extends UserAwareController
 
     #[Route(path: '/api/task/log/{id}/{fromId}', defaults: ['fromId' => null], name: 'task_log', methods: ['GET'])]
     public function fetchTaskLog(
-        Household $household,
-        ?string $fromId,
+        Household         $household,
+        ?string           $fromId,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
         if (!$household->getMembers()->contains($this->getUser())) {
             return JsonErrorResponse::create([
-                'status' => 'error',
                 'reason' => 'You are not a member of this household!'
             ]);
         }
@@ -113,12 +113,11 @@ class TaskController extends UserAwareController
 
     #[Route(path: '/api/task/stats/{id}', name: 'task_stats', methods: ['GET'])]
     public function fetchStats(
-        Household $household,
+        Household         $household,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
         if (!$household->getMembers()->contains($this->getUser())) {
             return JsonErrorResponse::create([
-                'status' => 'error',
                 'reason' => 'You are not a member of this household!'
             ]);
         }
@@ -127,6 +126,34 @@ class TaskController extends UserAwareController
             'durations' => $taskLogRepository->getDurationStats($household),
             'userParticipations' => $taskLogRepository->getUserParticipations($household),
         ]);
+    }
+
+    #[Route(path: '/api/task/assign/{id}', name: 'task_assign', methods: ['POST'])]
+    public function assignTask(
+        Task                   $task,
+        Request                $request,
+        UserRepository         $userRepository,
+        EntityManagerInterface $entityManager,
+        TaskPublisher          $taskPublisher,
+    ): JsonResponse {
+        if (!$task->getHousehold()->getMembers()->contains($this->getUser())) {
+            return JsonErrorResponse::create([
+                'reason' => 'You are not a member of this household!'
+            ]);
+        }
+        $data = Json::fromRequest($request);
+        $assignee = $userRepository->find($data->tryInt('assignee'));
+        if (null !== $assignee && !$task->getHousehold()->getMembers()->contains($assignee)) {
+            return JsonErrorResponse::create([
+                'reason' => 'Cannot assign to users, that are not members of this household!'
+            ]);
+        }
+
+        $task->assignTo($assignee);
+        $entityManager->flush();
+        $taskPublisher->publish($task->getHousehold());
+
+        return JsonSuccessResponse::create([]);
     }
 
     #[Route(path: '/api/task/{id}', name: 'task_delete', methods: ['DELETE'])]
