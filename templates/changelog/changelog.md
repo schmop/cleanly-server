@@ -4,7 +4,11 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.16 - Aktuell
+## 1.17 - Aktuell
+
+
+
+## 1.16 - 28.12.2022
 
 Bei (noch) leeren Ansichten werden Hinweise angezeigt, was man auf den Ansichten sehen könnte.
 

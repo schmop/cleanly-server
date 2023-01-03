@@ -17,7 +17,7 @@ class Json
      * @param array<array-key, mixed> $data
      */
     public function __construct(
-        array $data,
+        array                    $data,
         private readonly ?string $previousPath = null,
     ) {
         foreach (array_keys($data) as $key) {
@@ -221,14 +221,14 @@ class Json
     private function assertSequential(string $key): void
     {
         $array = $this->data[$key];
-        if (!is_array($array) || array_keys($array) !== range(0, count($array) - 1)) {
+        if (!is_array($array) || !array_is_list($array)) {
             throw $this->buildException($key, 'sequential array');
         }
     }
 
     private function buildPath(string|int $key): string
     {
-        return $this->previousPath ? "$this->previousPath.$key" : (string) $key;
+        return $this->previousPath ? "$this->previousPath.$key" : (string)$key;
     }
 
     private function buildException(string|int $key, string $expectedType): \InvalidArgumentException

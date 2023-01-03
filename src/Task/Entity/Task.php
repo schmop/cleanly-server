@@ -2,15 +2,15 @@
 
 namespace App\Task\Entity;
 
-use App\Task\TaskRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
 use App\Household\Entity\Household;
+use App\Task\TaskRepository;
+use App\User\Entity\User;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 
 
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
-
 class Task implements \JsonSerializable
 {
     #[ORM\Id]
@@ -42,6 +42,10 @@ class Task implements \JsonSerializable
     #[ORM\Column(type: "integer", options: ['default' => 0])]
     private int $stars = 0;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'assignee_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $assignee = null;
+
     #[ORM\ManyToOne(targetEntity: Household::class, inversedBy: "tasks")]
     #[ORM\JoinColumn(name: "household_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private Household $household;
@@ -49,7 +53,7 @@ class Task implements \JsonSerializable
     /**
      * @var Collection<int, TaskLog>
      */
-    #[ORM\OneToMany(targetEntity: TaskLog::class, mappedBy: "task")]
+    #[ORM\OneToMany(mappedBy: "task", targetEntity: TaskLog::class)]
     private Collection $logs;
 
     public function __construct()
@@ -70,6 +74,16 @@ class Task implements \JsonSerializable
     public function setHousehold(Household $household): void
     {
         $this->household = $household;
+    }
+
+    public function getAssignee(): ?User
+    {
+        return $this->assignee;
+    }
+
+    public function assignTo(?User $assignee): void
+    {
+        $this->assignee = $assignee;
     }
 
     public function getLastCompleted(): ?\DateTimeImmutable
@@ -152,15 +166,15 @@ class Task implements \JsonSerializable
 
     /**
      * @return array{
-     *      id: int,
-     *      name: string|null,
-     *      icon: string|null,
-     *      color: null,
-     *      hue: int|null,
-     *      description: string|null,
-     *      lastComplete: int|null,
-     *      duration: int|null,
-     *      stars: int,
+     *     id: int,
+     *     name: string|null,
+     *     icon: string|null,
+     *     hue: int|null,
+     *     assignee: int|null,
+     *     description: string|null,
+     *     lastComplete: int|null,
+     *     duration: int|null,
+     *     stars: int,
      * }
      */
     public function jsonSerialize(): array
@@ -169,8 +183,8 @@ class Task implements \JsonSerializable
             'id' => $this->getId(),
             'name' => $this->getName(),
             'icon' => $this->getIcon(),
-            'color' => null, // @TODO: Remove after version 1.15
             'hue' => $this->getHue(),
+            'assignee' => $this->getAssignee()?->getId(),
             'description' => $this->getDescription(),
             'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),

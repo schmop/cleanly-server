@@ -9,13 +9,14 @@ use Doctrine\ORM\EntityManagerInterface;
 class TodoEventProcessor
 {
     public function __construct(
-        private TodoRepository $todoRepository,
-        private EntityManagerInterface $entityManager,
+        private readonly TodoRepository         $todoRepository,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
     /**
      * @param TodoEvent[] $events
+     * @throws InconsistentChecklistEventException
      */
     public function process(array $events, Household $household): void
     {
@@ -52,6 +53,9 @@ class TodoEventProcessor
         $this->entityManager->flush();
     }
 
+    /**
+     * @throws InconsistentChecklistEventException
+     */
     private function update(TodoEvent $event): void
     {
         $todo = $this->todoRepository->findByUuid($event->uuid);
@@ -62,6 +66,9 @@ class TodoEventProcessor
         $this->entityManager->flush();
     }
 
+    /**
+     * @throws InconsistentChecklistEventException
+     */
     private function sort(TodoEvent $event, Household $household): void
     {
         $todo = $this->todoRepository->findByUuid($event->uuid);
@@ -71,6 +78,9 @@ class TodoEventProcessor
         $this->todoRepository->moveBefore($todo, $event?->data ?? null);
     }
 
+    /**
+     * @throws InconsistentChecklistEventException
+     */
     private function delete(TodoEvent $event, Household $household): void
     {
         $todo = $this->todoRepository->findByUuid($event->uuid);
