@@ -142,7 +142,8 @@ class TaskController extends UserAwareController
             ]);
         }
         $data = Json::fromRequest($request);
-        $assignee = $userRepository->find($data->tryInt('assignee'));
+        $assigneeId = $data->tryInt('assignee');
+        $assignee = $assigneeId ? $userRepository->find($assigneeId) : null;
         if (null !== $assignee && !$task->getHousehold()->getMembers()->contains($assignee)) {
             return JsonErrorResponse::create([
                 'reason' => 'Cannot assign to users, that are not members of this household!'
