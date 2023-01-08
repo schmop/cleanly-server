@@ -4,35 +4,35 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Registration\RegistrationException;
 use App\Registration\RegistrationFactory;
+use App\Registration\RegistrationRepository;
+use App\User\Entity\User;
+use App\User\UserRepository;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
-use App\Registration\RegistrationException;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
-use Symfony\Component\Mime\Address;
-use App\Registration\RegistrationRepository;
-use App\User\UserRepository;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Routing\Annotation\Route;
 use Twig\Environment;
 
 class SignUpController
 {
     #[Route("/signup", "signup", methods: ["POST"])]
     public function signup(
-        Request $request,
+        Request             $request,
         RegistrationFactory $registrationFactory,
-        MailerInterface $mailer,
+        MailerInterface     $mailer,
     ): JsonResponse {
         try {
             $registration = $registrationFactory->createRegistrationFromRequest($request);
         } catch (RegistrationException $e) {
             return JsonErrorResponse::create([
-                'errors' => json_encode($e->errors),
+                'reason' => json_encode($e->errors),
             ]);
         }
 
@@ -43,8 +43,7 @@ class SignUpController
             ->htmlTemplate('registration/email.html.twig')
             ->context([
                 'registration' => $registration,
-            ])
-        ;
+            ]);
 
         $mailer->send($email);
 
@@ -55,11 +54,11 @@ class SignUpController
 
     #[Route("/verify/{uuid}/{token}", name: "signup_verify", methods: ["GET"])]
     public function verify(
-        string $uuid,
-        string $token,
+        string                 $uuid,
+        string                 $token,
         RegistrationRepository $registrationRepository,
-        UserRepository $userRepository,
-        Environment $twig,
+        UserRepository         $userRepository,
+        Environment            $twig,
     ): Response {
         $registration = $registrationRepository->findByUuid($uuid);
         if (null === $registration || $registration->token !== $token) {

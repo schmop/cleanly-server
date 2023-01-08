@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace App\Json;
 
+use App\Json\Exception\UnexpectedJsonException;
 use Symfony\Component\HttpFoundation\Request;
 
-class Json
+readonly class Json
 {
     /** @var array<string, mixed> $data */
-    private readonly array $data;
+    private array $data;
 
     /**
      * Validates that $data is actually array<string, mixed>
      *
      * @param array<array-key, mixed> $data
+     * @throws UnexpectedJsonException
      */
     public function __construct(
-        array                    $data,
-        private readonly ?string $previousPath = null,
+        array           $data,
+        private ?string $previousPath = null,
     ) {
         foreach (array_keys($data) as $key) {
             if (!is_string($key)) {
@@ -29,18 +31,28 @@ class Json
     }
 
     /**
-     * @throws \JsonException
+     * @throws UnexpectedJsonException
      */
     public static function fromString(string $json): self
     {
-        return new self(JsonDecoder::toArray($json));
+        try {
+            return new self(JsonDecoder::toArray($json));
+        } catch (\JsonException $e) {
+            throw new UnexpectedJsonException('Could not parse JSON!', previous: $e);
+        }
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public static function fromRequest(Request $request): self
     {
         return self::fromString($request->getContent());
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function string(string $key): string
     {
         if (!isset($this->data[$key]) || !is_string($this->data[$key])) {
@@ -50,6 +62,9 @@ class Json
         return $this->data[$key];
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function tryString(string $key): ?string
     {
         if (!isset($this->data[$key])) {
@@ -62,6 +77,9 @@ class Json
         return $this->data[$key];
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function int(string $key): int
     {
         if (!isset($this->data[$key]) || !is_int($this->data[$key])) {
@@ -71,6 +89,9 @@ class Json
         return $this->data[$key];
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function tryInt(string $key): ?int
     {
         if (!isset($this->data[$key])) {
@@ -83,6 +104,9 @@ class Json
         return $this->data[$key];
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function bool(string $key): bool
     {
         if (!isset($this->data[$key]) || !is_bool($this->data[$key])) {
@@ -92,6 +116,9 @@ class Json
         return $this->data[$key];
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function tryBool(string $key): ?bool
     {
         if (!isset($this->data[$key])) {
@@ -104,6 +131,9 @@ class Json
         return $this->data[$key];
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function json(string $key): Json
     {
         if (!isset($this->data[$key]) || !is_array($this->data[$key])) {
@@ -113,6 +143,9 @@ class Json
         return new self($this->data[$key]);
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function tryJson(string $key): ?Json
     {
         if (!isset($this->data[$key])) {
@@ -128,6 +161,7 @@ class Json
 
     /**
      * @return Json[]
+     * @throws UnexpectedJsonException
      */
     public function jsonArray(string $key): array
     {
@@ -151,6 +185,7 @@ class Json
 
     /**
      * @return string[]
+     * @throws UnexpectedJsonException
      */
     public function stringArray(string $key): array
     {
@@ -173,6 +208,7 @@ class Json
 
     /**
      * @return int[]
+     * @throws UnexpectedJsonException
      */
     public function intArray(string $key): array
     {
@@ -209,15 +245,21 @@ class Json
         return $this->data;
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     public function serialize(): string
     {
         try {
             return json_encode($this->data, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new \RuntimeException('Invalid internal Json object.', previous: $e);
+            throw new UnexpectedJsonException('Invalid internal Json object.', previous: $e);
         }
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     */
     private function assertSequential(string $key): void
     {
         $array = $this->data[$key];
@@ -231,18 +273,18 @@ class Json
         return $this->previousPath ? "$this->previousPath.$key" : (string)$key;
     }
 
-    private function buildException(string|int $key, string $expectedType): \InvalidArgumentException
+    private function buildException(string|int $key, string $expectedType): UnexpectedJsonException
     {
         $path = $this->buildPath($key);
 
         if (!isset($this->data[$key])) {
-            return new \InvalidArgumentException(
+            return new UnexpectedJsonException(
                 sprintf('Missing value at %s. %s expected.', $path, $expectedType)
             );
         }
 
         $type = gettype($this->data[$key]);
-        return new \InvalidArgumentException(
+        return new UnexpectedJsonException(
             sprintf('Invalid type at %s. %s expected, %s got.', $path, $expectedType, $type)
         );
     }

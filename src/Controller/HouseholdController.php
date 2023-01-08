@@ -7,29 +7,31 @@ namespace App\Controller;
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdInvite;
 use App\Household\Entity\HouseholdPrivilege;
+use App\Household\Entity\ReassignmentStrategy;
 use App\Household\HouseholdVoter;
-use App\User\Entity\User;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Invite\InvitePublisher;
+use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 use App\Push\Pusher;
+use App\User\Entity\User;
 use App\User\UserRepository;
 use App\Utils\Base64UrlInterface;
 use App\Webhook\WebhookSecretGenerator;
 use App\Webhook\WebhookValidator;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 class HouseholdController extends UserAwareController
 {
     #[Route(path: '/api/household/create', name: 'create_household', methods: ['POST'])]
     public function createHouseHold(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
         $household = Household::createFromRequest($request, $user);
         $entityManager->persist($household);
@@ -40,13 +42,13 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/invite/{id}', name: 'household_invite', methods: ['POST'])]
     public function invite(
-        Household $household,
+        Household              $household,
         EntityManagerInterface $entityManager,
-        UserRepository $userRepository,
-        Base64UrlInterface $base64Url,
-        Request $request,
-        InvitePublisher $invitePublisher,
-        Pusher $pusher,
+        UserRepository         $userRepository,
+        Base64UrlInterface     $base64Url,
+        Request                $request,
+        InvitePublisher        $invitePublisher,
+        Pusher                 $pusher,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
@@ -57,24 +59,20 @@ class HouseholdController extends UserAwareController
             try {
                 $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee, $user);
             } catch (\Exception $e) {
-                return JsonErrorResponse::create([ 'reason' => $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+                return JsonErrorResponse::create(['reason' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
             $entityManager->persist($inviteToken);
             $invitePublisher->publish($inviteToken);
         }
         $entityManager->flush();
-        $pusher->publishInvites(
-            $invitees,
-            "Einladung in Haushalt",
-            sprintf("Einladung von %s in den Haushalt %s erhalten", $user->getName(), $household->getName())
-        );
+        $pusher->publishInvites($user, $invitees, $household);
 
         return JsonSuccessResponse::create();
     }
 
     #[Route(path: '/api/household/join-by-token/{token}', name: 'household_join')]
     public function join(
-        HouseholdInvite $invite,
+        HouseholdInvite        $invite,
         EntityManagerInterface $entityManager
     ): JsonResponse {
         if ($invite->getValidUntil()->getTimestamp() <= (new \DateTime())->getTimestamp()) {
@@ -98,7 +96,7 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/accept-invite/{id}', name: 'household_accept_invite')]
     public function acceptInvite(
-        Household $household,
+        Household              $household,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
@@ -124,7 +122,7 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/decline-invite/{id}', name: 'household_decline_invite')]
     public function declineInvite(
-        Household $household,
+        Household              $household,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
@@ -143,7 +141,7 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/leave/{id}', name: 'household_leave', methods: ['POST'])]
     public function leaveHousehold(
-        Household $household,
+        Household              $household,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
         $user = $this->getUser();
@@ -153,7 +151,7 @@ class HouseholdController extends UserAwareController
 
         if ($household->getUserPrivilege($user) === HouseholdPrivilege::PRIVILEGE_ADMIN) {
             $numberAdmins = $household->getPrivileges()->filter(
-                static fn (HouseholdPrivilege $householdPrivilege) => $householdPrivilege->level === HouseholdPrivilege::PRIVILEGE_ADMIN
+                static fn(HouseholdPrivilege $householdPrivilege) => $householdPrivilege->level === HouseholdPrivilege::PRIVILEGE_ADMIN
             )->count();
             if ($numberAdmins === 1) {
                 return JsonErrorResponse::create(['reason' => 'You cannot abandon this household as the last admin.',]);
@@ -167,9 +165,9 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/kick/{id}/{user_id}', name: 'household_kick', methods: ['POST'])]
     public function kickMember(
-        Household $household,
+        Household                                           $household,
         #[MapEntity(expr: "repository.find(user_id)")] User $kicked,
-        EntityManagerInterface $entityManager,
+        EntityManagerInterface                              $entityManager,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
@@ -187,10 +185,10 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/privilege/{id}/{user_id}/{privilege}', name: 'household_member_privilege', methods: ['POST'])]
     public function privilege(
-        Household $household,
+        Household                                           $household,
         #[MapEntity(expr: "repository.find(user_id)")] User $targetUser,
-        int $privilege,
-        EntityManagerInterface $entityManager,
+        int                                                 $privilege,
+        EntityManagerInterface                              $entityManager,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $user = $this->getUser();
@@ -214,7 +212,7 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/{id}', name: 'delete_household', methods: ['DELETE'])]
     public function deleteHousehold(
-        Household $household,
+        Household              $household,
         EntityManagerInterface $entityManager
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
@@ -226,11 +224,11 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/webhook/{id}', name: 'household_webhook', methods: ['POST'])]
     public function setWebhook(
-        Household $household,
+        Household              $household,
         EntityManagerInterface $entityManager,
-        WebhookValidator $webhookValidator,
+        WebhookValidator       $webhookValidator,
         WebhookSecretGenerator $webhookSecretGenerator,
-        Request $request,
+        Request                $request,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
         $data = Json::fromRequest($request);
@@ -245,5 +243,26 @@ class HouseholdController extends UserAwareController
         return JsonSuccessResponse::create([
             'secret' => $household->getWebhookSecret(),
         ]);
+    }
+
+    #[Route(path: '/api/household/reassignment-strategy/{id}', name: 'household_reassignment_strategy', methods: ['POST'])]
+    public function setReassignmentStrategy(
+        Household              $household,
+        EntityManagerInterface $entityManager,
+        Request                $request,
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
+        try {
+            $data = Json::fromRequest($request);
+            $strategy = ReassignmentStrategy::from($data->string('reassignmentStrategy'));
+        } catch (UnexpectedJsonException|\ValueError $e) {
+            return JsonErrorResponse::create([
+                'reason' => 'Invalid data given, "reassign_strategy" is required!',
+            ]);
+        }
+        $household->setReassignmentStrategy($strategy);
+        $entityManager->flush();
+
+        return JsonSuccessResponse::create();
     }
 }

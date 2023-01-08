@@ -11,6 +11,8 @@ use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Json;
 use App\Push\Pusher;
 use App\Task\Entity\Task;
+use App\Task\Exception\TaskAssignException;
+use App\Task\TaskAssigner;
 use App\Task\TaskCompleter;
 use App\Task\TaskFactory;
 use App\Task\TaskLogRepository;
@@ -78,17 +80,7 @@ class TaskController extends UserAwareController
             ], Response::HTTP_TOO_MANY_REQUESTS);
         }
         $taskPublisher->publish($task->getHousehold());
-        $pusher->publishTaskDone(
-            $task->getHousehold(),
-            $user,
-            sprintf('%s wurde erledigt!', $task->getName()),
-            sprintf(
-                '%s hat in %s gerade %s erledigt!',
-                $user->getName(),
-                $task->getHousehold()->getName(),
-                $task->getName()
-            ),
-        );
+        $pusher->publishTaskDone($task, $user);
         $webhookNotifier->notify($task, $user);
 
         return JsonSuccessResponse::create(['timestamp' => $task->getLastCompleted()?->getTimestamp()]);
@@ -135,6 +127,7 @@ class TaskController extends UserAwareController
         UserRepository         $userRepository,
         EntityManagerInterface $entityManager,
         TaskPublisher          $taskPublisher,
+        TaskAssigner           $taskAssigner,
     ): JsonResponse {
         if (!$task->getHousehold()->getMembers()->contains($this->getUser())) {
             return JsonErrorResponse::create([
@@ -144,13 +137,13 @@ class TaskController extends UserAwareController
         $data = Json::fromRequest($request);
         $assigneeId = $data->tryInt('assignee');
         $assignee = $assigneeId ? $userRepository->find($assigneeId) : null;
-        if (null !== $assignee && !$task->getHousehold()->getMembers()->contains($assignee)) {
+        try {
+            $taskAssigner->assignTo($task, $assignee);
+        } catch (TaskAssignException) {
             return JsonErrorResponse::create([
-                'reason' => 'Cannot assign to users, that are not members of this household!'
+                'reason' => 'Cannot assign task to users, that are not members of this household!',
             ]);
         }
-
-        $task->assignTo($assignee);
         $entityManager->flush();
         $taskPublisher->publish($task->getHousehold());
 

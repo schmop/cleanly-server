@@ -3,50 +3,60 @@
 namespace App\Household\Entity;
 
 use App\Household\HouseholdRepository;
-use Doctrine\ORM\Mapping as ORM;
+use App\Task\Entity\Task;
+use App\Todo\Entity\Todo;
+use App\User\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\Request;
-use App\Todo\Entity\Todo;
-use App\Task\Entity\Task;
-use App\User\Entity\User;
 
- #[ORM\Entity(repositoryClass:HouseholdRepository::class)]
+enum ReassignmentStrategy: string
+{
+    case None = 'none';
+    case Unassign = 'unassign';
+    case Rotate = 'rotate';
+}
+
+#[ORM\Entity(repositoryClass: HouseholdRepository::class)]
 class Household implements \JsonSerializable
 {
-     #[ORM\Id]
-     #[ORM\GeneratedValue]
-     #[ORM\Column(type:"integer")]
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: "integer")]
     private int $id;
 
-     #[ORM\Column(type:"string", length:255)]
+    #[ORM\Column(type: "string", length: 255)]
     private string $name;
 
-     #[ORM\Column(type:"string", length:255, nullable:true)]
+    #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $webhookUrl;
 
-     #[ORM\Column(type:"string", length:255, nullable:true)]
+    #[ORM\Column(type: "string", length: 255, nullable: true)]
     private ?string $webhookSecret;
 
+    #[ORM\Column(type: "string", nullable: false, enumType: ReassignmentStrategy::class, options: ['default' => 'none'])]
+    private ReassignmentStrategy $reassignmentStrategy;
+
     /** @var Collection<int, User> */
-    #[ORM\ManyToMany(targetEntity:User::class, inversedBy:"households")]
-    #[ORM\JoinTable(name:"household_members")]
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: "households")]
+    #[ORM\JoinTable(name: "household_members")]
     private Collection $members;
 
     /** @var Collection<int, HouseholdPrivilege> */
-    #[ORM\OneToMany(targetEntity:HouseholdPrivilege::class, mappedBy:"household", cascade:["all"], orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: "household", targetEntity: HouseholdPrivilege::class, cascade: ["all"], orphanRemoval: true)]
     private Collection $privileges;
 
     /** @var Collection<int, HouseholdInvite> */
-    #[ORM\OneToMany(targetEntity:HouseholdInvite::class, mappedBy:"household")]
+    #[ORM\OneToMany(mappedBy: "household", targetEntity: HouseholdInvite::class)]
     private Collection $invites;
 
     /** @var Collection<int, Task> */
-    #[ORM\OneToMany(targetEntity:Task::class, mappedBy:"household")]
+    #[ORM\OneToMany(mappedBy: "household", targetEntity: Task::class)]
     private Collection $tasks;
 
     /** @var Collection<int, Todo> */
-    #[ORM\OneToMany(targetEntity:Todo::class, mappedBy:"household", cascade:["all"], orphanRemoval:true)]
+    #[ORM\OneToMany(mappedBy: "household", targetEntity: Todo::class, cascade: ["all"], orphanRemoval: true)]
     private Collection $checklist;
 
     public function __construct()
@@ -191,11 +201,12 @@ class Household implements \JsonSerializable
     /**
      * @return Collection<int, HouseholdPrivilege>
      */
-	public function getPrivileges(): Collection {
-		return $this->privileges;
-	}
+    public function getPrivileges(): Collection
+    {
+        return $this->privileges;
+    }
 
-	public function setUserPrivilege(User $user, int $level): void
+    public function setUserPrivilege(User $user, int $level): void
     {
         if (!in_array($level, HouseholdPrivilege::PRIVILEGES)) {
             throw new \InvalidArgumentException('Invalid household privilege given!');
@@ -222,10 +233,21 @@ class Household implements \JsonSerializable
         return HouseholdPrivilege::PRIVILEGE_USER;
     }
 
+    public function getReassignmentStrategy(): ReassignmentStrategy
+    {
+        return $this->reassignmentStrategy;
+    }
+
+    public function setReassignmentStrategy(ReassignmentStrategy $reassignmentStrategy): void
+    {
+        $this->reassignmentStrategy = $reassignmentStrategy;
+    }
+
     /**
      * @return array{
      *     id: int|null,
      *     name: string|null,
+     *     reassignmentStrategy: ReassignmentStrategy,
      *     webhookUrl: string|null,
      *     users: array<int, mixed>,
      *     tasks: array<int, mixed>,
@@ -238,19 +260,21 @@ class Household implements \JsonSerializable
         return [
             'id' => $this->getId(),
             'name' => $this->getName(),
+            'reassignmentStrategy' => $this->getReassignmentStrategy(),
             'webhookUrl' => $this->getWebhookUrl(),
             'users' => $this->getMembers()->map(
-                static fn (User $user) => $user->jsonSerialize()
+                static fn(User $user) => $user->jsonSerialize()
             )->toArray(),
             'tasks' => $this->getTasks()->map(
-                static fn (Task $task) => $task->jsonSerialize()
+                static fn(Task $task) => $task->jsonSerialize()
             )->toArray(),
             'checklist' => $this->getSortedChecklist()->map(
-                static fn (Todo $todo) => $todo->jsonSerialize()
+                static fn(Todo $todo) => $todo->jsonSerialize()
             )->toArray(),
             'privileges' => $this->getPrivileges()->map(
-                static fn (HouseholdPrivilege $privilege) => $privilege->jsonSerialize()
+                static fn(HouseholdPrivilege $privilege) => $privilege->jsonSerialize()
             )->toArray(),
         ];
     }
+
 }

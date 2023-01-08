@@ -2,10 +2,11 @@
 
 namespace App\Hub;
 
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\User\Entity\User;
 use Psr\Log\LoggerInterface;
-
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use function Lambdish\Phunctional\map;
 
 class Publisher
@@ -21,18 +22,22 @@ class Publisher
      */
     public function publish(array $targets, string $type, mixed $payload): void
     {
-        $targetIds = map(fn (User $target) => $target->getId(), $targets);
-        $response = $this->client->request('POST', sprintf("%s/publish", self::HOST), [
-            'json' => [
-                'targets' => $targetIds,
-                'data' => [
-                    'payload' => $payload,
-                    'type' => $type,
-                ],
-            ]
-        ]);
-        if ($response->getStatusCode() !== 200) {
-            $this->logger->error('Could not publish!');
+        $targetIds = map(fn(User $target) => $target->getId(), $targets);
+        try {
+            $response = $this->client->request('POST', sprintf("%s/publish", self::HOST), [
+                'json' => [
+                    'targets' => $targetIds,
+                    'data' => [
+                        'payload' => $payload,
+                        'type' => $type,
+                    ],
+                ]
+            ]);
+            if ($response->getStatusCode() !== Response::HTTP_OK) {
+                $this->logger->error('Could not publish!');
+            }
+        } catch (TransportExceptionInterface $e) {
+            $this->logger->error('Could not publish!', ['exception' => $e]);
         }
     }
 }

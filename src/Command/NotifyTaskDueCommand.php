@@ -2,17 +2,16 @@
 
 namespace App\Command;
 
-use App\Push\Pusher;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use App\Household\HouseholdRepository;
+use App\Push\Pusher;
 use App\Task\Entity\Task;
 use App\Task\TaskSecretary;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-
+use Symfony\Component\Console\Output\OutputInterface;
 use function Lambdish\Phunctional\filter;
 use function Lambdish\Phunctional\map;
 
@@ -20,16 +19,17 @@ use function Lambdish\Phunctional\map;
 class NotifyTaskDueCommand extends Command
 {
     public function __construct(
-        private readonly Pusher $pusher,
+        private readonly Pusher              $pusher,
         private readonly HouseholdRepository $householdRepository,
-        private readonly TaskSecretary $taskSecretary,
-        private readonly LoggerInterface $logger,
+        private readonly TaskSecretary       $taskSecretary,
+        private readonly LoggerInterface     $logger,
     ) {
         parent::__construct();
     }
 
 
-    protected function configure(): void {
+    protected function configure(): void
+    {
         $this->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Just returns the devices and push notifications, but does not send any push notifications!');
     }
 
@@ -39,7 +39,7 @@ class NotifyTaskDueCommand extends Command
             $households = $this->householdRepository->findAll();
             foreach ($households as $household) {
                 $dueTasks = filter(
-                    fn (Task $task) => $this->taskSecretary->isTaskDue($task) && !$this->taskSecretary->wasAlreadyNotified($task),
+                    fn(Task $task) => $this->taskSecretary->isTaskDue($task) && !$this->taskSecretary->wasAlreadyNotified($task),
                     $household->getTasks(),
                 );
                 if (empty($dueTasks)) {
@@ -47,7 +47,7 @@ class NotifyTaskDueCommand extends Command
                 }
                 if ($input->getOption('dry-run')) {
                     dump(map(
-                        fn (Task $task) => [
+                        fn(Task $task) => [
                             'household' => $task->getHousehold()->getName(),
                             'task' => $task->jsonSerialize()
                         ],
@@ -57,11 +57,7 @@ class NotifyTaskDueCommand extends Command
                     continue;
                 }
                 foreach ($dueTasks as $task) {
-                    $this->pusher->publishTaskDue(
-                        $household,
-                        'Aufgabe wird dringend!',
-                        sprintf('%s sollte in %s bald erledigt werden!', $task->getName(), $household->getName()),
-                    );
+                    $this->pusher->publishTaskDue($task);
                     $this->taskSecretary->markTaskAsNotified($task);
                 }
                 $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));

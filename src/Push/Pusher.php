@@ -2,52 +2,95 @@
 
 namespace App\Push;
 
-use Kreait\Firebase\Contract\Messaging;
 use App\Household\Entity\Household;
 use App\Push\Entity\Device;
+use App\Task\Entity\Task;
+use App\User\Entity\User;
+use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Exception\FirebaseException;
+use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 use Psr\Log\LoggerInterface;
-use App\User\Entity\User;
-
 use function Lambdish\Phunctional\filter;
 use function Lambdish\Phunctional\map;
 
-class Pusher
+readonly class Pusher
 {
-    public function __construct(private Messaging $messaging, private DeviceRepository $deviceRepository, private LoggerInterface $logger)
-    {
+    public function __construct(
+        private Messaging        $messaging,
+        private DeviceRepository $deviceRepository,
+        private LoggerInterface  $logger,
+    ) {
     }
 
-    public function publishTaskDone(Household $household, User $exclude, string $title, string $content): void
+    public function publishTaskDone(Task $task, User $exclude): void
     {
         $devices = filter(
-            fn(Device $device) =>
-            $device->getUser() !== $exclude && $device->getUser()->getUserSettings()->notifyTaskDone === true,
-            $this->deviceRepository->findByHousehold($household),
+            fn(Device $device) => $device->getUser() !== $exclude && $device->getUser()->getUserSettings()->notifyTaskDone === true,
+            $this->deviceRepository->findByHousehold($task->getHousehold()),
         );
-        $this->publishToDevices($devices, $title, $content);
+        $this->publishToDevices(
+            $devices,
+            sprintf('%s wurde erledigt!', $task->getName()),
+            sprintf(
+                '%s hat in %s gerade %s erledigt!',
+                $exclude->getName(),
+                $task->getHousehold()->getName(),
+                $task->getName(),
+            ),
+        );
     }
 
-    public function publishTaskDue(Household $household, string $title, string $content): void
+    public function publishTaskDue(Task $task): void
     {
+        $household = $task->getHousehold();
         $devices = filter(
             fn(Device $device) => $device->getUser()->getUserSettings()->notifyTaskDue === true,
             $this->deviceRepository->findByHousehold($household),
         );
-        $this->publishToDevices($devices, $title, $content);
+        $this->publishToDevices(
+            $devices,
+            'Aufgabe wird dringend!',
+            sprintf(
+                '%s sollte in %s bald erledigt werden!',
+                $task->getName(),
+                $household->getName(),
+            ),
+        );
     }
 
     /**
-     * @param User[] $users
+     * @param User[] $invitees
      */
-    public function publishInvites(array $users, string $title, string $content): void
+    public function publishInvites(User $inviter, array $invitees, Household $household): void
     {
         $devices = filter(
             fn(Device $device) => $device->getUser()->getUserSettings()->notifyInvites === true,
-            $this->deviceRepository->findByUsers($users),
+            $this->deviceRepository->findByUsers($invitees),
         );
-        $this->publishToDevices($devices, $title, $content);
+        $this->publishToDevices(
+            $devices,
+            "Einladung in Haushalt",
+            sprintf(
+                "Einladung von %s in den Haushalt %s erhalten",
+                $inviter->getName(),
+                $household->getName(),
+            ),
+        );
+    }
+
+    public function publishTaskAssign(Task $task, User $assignee): void
+    {
+        $this->publishToDevices(
+            $this->deviceRepository->findByUser($assignee),
+            'Aufgabe zugewiesen',
+            sprintf(
+                'Dir wurde %s in %s zugewiesen!',
+                $task->getName(),
+                $task->getHousehold()->getName(),
+            ),
+        );
     }
 
     /**
@@ -62,7 +105,7 @@ class Pusher
         try {
             $message = CloudMessage::new()->withNotification(Notification::create($title, $content, $imageUrl));
             $this->messaging->sendMulticast($message, $deviceIds);
-        } catch (\Exception $e) {
+        } catch (MessagingException|FirebaseException $e) {
             $this->logger->error('Could not send push notifications, reason: {message}!', [
                 'message' => $e->getMessage(),
                 'exception' => $e

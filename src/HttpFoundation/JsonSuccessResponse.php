@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\HttpFoundation;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class JsonSuccessResponse
 {
-    private function __construct(){}
+    private function __construct()
+    {
+    }
 
     /**
      * @param array<array-key, mixed> $data
@@ -16,6 +19,6 @@ class JsonSuccessResponse
      */
     public static function create(array $data = [], array $headers = []): JsonResponse
     {
-        return new JsonResponse($data, JsonResponse::HTTP_OK, $headers);
+        return new JsonResponse($data, Response::HTTP_OK, $headers);
     }
 }
