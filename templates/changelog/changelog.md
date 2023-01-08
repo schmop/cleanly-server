@@ -6,7 +6,18 @@ Web: https://schmoppo.de
 
 ## 1.17 - Aktuell
 
+Aufgaben können nun Mitgliedern zugewiesen werden!
 
+![assignment](assets/changelog/assignment.png)
+
+Außerdem kann man nun einstellen, was passieren soll, wenn man eine Aufgabe erledigt hat, zu der man zugewiesen war.
+Die Möglichkeiten sind:
+
+* **Nichts tun** - Die Zuweisung bleibt bestehen und man muss sich manuell darum kümmern.
+* **Zuweisung entfernen** - Nachdem etwas erledigt wurde, ist immer niemand mehr zugewiesen.
+* **Rotieren** - Die Person, die diese Aufgabe am längsten nicht erledigt hat, wird automatisch zugewiesen.
+
+![reassignment-strategy](assets/changelog/reassignment-strategy.png)
 
 ## 1.16 - 28.12.2022
 
@@ -36,9 +47,11 @@ Wenn man Mitglied in exakt einem Haushalt ist, wird dieser als Startseite genomm
 
 In der Übersicht aller Haushalte wurden die redundanten Aktionen hinter dem Kontextmenü entfernt.
 
-Changelogs sind nun nicht mehr in der App ausgeliefert, sondern über https://cleanly.schmoppo.de/changelog erreichbar. Das reduziert die App-Größe nachhaltig und verschnellert das aktualisieren der App.
+Changelogs sind nun nicht mehr in der App ausgeliefert, sondern über https://cleanly.schmoppo.de/changelog erreichbar.
+Das reduziert die App-Größe nachhaltig und verschnellert das aktualisieren der App.
 
-Die Aufgabenfarben können nun nach fließenden Farbtönen eingestellt werden. Außerdem sind die Kontraste der Farben im Lightmode und im Darkmode so angepasst, dass sie lesbar bleiben.
+Die Aufgabenfarben können nun nach fließenden Farbtönen eingestellt werden. Außerdem sind die Kontraste der Farben im
+Lightmode und im Darkmode so angepasst, dass sie lesbar bleiben.
 
 ![color-picker](assets/changelog/color-picker.png)
 
@@ -52,7 +65,8 @@ Das Aufrufen der App aus dem Hintergrund aktualisiert nun den Zustand aller Haus
 
 Fehler behoben, bei dem man die Login-Maske durch Aktualisieren der Seite vor dem Einloggen umgehen konnte.
 
-Die Fortschrittsanzeigen bei Aufgaben mit Wiederholungsintervall wurden durch farbige Balken mit einstellbaren Farben ersetzt.
+Die Fortschrittsanzeigen bei Aufgaben mit Wiederholungsintervall wurden durch farbige Balken mit einstellbaren Farben
+ersetzt.
 
 ![task-colors](assets/changelog/task-colors.png)
 
@@ -95,15 +109,18 @@ Wie gewohnt öffnen sie darauf die App und werden entfernt.
 
 Aufgaben können nun ohne Wiederholungsdatum eingestellt werden!
 
-Diese Aufgaben senden keine Push-Benachrichtigungen, wenn sie lange nicht erledigt werden, denn sie können nie *dringlich* werden.
+Diese Aufgaben senden keine Push-Benachrichtigungen, wenn sie lange nicht erledigt werden, denn sie können nie
+*dringlich* werden.
 
 ![nonrepeating](assets/changelog/nonrepeating.png)
 
 ## 1.7 - 08.12.2022
 
-Das Ändern der Sterne einer Aufgabe ändert die erarbeiteten Sterne nicht mehr rückwirkend für alle Mitglieder des Haushaltes.
+Das Ändern der Sterne einer Aufgabe ändert die erarbeiteten Sterne nicht mehr rückwirkend für alle Mitglieder des
+Haushaltes.
 
-Der Aktivitäts-Tab lädt nicht mehr alle Aktivitätseinträge auf einmal, sondern lädt beim Scrollen in die Vergangenheit Einträge nach.
+Der Aktivitäts-Tab lädt nicht mehr alle Aktivitätseinträge auf einmal, sondern lädt beim Scrollen in die Vergangenheit
+Einträge nach.
 
 ![Infinite scroll](assets/changelog/infinite-scroll.png)
 
@@ -129,6 +146,7 @@ Diese Rolle kann Aufgaben anlegen und bearbeiten.
 Interaktionen mit Aufgaben (Erstellen, Erledigen, Löschen, Editieren) geben (Miss-)Erfolgsrückmeldung.
 
 ## 1.5 - 15.08.2022
+
 Man kann die Sprache nun wechseln. Es stehen die Sprachen "Deutsch" und "Englisch" zur Verfügung.
 
 ![Language settings](assets/changelog/language-settings.png)
@@ -142,26 +160,32 @@ Dadurch können Mitglieder eine Übersicht darüber bekommen, wer wie viel in de
 ![Stars member](assets/changelog/stars-member.png)
 
 ## 1.4.2 - 12.08.2022
+
 Registrationen müssen ab sofort mit der bestätigung der E-Mail-Adresse abgeschlossen werden.
 
-Benachrichtigungseinstellungen hinzugefügt, die einem erlauben Push-Benachrichtigungen für explizite Ereignisse feingranular zu deaktivieren.
+Benachrichtigungseinstellungen hinzugefügt, die einem erlauben Push-Benachrichtigungen für explizite Ereignisse
+feingranular zu deaktivieren.
 
 ![Notification settings](assets/changelog/notification-settings.png)
 
 Man wird nun benachrichtigt, wenn Aufgaben dringend werden.
 
 Kleinere Fehlerbehebungen:
+
 * "Aufgabe bearbeiten" repariert.
 * Die Checkliste kann wieder sortiert werden.
 
 ## 1.4.1 - 30.07.2022
+
 Fehler behoben, bei dem
+
 * man regelmäßig zu früh ausgeloggt wurde
 * sich das "Mitglieder einladen"-Fenster nicht mehr schloß
 * man keine Rückmeldung beim Abhaken von Aufgaben bekam
 * die Checkliste nicht mehr speicherte
 
 ## 1.4 - 28.07.2022
+
 Änderungen werden in der App nun unter dem Menüeintrag "Änderungen" veröffentlicht.
 
 ![Changelog](assets/changelog/changelogs.png)
@@ -169,14 +193,15 @@ Fehler behoben, bei dem
 Man kann Zugriff zum Account bei verlorenem Passwort über eine "Passwort vergessen"-Funktion wiedererlangen.
 Dies ist bislang nur über den folgenden direkt Link erreichbar: https://cleanly.schmoppo.de/reset-password
 
-Unterstützung für Push-Benachrichtigungen wurde hinzugefügt! Damit wird man jetzt informiert, wenn Aufgaben in einem Haushalt erledigt wurden oder wenn man zu einem Haushalt eingeladen wurde!
+Unterstützung für Push-Benachrichtigungen wurde hinzugefügt! Damit wird man jetzt informiert, wenn Aufgaben in einem
+Haushalt erledigt wurden oder wenn man zu einem Haushalt eingeladen wurde!
 
 ![Push notifications](assets/changelog/push.jpg)
 
 Beim Erstellen eines Checklisteneintrages wird dieser direkt fokussiert.
 
-
 ## 1.3.2 - 23.07.2022
+
 Aktivitäten innerhalb eines Haushalts sind jetzt unter dem Tab "Aktivitäten" einsehbar.
 
 *Aktivitäten:*
@@ -193,12 +218,13 @@ Aktionen in den Haushalteinstellungen werden nun ausgeblendet, wenn die Rechte f
 Fehler behoben, bei dem der Home-Button manchmal nicht funktioniert hat.
 
 ## 1.3.1 - 18.07.2022
+
 Aktuelle Änderungen anderer Nutzer in der geteilten Checkliste werden in echtzeit angezeigt.
 
 Änderungen in der geteilten Checkliste haben jetzt Animationen.
 
-
 ## 1.3.0 - 07.07.2022
+
 Geteilte Checkliste für Haushalte hinzugefügt.
 
 Besitzrechte eines Haushalts können nun übertragen werden.
