@@ -8,6 +8,7 @@ use App\Task\Entity\Task;
 use App\User\Entity\User;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpClient\Exception\ClientException;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class WebhookNotifier
@@ -16,7 +17,7 @@ class WebhookNotifier
 
     public function __construct(
         private readonly HttpClientInterface $client,
-        private readonly LoggerInterface $logger,
+        private readonly LoggerInterface     $logger,
     ) {
     }
 
@@ -50,7 +51,7 @@ class WebhookNotifier
                     'authorization' => "Bearer $secret",
                 ],
             ]);
-        } catch (ClientException $exception) {
+        } catch (ClientException|TransportExceptionInterface $exception) {
             $this->logger->warning('Could not notify webhook.', [
                 'exception' => $exception,
                 'household' => $household->getId(),

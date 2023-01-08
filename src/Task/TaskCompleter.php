@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Task;
+
 use App\Task\Entity\Task;
 use App\User\Entity\User;
 use App\Utils\Clock;
@@ -10,10 +11,10 @@ class TaskCompleter
     private const RATE_LIMIT = 5 * 60; // 5 minutes
 
     public function __construct(
-        private readonly TaskRepository $taskRepository,
-        private readonly TaskLogFactory $taskLogFactory,
+        private readonly TaskRepository    $taskRepository,
+        private readonly TaskLogFactory    $taskLogFactory,
         private readonly TaskLogRepository $taskLogRepository,
-        private readonly Clock $clock,
+        private readonly Clock             $clock,
     ) {
     }
 

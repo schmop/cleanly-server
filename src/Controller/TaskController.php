@@ -21,6 +21,7 @@ use App\Task\TaskRepository;
 use App\User\UserRepository;
 use App\Webhook\WebhookNotifier;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -67,6 +68,8 @@ class TaskController extends UserAwareController
         Pusher          $pusher,
         TaskCompleter   $taskCompleter,
         WebhookNotifier $webhookNotifier,
+        TaskAssigner    $taskAssigner,
+        LoggerInterface $logger,
     ): JsonResponse {
         $user = $this->getUser();
         if (!$task->getHousehold()->getMembers()->contains($user)) {
@@ -82,8 +85,16 @@ class TaskController extends UserAwareController
         $taskPublisher->publish($task->getHousehold());
         $pusher->publishTaskDone($task, $user);
         $webhookNotifier->notify($task, $user);
+        try {
+            $taskAssigner->autoAssign($task, $user);
+        } catch (TaskAssignException $e) {
+            $logger->error('Could not auto reassign task!', ['exception' => $e]);
+        }
 
-        return JsonSuccessResponse::create(['timestamp' => $task->getLastCompleted()?->getTimestamp()]);
+        return JsonSuccessResponse::create([
+            'timestamp' => $task->getLastCompleted()?->getTimestamp(),
+            'assignee' => $task->getAssignee(),
+        ]);
     }
 
     #[Route(path: '/api/task/log/{id}/{fromId}', defaults: ['fromId' => null], name: 'task_log', methods: ['GET'])]

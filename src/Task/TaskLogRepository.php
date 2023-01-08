@@ -2,14 +2,14 @@
 
 namespace App\Task;
 
-use App\Task\Entity\TaskLog;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
-use App\User\Entity\User;
-use App\Task\Entity\Task;
 use App\Household\Entity\Household;
 use App\Phunctional\Statistics;
-
+use App\Task\Entity\Task;
+use App\Task\Entity\TaskLog;
+use App\User\Entity\User;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use function Lambdish\Phunctional\filter;
 use function Lambdish\Phunctional\map;
 
 /**
@@ -51,8 +51,7 @@ class TaskLogRepository extends ServiceEntityRepository
             ->where('h.id = :household')
             ->orderBy('l.timestamp', 'DESC')
             ->setParameter(':household', $household->getId())
-            ->setMaxResults(20)
-        ;
+            ->setMaxResults(20);
         if (null !== $fromId) {
             /**
              * Subqueries in Doctrine are working best as DQLs
@@ -70,8 +69,7 @@ class TaskLogRepository extends ServiceEntityRepository
                         . ')',
                     ),
                 )
-                ->setParameter(':fromId', $fromId)
-            ;
+                ->setParameter(':fromId', $fromId);
         }
 
         return $qb->getQuery()->getResult();
@@ -88,8 +86,7 @@ class TaskLogRepository extends ServiceEntityRepository
             ->innerJoin('t.household', 'h')
             ->where('h.id = :household')
             ->orderBy('l.timestamp', 'ASC')
-            ->setParameter(':household', $household->getId())
-        ;
+            ->setParameter(':household', $household->getId());
 
         return $qb->getQuery()->getResult();
     }
@@ -146,7 +143,7 @@ class TaskLogRepository extends ServiceEntityRepository
     {
         /** @param TaskLog[] $logs */
         return map(function (array $logs) {
-            $timestamps = map(fn (TaskLog $log) => $log->getTimestamp()->getTimestamp(), $logs);
+            $timestamps = map(fn(TaskLog $log) => $log->getTimestamp()->getTimestamp(), $logs);
             $deltas = Statistics::delta($timestamps);
 
             return [
@@ -164,16 +161,40 @@ class TaskLogRepository extends ServiceEntityRepository
     private function getLogsPerTaskFromHousehold(Household $household): array
     {
         $logsPerTask = [];
-        $num = 0;
         foreach ($this->findByHousehold($household) as $log) {
             $taskId = $log->getTask()->getId();
             if (!array_key_exists($taskId, $logsPerTask)) {
                 $logsPerTask[$taskId] = [];
             }
             $logsPerTask[$taskId][] = $log;
-            $num++;
         }
 
         return $logsPerTask;
+    }
+
+    public function getNextAssignmentRotation(Task $task): ?User
+    {
+        $qb = $this->createQueryBuilder('l');
+
+        $rotationOrders = $qb
+            ->select('u.id, MAX(l.timestamp) as lastDone')
+            ->leftJoin('l.user', 'u')
+            ->groupBy('u.id')
+            ->orderBy('lastDone', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $members = $task->getHousehold()->getMembers()->toArray();
+        foreach ($rotationOrders as $rotationOrder) {
+            if (count($members) <= 1) {
+                break;
+            }
+            $members = filter(
+                fn(User $member) => $member->getId() !== $rotationOrder['id'],
+                $members,
+            );
+        }
+
+        return $members[0] ?? null;
     }
 }
