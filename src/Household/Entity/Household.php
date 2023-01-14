@@ -77,6 +77,7 @@ class Household implements \JsonSerializable
         $household = new self();
         $household->setName($name);
         $household->setUserPrivilege($user, HouseholdPrivilege::PRIVILEGE_ADMIN);
+        $household->setReassignmentStrategy(ReassignmentStrategy::None);
         $household->addMember($user);
 
         return $household;
