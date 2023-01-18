@@ -24,6 +24,7 @@ class StatisticsController extends UserAwareController
         Request $request,
         LoggerInterface $logger,
         HouseholdRepository $householdRepository,
+        TaskLogRepository $taskLogRepository,
     ): JsonResponse
     {
         try {
@@ -41,7 +42,12 @@ class StatisticsController extends UserAwareController
             ]);
         }
 
-        return JsonSuccessResponse::create(['foo' => 'bar']);
+        $begin = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::ISO8601_EXPANDED, $requestContent->begin);
+        $end = \DateTimeImmutable::createFromFormat(\DateTimeImmutable::ISO8601_EXPANDED, $requestContent->end);
+
+        $taskLogs = $taskLogRepository->getTasklogsForHouseholdInTimeframe($household, $begin, $end);
+
+        return JsonSuccessResponse::create($taskLogs);
     }
 
     #[Route(path: '/api/task/stats/{id}', name: 'task_stats', methods: ['GET'])]

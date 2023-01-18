@@ -203,6 +203,15 @@ class TaskLogRepository extends ServiceEntityRepository
      */
     public function getTasklogsForHouseholdInTimeframe(Household $household, \DateTimeImmutable $begin, \DateTimeImmutable $end): array
     {
+        $queryBuilder = $this->createQueryBuilder('taskLog');
 
+        $queryBuilder
+            ->leftJoin('taskLog.task', 'task')
+            ->where('task.household = :household')
+            ->andWhere('taskLog.timestamp BETWEEN :begin AND :end')
+            ->setParameters([':household' => $household, ':begin' => $begin, ':end' => $end])
+            ;
+
+        return $queryBuilder->getQuery()->getResult();
     }
 }
