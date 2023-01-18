@@ -41,4 +41,9 @@ class HouseholdRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function findById(int $householdId): ?Household
+    {
+        return $this->find($householdId);
+    }
 }

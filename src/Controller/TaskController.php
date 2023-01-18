@@ -114,23 +114,6 @@ class TaskController extends UserAwareController
         return JsonSuccessResponse::create(['logs' => $logs, 'upToId' => $upToId]);
     }
 
-    #[Route(path: '/api/task/stats/{id}', name: 'task_stats', methods: ['GET'])]
-    public function fetchStats(
-        Household         $household,
-        TaskLogRepository $taskLogRepository,
-    ): JsonResponse {
-        if (!$household->getMembers()->contains($this->getUser())) {
-            return JsonErrorResponse::create([
-                'reason' => 'You are not a member of this household!'
-            ]);
-        }
-
-        return JsonSuccessResponse::create([
-            'durations' => $taskLogRepository->getDurationStats($household),
-            'userParticipations' => $taskLogRepository->getUserParticipations($household),
-        ]);
-    }
-
     #[Route(path: '/api/task/assign/{id}', name: 'task_assign', methods: ['POST'])]
     public function assignTask(
         Task                   $task,

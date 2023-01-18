@@ -197,4 +197,12 @@ class TaskLogRepository extends ServiceEntityRepository
 
         return $members[0] ?? null;
     }
+
+    /**
+     * @return TaskLog[]
+     */
+    public function getTasklogsForHouseholdInTimeframe(Household $household, \DateTimeImmutable $begin, \DateTimeImmutable $end): array
+    {
+
+    }
 }
