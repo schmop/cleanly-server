@@ -97,7 +97,7 @@ class TaskController extends UserAwareController
         ]);
     }
 
-    #[Route(path: '/api/task/log/{id}/{fromId}', defaults: ['fromId' => null], name: 'task_log', methods: ['GET'])]
+    #[Route(path: '/api/task/log/{id}/{fromId}', name: 'task_log', defaults: ['fromId' => null], methods: ['GET'])]
     public function fetchTaskLog(
         Household         $household,
         ?string           $fromId,
