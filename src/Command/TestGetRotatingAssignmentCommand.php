@@ -4,7 +4,6 @@ namespace App\Command;
 
 use App\Household\HouseholdRepository;
 use App\Task\TaskLogRepository;
-use App\Task\TaskRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -12,11 +11,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand('cleanly:test-get-rotating-assignment')]
-readonly class TestGetRotatingAssignmentCommand extends Command
+class TestGetRotatingAssignmentCommand extends Command
 {
     public function __construct(
         private TaskLogRepository   $taskLogRepository,
-        private TaskRepository      $taskRepository,
         private HouseholdRepository $householdRepository,
     ) {
         parent::__construct();
@@ -35,13 +33,15 @@ readonly class TestGetRotatingAssignmentCommand extends Command
             return Command::FAILURE;
         }
         $household = $this->householdRepository->find($householdId);
-        foreach ($household->getTasks() as $task) {
+        foreach ($household?->getTasks() as $task) {
+            $user = $this->taskLogRepository->getNextAssignmentRotation(
+                $task,
+            );
             dump(
                 $task->getId(),
                 $task->getName(),
-                $this->taskLogRepository->getNextAssignmentRotation(
-                    $task,
-                ),
+                $user->getId(),
+                $user->getName(),
             );
         }
 
