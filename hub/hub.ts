@@ -45,10 +45,10 @@ async function eventsHandler(request: Request, response: Response) {
     const clientId = v4();
 
     clients[clientId] = {response, userId};
-    console.log(`${clientId} (user ${userId}) connected!`);
+    console.info(`${clientId} (user ${userId}) connected!`);
 
     request.on('close', () => {
-        console.log(`${clientId} (user ${userId}) disconnected`);
+        console.info(`${clientId} (user ${userId}) disconnected`);
         delete clients[clientId];
     });
 }
@@ -95,7 +95,7 @@ function sendDataToUser(target: number, data: any) {
 
 
 app.listen(PORT, () => {
-    console.log(`Cleanly hub listening at http://localhost:${PORT}`)
+    console.info(`Cleanly hub listening at http://localhost:${PORT}`)
 });
 
 app.get('/events', eventsHandler);

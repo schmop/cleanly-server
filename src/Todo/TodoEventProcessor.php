@@ -28,7 +28,7 @@ class TodoEventProcessor
                         $this->create($event, $household);
                         break;
                     case TodoEvent::TYPE_SORT:
-                        $this->sort($event, $household);
+                        $this->sort($event);
                         break;
                     case TodoEvent::TYPE_UPDATE:
                         $this->update($event);
@@ -69,7 +69,7 @@ class TodoEventProcessor
     /**
      * @throws InconsistentChecklistEventException
      */
-    private function sort(TodoEvent $event, Household $household): void
+    private function sort(TodoEvent $event): void
     {
         $todo = $this->todoRepository->findByUuid($event->uuid);
         if (null === $todo) {

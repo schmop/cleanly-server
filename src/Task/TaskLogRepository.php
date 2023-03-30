@@ -179,8 +179,10 @@ class TaskLogRepository extends ServiceEntityRepository
         $rotationOrders = $qb
             ->select('u.id, MAX(l.timestamp) as lastDone')
             ->leftJoin('l.user', 'u')
+            ->where('l.task = :task')
             ->groupBy('u.id')
             ->orderBy('lastDone', 'DESC')
+            ->setParameter(':task', $task)
             ->getQuery()
             ->getResult();
 
@@ -195,6 +197,6 @@ class TaskLogRepository extends ServiceEntityRepository
             );
         }
 
-        return $members[0] ?? null;
+        return array_shift($members) ?? null;
     }
 }

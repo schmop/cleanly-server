@@ -14,6 +14,8 @@ use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
 use App\Todo\TodoPublisher;
 
+use function Lambdish\Phunctional\map;
+
 class TodoController extends UserAwareController
 {
     #[Route(path: '/api/household/update-checklist/{id}', name: 'household_update_checklist', methods: ['POST'])]
@@ -29,10 +31,7 @@ class TodoController extends UserAwareController
         }
         try {
             $rawEvents = Json::fromRequest($request)->jsonArray('events');
-            $events = [];
-            foreach ($rawEvents as $rawEvent) {
-                $events[] = TodoEvent::createFromJson($rawEvent);
-            }
+            $events = map(fn (Json $rawEvent) => TodoEvent::createFromJson($rawEvent), $rawEvents);
             $todoEventProcessor->process($events, $household);
             $todoPublisher->publish($user, $events, $household);
         } catch (\Exception $e) {
