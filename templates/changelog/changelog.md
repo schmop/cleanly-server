@@ -4,7 +4,20 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.17 - Aktuell
+## 1.18 - Aktuell
+
+Die App ist nun robuster gegenüber Verbindungsabbrüchen.
+Außerdem lädt die Oberfläche schneller, da der letzte Zustand der geöffneten App jetzt lokal gespeichert wird.
+Dadurch kann man zum Beispiel die Checkliste auch im Laden aufrufen und abhaken, auch wenn dort kein Internet ist.
+Das wird Synchronisiert, sobald die Verbindung wieder hergestellt ist.
+
+Die Statistiken sind im Dark-Mode besser lesbar.
+
+![statistics darkmode](assets/changelog/statistics-darkmode.png)
+
+![punctuality darkmode](assets/changelog/punctuality-darkmode.png)
+
+## 1.17 - 08.01.2023
 
 Aufgaben können nun Mitgliedern zugewiesen werden!
 
