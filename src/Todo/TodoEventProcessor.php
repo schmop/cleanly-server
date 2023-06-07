@@ -2,15 +2,15 @@
 
 namespace App\Todo;
 
-use App\Household\Entity\Household;
+use App\Todo\Entity\Checklist;
 use App\Todo\Entity\Todo;
 use Doctrine\ORM\EntityManagerInterface;
 
-class TodoEventProcessor
+readonly class TodoEventProcessor
 {
     public function __construct(
-        private readonly TodoRepository         $todoRepository,
-        private readonly EntityManagerInterface $entityManager,
+        private TodoRepository         $todoRepository,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -18,14 +18,14 @@ class TodoEventProcessor
      * @param TodoEvent[] $events
      * @throws InconsistentChecklistEventException
      */
-    public function process(array $events, Household $household): void
+    public function process(array $events, Checklist $checklist): void
     {
         $this->entityManager->beginTransaction();
         try {
             foreach ($events as $event) {
                 switch ($event->type) {
                     case TodoEvent::TYPE_CREATE:
-                        $this->create($event, $household);
+                        $this->create($event, $checklist);
                         break;
                     case TodoEvent::TYPE_SORT:
                         $this->sort($event);
@@ -34,7 +34,7 @@ class TodoEventProcessor
                         $this->update($event);
                         break;
                     case TodoEvent::TYPE_DELETE:
-                        $this->delete($event, $household);
+                        $this->delete($event, $checklist);
                         break;
                 }
             }
@@ -45,11 +45,11 @@ class TodoEventProcessor
         $this->entityManager->commit();
     }
 
-    private function create(TodoEvent $event, Household $household): void
+    private function create(TodoEvent $event, Checklist $checklist): void
     {
-        $todo = new Todo($event->uuid, $event->data ?? '', $household);
+        $todo = new Todo($event->uuid, $event->data ?? '', $checklist);
         $this->todoRepository->addToEndOfList($todo);
-        $household->getChecklist()->add($todo);
+        $checklist->getChecklist()->add($todo);
         $this->entityManager->flush();
     }
 
@@ -75,20 +75,20 @@ class TodoEventProcessor
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot sort checklist entries that don't exist!");
         }
-        $this->todoRepository->moveBefore($todo, $event?->data ?? null);
+        $this->todoRepository->moveBefore($todo, $event->data);
     }
 
     /**
      * @throws InconsistentChecklistEventException
      */
-    private function delete(TodoEvent $event, Household $household): void
+    private function delete(TodoEvent $event, Checklist $checklist): void
     {
         $todo = $this->todoRepository->findByUuid($event->uuid);
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot delete checklist entries that don't exist!");
         }
         $this->todoRepository->removeOutOfList($todo);
-        $household->getChecklist()->removeElement($todo);
+        $checklist->getChecklist()->removeElement($todo);
         $this->entityManager->flush();
     }
 }

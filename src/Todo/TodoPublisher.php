@@ -1,11 +1,12 @@
 <?php
 
 namespace App\Todo;
-use App\Household\Entity\Household;
+
 use App\Hub\Publisher;
+use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
 
-class TodoPublisher
+readonly class TodoPublisher
 {
     public function __construct(private Publisher $publisher)
     {
@@ -14,13 +15,13 @@ class TodoPublisher
     /**
      * @param TodoEvent[] $events
      */
-    public function publish(User $updater, array $events, Household $household): void
+    public function publish(User $updater, array $events, Checklist $checklist): void
     {
         $membersWithoutSender = array_values(
             array_udiff(
-                $household->getMembers()->toArray(),
+                $checklist->getHousehold()->getMembers()->toArray(),
                 [$updater],
-                fn(User $a, User $b) => $a->getId() <=> $b->getId()
+                static fn (User $a, User $b) => $a->getId() <=> $b->getId()
             )
         );
 
@@ -28,7 +29,7 @@ class TodoPublisher
             $membersWithoutSender,
             'checklist',
             [
-                'household_id' => $household->getId(),
+                'checklist_uuid' => $checklist->getUuid(),
                 'events' => $events,
             ]
         );

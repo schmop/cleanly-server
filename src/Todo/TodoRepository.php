@@ -33,21 +33,18 @@ class TodoRepository extends ServiceEntityRepository
 
         if (null === $nextUuid) {
             $qb
-                ->where('t.nextUuid IS NULL')
-            ;
+                ->where('t.nextUuid IS NULL');
         } else {
             $qb
                 ->where('t.nextUuid = :nextUuid')
-                ->setParameter(':nextUuid', $nextUuid)
-            ;
+                ->setParameter(':nextUuid', $nextUuid);
         }
         $qb
             ->andWhere('t.household = :household')
             ->andWhere('t.uuid <> :notThis')
             ->setParameter(':household', $butNotThis->getHousehold())
             ->setParameter(':notThis', $butNotThis->getUuid())
-            ->setMaxResults(1)
-        ;
+            ->setMaxResults(1);
 
         /**
          * In order for phpstan to infer the correct return type of getOneOrNullResult
@@ -67,6 +64,9 @@ class TodoRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
+    /**
+     * @throws InconsistentChecklistEventException
+     */
     public function moveBefore(Todo $todo, ?string $beforeUuid): void
     {
         $this->removeOutOfList($todo);

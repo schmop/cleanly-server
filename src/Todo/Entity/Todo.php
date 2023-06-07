@@ -3,31 +3,30 @@
 namespace App\Todo\Entity;
 
 use App\Todo\TodoRepository;
-use App\Household\Entity\Household;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TodoRepository::class)]
 class Todo implements \JsonSerializable
 {
-     #[ORM\Id]
-     #[ORM\Column(type: "string")]
+    #[ORM\Id]
+    #[ORM\Column(type: "string")]
     private string $uuid;
 
     #[ORM\Column(type: "string", nullable: false)]
     private string $content;
 
-    #[ORM\Column(type: "string", nullable: true, unique: true)]
+    #[ORM\Column(type: "string", unique: true, nullable: true)]
     private ?string $nextUuid = null;
 
-     #[ORM\ManyToOne(targetEntity: Household::class, inversedBy: "checklist")]
-     #[ORM\JoinColumn(name: "household_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
-    private Household $household;
+    #[ORM\ManyToOne(targetEntity: Checklist::class, inversedBy: "checklist")]
+    #[ORM\JoinColumn(name: "checklist_uuid", referencedColumnName: "uuid", nullable: false, onDelete: "CASCADE")]
+    private Checklist $checklist;
 
-    public function __construct(string $uuid, string $content, Household $household)
+    public function __construct(string $uuid, string $content, Checklist $checklist)
     {
         $this->uuid = $uuid;
         $this->content = $content;
-        $this->household = $household;
+        $this->checklist = $checklist;
     }
 
     public function setContent(string $content): void
@@ -55,9 +54,9 @@ class Todo implements \JsonSerializable
         return $this->content;
     }
 
-    public function getHousehold(): Household
+    public function getChecklist(): Checklist
     {
-        return $this->household;
+        return $this->checklist;
     }
 
     /**

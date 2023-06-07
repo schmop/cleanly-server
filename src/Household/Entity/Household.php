@@ -3,20 +3,15 @@
 namespace App\Household\Entity;
 
 use App\Household\HouseholdRepository;
+use App\Household\NotInHouseholdException;
+use App\Household\ReassignmentStrategy;
 use App\Task\Entity\Task;
-use App\Todo\Entity\Todo;
+use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\Request;
-
-enum ReassignmentStrategy: string
-{
-    case None = 'none';
-    case Unassign = 'unassign';
-    case Rotate = 'rotate';
-}
 
 #[ORM\Entity(repositoryClass: HouseholdRepository::class)]
 class Household implements \JsonSerializable
@@ -55,9 +50,9 @@ class Household implements \JsonSerializable
     #[ORM\OneToMany(mappedBy: "household", targetEntity: Task::class)]
     private Collection $tasks;
 
-    /** @var Collection<int, Todo> */
-    #[ORM\OneToMany(mappedBy: "household", targetEntity: Todo::class, cascade: ["all"], orphanRemoval: true)]
-    private Collection $checklist;
+    /** @var Collection<int, Checklist> */
+    #[ORM\OneToMany(mappedBy: "household", targetEntity: Checklist::class, cascade: ["all"], orphanRemoval: true)]
+    private Collection $checklists;
 
     public function __construct()
     {
@@ -65,7 +60,7 @@ class Household implements \JsonSerializable
         $this->invites = new ArrayCollection();
         $this->tasks = new ArrayCollection();
         $this->privileges = new ArrayCollection();
-        $this->checklist = new ArrayCollection();
+        $this->checklists = new ArrayCollection();
     }
 
     public static function createFromRequest(Request $request, User $user): self
@@ -169,34 +164,11 @@ class Household implements \JsonSerializable
     }
 
     /**
-     * @return Collection<int, Todo>
+     * @return Collection<int, Checklist>
      */
-    public function getChecklist(): Collection
+    public function getChecklists(): Collection
     {
-        return $this->checklist;
-    }
-
-    /**
-     * @return Collection<int, Todo>
-     */
-    public function getSortedChecklist(): Collection
-    {
-        $checklist = $this->checklist->toArray();
-        $sortedChecklist = [];
-        $nextUuid = null;
-        while (!empty($checklist)) {
-            foreach ($checklist as $index => $todo) {
-                if ($todo->getNext() === $nextUuid) {
-                    array_unshift($sortedChecklist, $todo);
-                    array_splice($checklist, $index, 1);
-                    $nextUuid = $todo->getUuid();
-                    continue 2;
-                }
-            }
-            throw new \LogicException('Checklist is not sortable, the chain is broken');
-        }
-
-        return new ArrayCollection($sortedChecklist);
+        return $this->checklists;
     }
 
     /**
@@ -223,8 +195,14 @@ class Household implements \JsonSerializable
         $this->privileges->add(new HouseholdPrivilege($this, $user, $level));
     }
 
+    /**
+     * @throws NotInHouseholdException
+     */
     public function getUserPrivilege(User $user): int
     {
+        if (!$this->members->contains($user)) {
+            throw new NotInHouseholdException();
+        }
         foreach ($this->privileges as $privilege) {
             if ($privilege->user === $user) {
                 return $privilege->level;
@@ -269,8 +247,13 @@ class Household implements \JsonSerializable
             'tasks' => $this->getTasks()->map(
                 static fn(Task $task) => $task->jsonSerialize()
             )->toArray(),
-            'checklist' => $this->getSortedChecklist()->map(
-                static fn(Todo $todo) => $todo->jsonSerialize()
+            /**
+             * For backwards compatibility reasons.
+             * TODO: Remove this after august 2023
+             */
+            'checklist' => [],
+            'checklists' => $this->getChecklists()->map(
+                static fn(Checklist $checklist) => $checklist->jsonSerialize()
             )->toArray(),
             'privileges' => $this->getPrivileges()->map(
                 static fn(HouseholdPrivilege $privilege) => $privilege->jsonSerialize()

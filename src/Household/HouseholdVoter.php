@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Household;
+
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdPrivilege;
 use App\User\Entity\User;
@@ -11,6 +12,8 @@ class HouseholdVoter extends Voter
 {
     public const MANAGE_TASKS = "manage_tasks";
     public const MANAGE_HOUSEHOLD = "manage_household";
+    public const MANAGE_CHECKLISTS = "manage_checklists";
+    public const EDIT_CHECKLISTS = "edit_checklists";
 
     protected function supports(string $attribute, mixed $subject): bool
     {
@@ -22,14 +25,16 @@ class HouseholdVoter extends Voter
         $user = $token->getUser();
         assert($user instanceof User);
         assert($subject instanceof Household);
-        $privilege = $subject->getUserPrivilege($user);
-        switch ($attribute) {
-            case self::MANAGE_HOUSEHOLD:
-                return $privilege === HouseholdPrivilege::PRIVILEGE_ADMIN;
-            case self::MANAGE_TASKS:
-                return $privilege >= HouseholdPrivilege::PRIVILEGE_MODERATOR;
+        try {
+            $privilege = $subject->getUserPrivilege($user);
+        } catch (NotInHouseholdException) {
+            return false;
         }
-
-        return false;
+        return match ($attribute) {
+            self::MANAGE_HOUSEHOLD => $privilege === HouseholdPrivilege::PRIVILEGE_ADMIN,
+            self::MANAGE_TASKS, self::MANAGE_CHECKLISTS => $privilege >= HouseholdPrivilege::PRIVILEGE_MODERATOR,
+            self::EDIT_CHECKLISTS => true,
+            default => false,
+        };
     }
 }
