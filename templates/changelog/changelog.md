@@ -4,11 +4,22 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.18 - Aktuell
+## 1.20 - 14.03.2024
+
+Pro Haushalt kann es nun mehr als eine Checkliste geben!
+![multiple checklists](assets/changelog/multiple-checklist.png)
+
+## 1.19 - 19.04.2023
+
+Vor dem Löschen einer Aufgabe wird nun vorsichtshalber nach Bestätigung gefragt.
+Dadurch werden auch alle Aufgabenprotokolle gelöscht.
+
+## 1.18 - 17.04.2023
 
 Die App ist nun robuster gegenüber Verbindungsabbrüchen.
 Außerdem lädt die Oberfläche schneller, da der letzte Zustand der geöffneten App jetzt lokal gespeichert wird.
-Dadurch kann man zum Beispiel die Checkliste auch im Laden aufrufen und abhaken, auch wenn dort kein Internet ist.
+Dadurch kann man zum Beispiel die Checkliste auch im Supermarkt aufrufen und abhaken, auch wenn dort keine
+Internetverbindung ist.
 Das wird Synchronisiert, sobald die Verbindung wieder hergestellt ist.
 
 Die Statistiken sind im Dark-Mode besser lesbar.
