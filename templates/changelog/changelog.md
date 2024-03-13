@@ -7,6 +7,7 @@ Web: https://schmoppo.de
 ## 1.20 - 14.03.2024
 
 Pro Haushalt kann es nun mehr als eine Checkliste geben!
+
 ![multiple checklists](assets/changelog/multiple-checklist.png)
 
 ## 1.19 - 19.04.2023
