@@ -44,13 +44,15 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}/rename', name: 'household_checklist_rename', methods: ['POST'])]
     public function renameChecklist(
-        Checklist $checklist,
-        Request   $request,
+        Checklist           $checklist,
+        Request             $request,
+        ChecklistRepository $checklistRepository,
     ): JsonResponse {
         $household = $checklist->getHousehold();
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_CHECKLISTS, $household);
         try {
             $checklist->setName(Json::fromRequest($request)->string('name'));
+            $checklistRepository->save($checklist);
         } catch (UnexpectedJsonException $e) {
             return JsonErrorResponse::create(['reason' => 'No name given!', 'error' => $e->getTrace()]);
         }
