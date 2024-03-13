@@ -8,6 +8,7 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
+use App\Todo\ChecklistRepository;
 use App\Todo\Entity\Checklist;
 use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
@@ -59,23 +60,27 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}', name: 'household_checklist_remove', methods: ['DELETE'])]
     public function removeChecklist(
-        Checklist $checklist,
+        Checklist           $checklist,
+        ChecklistRepository $checklistRepository,
     ): JsonResponse {
         $household = $checklist->getHousehold();
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_CHECKLISTS, $household);
         $household->getChecklists()->removeElement($checklist);
+        $checklistRepository->remove($checklist);
 
         return JsonSuccessResponse::create();
     }
 
     #[Route(path: '/api/household/{id}/checklist/add', name: 'household_checklist_add', methods: ['PUT'])]
     public function addChecklist(
-        Household     $household,
-        UuidGenerator $uuidGenerator,
+        Household           $household,
+        UuidGenerator       $uuidGenerator,
+        ChecklistRepository $checklistRepository,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_CHECKLISTS, $household);
         $checklist = new Checklist($uuidGenerator->v4(), 'New Checklist', $household);
         $household->getChecklists()->add($checklist);
+        $checklistRepository->save($checklist);
 
         return JsonSuccessResponse::create(['uuid' => $checklist->getUuid()]);
     }

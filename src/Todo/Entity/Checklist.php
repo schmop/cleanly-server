@@ -12,7 +12,7 @@ class Checklist implements \JsonSerializable
 {
     /** @var Collection<int, Todo> */
     #[ORM\OneToMany(mappedBy: "checklist", targetEntity: Todo::class, cascade: ["all"], orphanRemoval: true)]
-    private readonly Collection $checklist;
+    private Collection $checklist;
 
     public function __construct(
         #[ORM\Id]

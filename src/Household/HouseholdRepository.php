@@ -36,8 +36,7 @@ class HouseholdRepository extends ServiceEntityRepository
             ->innerJoin('l.user', 'u')
             ->where('h.id = :householdId')
             ->groupBy('u.id')
-            ->setParameter('householdId', $household->getId())
-        ;
+            ->setParameter('householdId', $household->getId());
 
         return $qb->getQuery()->getResult();
     }

@@ -17,7 +17,12 @@ class HouseholdVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $subject instanceof Household && in_array($attribute, [self::MANAGE_HOUSEHOLD, self::MANAGE_TASKS]);
+        return $subject instanceof Household && in_array($attribute, [
+                self::MANAGE_HOUSEHOLD,
+                self::MANAGE_TASKS,
+                self::MANAGE_CHECKLISTS,
+                self::EDIT_CHECKLISTS,
+            ]);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -30,6 +35,7 @@ class HouseholdVoter extends Voter
         } catch (NotInHouseholdException) {
             return false;
         }
+
         return match ($attribute) {
             self::MANAGE_HOUSEHOLD => $privilege === HouseholdPrivilege::PRIVILEGE_ADMIN,
             self::MANAGE_TASKS, self::MANAGE_CHECKLISTS => $privilege >= HouseholdPrivilege::PRIVILEGE_MODERATOR,

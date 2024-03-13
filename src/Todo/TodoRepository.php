@@ -40,15 +40,15 @@ class TodoRepository extends ServiceEntityRepository
                 ->setParameter(':nextUuid', $nextUuid);
         }
         $qb
-            ->andWhere('t.household = :household')
+            ->andWhere('t.checklist = :checklist')
             ->andWhere('t.uuid <> :notThis')
-            ->setParameter(':household', $butNotThis->getHousehold())
+            ->setParameter(':checklist', $butNotThis->getChecklist())
             ->setParameter(':notThis', $butNotThis->getUuid())
             ->setMaxResults(1);
 
         /**
          * In order for phpstan to infer the correct return type of getOneOrNullResult
-         * it needs to explicitely have HYDRATE_OBJECT set
+         * it needs to explicitly have HYDRATE_OBJECT set
          * @link https://github.com/phpstan/phpstan-doctrine/issues/271
          * */
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);

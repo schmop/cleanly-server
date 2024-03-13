@@ -18,8 +18,9 @@ class TodoEvent
     ];
 
     public function __construct(
-        public string $type,
-        public string $uuid,
+        public string      $type,
+        public string      $uuid,
+        public string      $checklistUuid,
         public null|string $data
     ) {
     }
@@ -35,6 +36,7 @@ class TodoEvent
         return new self(
             $json->string('type'),
             $json->string('uuid'),
+            $json->string('checklistUuid'),
             $json->tryString('data'),
         );
     }
