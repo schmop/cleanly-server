@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1)
+declare(strict_types=1)
 ;
 
 namespace App\Controller;
@@ -23,5 +23,12 @@ class PolicyController extends AbstractController
     public function impress(Environment $twig): Response
     {
         return new Response($twig->render('policies/impress.html.twig'));
+    }
+
+
+    #[Route("/policy/account_delete", "policy_delete_account", methods: ["GET"])]
+    public function deleteAccount(Environment $twig): Response
+    {
+        return new Response($twig->render('policies/delete_account.html.twig'));
     }
 }
