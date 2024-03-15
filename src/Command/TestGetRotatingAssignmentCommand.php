@@ -33,15 +33,16 @@ class TestGetRotatingAssignmentCommand extends Command
             return Command::FAILURE;
         }
         $household = $this->householdRepository->find($householdId);
-        foreach ($household?->getTasks() as $task) {
+        $tasks = $household?->getTasks() ?? [];
+        foreach ($tasks as $task) {
             $user = $this->taskLogRepository->getNextAssignmentRotation(
                 $task,
             );
             dump(
                 $task->getId(),
                 $task->getName(),
-                $user->getId(),
-                $user->getName(),
+                $user?->getId(),
+                $user?->getName(),
             );
         }
 

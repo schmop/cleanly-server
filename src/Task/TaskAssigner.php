@@ -2,7 +2,7 @@
 
 namespace App\Task;
 
-use App\Household\Entity\ReassignmentStrategy;
+use App\Household\ReassignmentStrategy;
 use App\Push\Pusher;
 use App\Task\Entity\Task;
 use App\Task\Exception\TaskAssignException;
