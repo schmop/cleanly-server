@@ -49,3 +49,10 @@ And create the tables needed for doctine:
 ./bin/console doctrine:migrations:migrate
 ```
 Finally let your webserver serve the `public` folder, and you're good to go!
+
+## Development
+
+```
+symfony serve --no-tls --dir=public
+```
+
