@@ -9,12 +9,14 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use function Lambdish\Phunctional\map;
 
-class Publisher
+readonly class Publisher
 {
-    private const HOST = 'http://localhost:3334';
-
-    public function __construct(private HttpClientInterface $client, private LoggerInterface $logger)
-    {
+    public function __construct(
+        private HttpClientInterface $client,
+        private LoggerInterface $logger,
+        private string $sseHubUrl,
+        private string $ssePublishSecret,
+    ) {
     }
 
     /**
@@ -24,14 +26,17 @@ class Publisher
     {
         $targetIds = map(fn(User $target) => $target->getId(), $targets);
         try {
-            $response = $this->client->request('POST', sprintf("%s/publish", self::HOST), [
+            $response = $this->client->request('POST', sprintf("%s/publish", $this->sseHubUrl), [
                 'json' => [
                     'targets' => $targetIds,
                     'data' => [
                         'payload' => $payload,
                         'type' => $type,
                     ],
-                ]
+                ],
+                'headers' => [
+                    'Authorization' => "Bearer $this->ssePublishSecret"
+                ],
             ]);
             if ($response->getStatusCode() !== Response::HTTP_OK) {
                 $this->logger->error('Could not publish!');

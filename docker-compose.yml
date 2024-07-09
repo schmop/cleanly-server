@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_container
+    env_file:
+      - .database.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${DB_FOLDER:-./dbdata}:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  symfony:
+    build:
+      context: .
+      dockerfile: images/symfony/Dockerfile
+    container_name: symfony_container
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /var/www/html
+    environment:
+      SYMFONY_ENV: dev
+#    ports:
+#      - "9000:9000"
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_container
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./images/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./public:/var/www/html/public
+    depends_on:
+      - symfony
+    networks:
+      - internal
+
+  node_sse:
+    image: node:latest
+    container_name: node_sse_container
+    volumes:
+      - ./hub:/usr/src/app
+    working_dir: /usr/src/app
+    environment:
+      SSE_PUBLISH_SECRET: ${SSE_PUBLISH_SECRET}
+    command: >
+      sh -c "npm ci && npm run build && npm run start"
+    ports:
+      - "3334:3334"
+    networks:
+      - internal
+networks:
+  internal:
+    driver: bridge
+volumes:
+  db_data:

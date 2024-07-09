@@ -42,6 +42,11 @@ services:
                 event: lexik_jwt_authentication.on_authentication_success
                 method: attachRefreshToken
 
+    App\Hub\Publisher:
+        arguments:
+            $sseHubUrl: '%env(SSE_HUB_URL)%'
+            $ssePublishSecret: '%env(SSE_PUBLISH_SECRET)%'
+
     Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
 
     # add more service definitions when explicit configuration is needed

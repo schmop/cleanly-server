@@ -2,9 +2,15 @@ import express, {Express} from 'express';
 import cors from 'cors';
 import { v4 } from 'uuid';
 import { Request, Response } from 'express-serve-static-core';
-import { whoami } from './whoami';
+import {UserId, whoami} from './whoami';
 
 type Uuid = string;
+
+const publishSecret = process.env.SSE_PUBLISH_SECRET;
+if (publishSecret === undefined) {
+    console.error('No SSE_PUBLISH_SECRET environment variable set! Exiting!');
+    process.exit(1);
+}
 
 const app: Express = express();
 
@@ -13,7 +19,7 @@ app.use(express.json());
 // app.use(express.urlencoded({ extended: false }));
 
 const PORT = 3334;
-const clients = {} as Record<Uuid, {response: Response, userId: number}>;
+const clients: Record<Uuid, {response: Response, userId: UserId}> = {};
 
 function forbidden(response: Response, text: string) {
     console.error(text);
@@ -54,15 +60,9 @@ async function eventsHandler(request: Request, response: Response) {
 }
 
 async function publish(request: Request, response: Response) {
-    const addr = request.socket.remoteAddress;
-    const allowedIps = [
-        '127.0.0.1',
-        'localhost',
-        '::1',
-        '::ffff:127.0.0.1',
-    ];
-    if (addr == null || !allowedIps.includes(addr)) {
-        return forbidden(response, `Remote ${addr} tried to publish data!`);
+    const auth = request.header('Authorization');
+    if (auth?.toLowerCase() !== `bearer ${publishSecret}`) {
+        return forbidden(response, 'No valid sse push secret given!');
     }
     const targets: number[] = request.body.targets;
     const data: any = request.body.data;
@@ -92,7 +92,6 @@ function sendDataToUser(target: number, data: any) {
     }
     receivingClients.forEach((client: Uuid) => sendDataToClient(client, data));
 }
-
 
 app.listen(PORT, () => {
     console.info(`Cleanly hub listening at http://localhost:${PORT}`)
