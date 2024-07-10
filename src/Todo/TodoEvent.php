@@ -2,6 +2,7 @@
 
 namespace App\Todo;
 
+use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 
 class TodoEvent
@@ -25,6 +26,10 @@ class TodoEvent
     ) {
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     * @throws InconsistentChecklistEventException
+     */
     public static function createFromJson(Json $json): self
     {
         if (!in_array($json->string('type'), self::ALL_TYPES)) {

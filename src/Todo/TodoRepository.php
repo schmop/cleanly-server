@@ -78,6 +78,9 @@ class TodoRepository extends ServiceEntityRepository
         if (null === $insertBefore) {
             throw new InconsistentChecklistEventException('Could not find event to insert after');
         }
+        if ($todo->getUuid() === $beforeUuid) {
+            throw new InconsistentChecklistEventException("Cannot sort checklist entries to themselves!");
+        }
         $prevInsertBefore = $this->findByNextUuid($beforeUuid, $todo);
         if (null !== $prevInsertBefore) {
             $prevInsertBefore->setNext(null);
