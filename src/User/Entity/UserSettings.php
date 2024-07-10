@@ -24,6 +24,9 @@ class UserSettings
         #[ORM\Column(type: 'boolean')]
         public bool $notifyInvites = true,
 
+        #[ORM\Column(type: 'boolean')]
+        public bool $swipeToFinishTasks = true,
+
         #[ORM\Column(type: 'string', options: ['default' => 'de'])]
         public string $language = 'de',
     ) {
@@ -34,6 +37,7 @@ class UserSettings
      *      notifyTaskDone: bool,
      *      notifyTaskDue: bool,
      *      notifyInvites: bool,
+     *      swipeToFinishTasks: bool,
      *      language: string,
      * }
      */
@@ -43,6 +47,7 @@ class UserSettings
             'notifyTaskDone' => $this->notifyTaskDone,
             'notifyTaskDue' => $this->notifyTaskDue,
             'notifyInvites' => $this->notifyInvites,
+            'swipeToFinishTasks' => $this->swipeToFinishTasks,
             'language' => $this->language,
         ];
     }
