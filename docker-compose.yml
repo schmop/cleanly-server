@@ -25,6 +25,8 @@ services:
       db:
         condition: service_healthy
     working_dir: /var/www/html
+    volumes:
+      - webserver_volume:/var/www/html
     environment:
       SYMFONY_ENV: dev
 #    ports:
@@ -39,7 +41,7 @@ services:
       - "8000:8000"
     volumes:
       - ./images/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./public:/var/www/html/public
+      - webserver_volume:/var/www/html/public:ro
     depends_on:
       - symfony
     networks:
@@ -48,6 +50,7 @@ services:
   node_sse:
     image: node:latest
     container_name: node_sse_container
+    user: "${UID}:${GID}"
     volumes:
       - ./hub:/usr/src/app
     working_dir: /usr/src/app
@@ -63,4 +66,4 @@ networks:
   internal:
     driver: bridge
 volumes:
-  db_data:
+  webserver_volume:
