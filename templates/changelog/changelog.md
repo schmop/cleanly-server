@@ -4,6 +4,13 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
+## 1.22 - 12.07.2024
+
+Nachrichten können mit einer Wischgeste wieder erledigt werden!
+<video src="assets/changelog/swipe-to-done.mp4" autoplay loop muted playsinline></video>
+
+Lange Checklisten-Einträge werden nun automatisch umgebrochen. 
+
 ## 1.20 - 14.03.2024
 
 Pro Haushalt kann es nun mehr als eine Checkliste geben!
