@@ -2,8 +2,10 @@ services:
   db:
     image: postgres:latest
     container_name: postgres_container
-    env_file:
-      - .database.env
+    environment:
+        POSTGRES_DB: "${DB_NAME}"
+        POSTGRES_USER: "${DB_USER}"
+        POSTGRES_PASSWORD: "${DB_PASS}"
     ports:
       - "5432:5432"
     volumes:
@@ -28,7 +30,7 @@ services:
     volumes:
       - webserver_volume:/var/www/html
     environment:
-      SYMFONY_ENV: dev
+      SYMFONY_ENV: "${APP_ENV}"
 #    ports:
 #      - "9000:9000"
     networks:
