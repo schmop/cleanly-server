@@ -7,7 +7,7 @@ Web: https://schmoppo.de
 ## 1.22 - 12.07.2024
 
 Nachrichten können mit einer Wischgeste wieder erledigt werden!
-<video src="assets/changelog/swipe-to-done.mp4" autoplay loop muted playsinline></video>
+<video src="assets/changelog/swipe-to-done.mp4" autoplay loop muted playsinline style="max-width: 100%;"></video>
 
 Lange Checklisten-Einträge werden nun automatisch umgebrochen. 
 
