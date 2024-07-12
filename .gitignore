@@ -37,3 +37,9 @@ composer.phar
 /phpunit.xml
 .phpunit.result.cache
 ###< phpunit/phpunit ###
+
+
+###> phpstan/phpstan ###
+phpstan.neon
+phpstan.dist.neon
+###< phpstan/phpstan ###

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ -f ../.env.local ]; then
+  npx env-cmd -f ../.env.local "$@"
+elif [ -f ../.env ]; then
+  npx env-cmd -f ../.env "$@"
+else
+  echo "No ../.env.local or ../.env file found"
+  exit 1
+fi
