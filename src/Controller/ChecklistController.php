@@ -9,6 +9,7 @@ use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 use App\Todo\ChecklistRepository;
+use App\Todo\ChecklistUpdateNotifier;
 use App\Todo\Entity\Checklist;
 use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
@@ -23,17 +24,19 @@ class ChecklistController extends UserAwareController
 {
     #[Route(path: '/api/household/checklist/{uuid}/update', name: 'household_checklist_update', methods: ['POST'])]
     public function updateChecklist(
-        Checklist          $checklist,
-        Request            $request,
-        TodoEventProcessor $todoEventProcessor,
-        TodoPublisher      $todoPublisher,
+        Checklist               $checklist,
+        Request                 $request,
+        TodoEventProcessor      $todoEventProcessor,
+        ChecklistUpdateNotifier $checklistUpdateNotifier,
+        TodoPublisher           $todoPublisher,
     ): JsonResponse {
         $household = $checklist->getHousehold();
         $this->denyAccessUnlessGranted(HouseholdVoter::EDIT_CHECKLISTS, $household);
         try {
             $rawEvents = Json::fromRequest($request)->jsonArray('events');
-            $events = map(fn (Json $rawEvent) => TodoEvent::createFromJson($rawEvent), $rawEvents);
+            $events = map(fn(Json $rawEvent) => TodoEvent::createFromJson($rawEvent), $rawEvents);
             $todoEventProcessor->process($events, $checklist);
+            $checklistUpdateNotifier->notify($this->getUser(), $checklist);
             $todoPublisher->publish($this->getUser(), $events, $checklist);
         } catch (\Exception $e) {
             return JsonErrorResponse::create(['reason' => 'Edits on the checklist were invalid, ' . $e->getMessage(), 'trace' => $e->getTrace()]);
@@ -85,5 +88,29 @@ class ChecklistController extends UserAwareController
         $checklistRepository->save($checklist);
 
         return JsonSuccessResponse::create(['uuid' => $checklist->getUuid()]);
+    }
+
+    #[Route(path: '/api/household/checklist/{uuid}/subscribe', name: 'household_checklist_subscribe', methods: ['POST'])]
+    public function subscribeToChecklistUpdates(
+        Checklist           $checklist,
+        ChecklistRepository     $checklistRepository,
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::EDIT_CHECKLISTS, $checklist->getHousehold());
+        $checklist->getSubscribers()->add($this->getUser());
+        $checklistRepository->save($checklist);
+
+        return JsonSuccessResponse::create();
+    }
+
+    #[Route(path: '/api/household/checklist/{uuid}/unsubscribe', name: 'household_checklist_unsubscribe', methods: ['POST'])]
+    public function unsubscribeToChecklistUpdates(
+        Checklist           $checklist,
+        ChecklistRepository     $checklistRepository,
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::EDIT_CHECKLISTS, $checklist->getHousehold());
+        $checklist->getSubscribers()->removeElement($this->getUser());
+        $checklistRepository->save($checklist);
+
+        return JsonSuccessResponse::create();
     }
 }

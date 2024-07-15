@@ -3,6 +3,7 @@
 namespace App\Todo\Entity;
 
 use App\Household\Entity\Household;
+use App\User\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,6 +14,18 @@ class Checklist implements \JsonSerializable
     /** @var Collection<int, Todo> */
     #[ORM\OneToMany(mappedBy: "checklist", targetEntity: Todo::class, cascade: ["all"], orphanRemoval: true)]
     private Collection $checklist;
+
+
+    /** @var Collection<int, User> */
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: "checklistSubscriptions")]
+    #[ORM\JoinTable(name: "checklist_subscriptions")]
+    #[ORM\InverseJoinColumn(name: "user_id", referencedColumnName: "id")]
+    #[ORM\JoinColumn(name: "checklist_uuid", referencedColumnName: "uuid")]
+    private Collection $subscribers;
+
+
+    #[ORM\Column(type: "datetime_immutable", options: ['default' => 'CURRENT_TIMESTAMP'])]
+    private \DateTimeImmutable $lastUpdatedAt;
 
     public function __construct(
         #[ORM\Id]
@@ -27,6 +40,7 @@ class Checklist implements \JsonSerializable
         private readonly Household $household,
     ) {
         $this->checklist = new ArrayCollection();
+        $this->subscribers = new ArrayCollection();
     }
 
     /**
@@ -60,6 +74,14 @@ class Checklist implements \JsonSerializable
         return $this->checklist;
     }
 
+    /**
+     * @return Collection<int, User>
+     */
+    public function getSubscribers(): Collection
+    {
+        return $this->subscribers;
+    }
+
     public function getUuid(): string
     {
         return $this->uuid;
@@ -78,6 +100,16 @@ class Checklist implements \JsonSerializable
     public function getHousehold(): Household
     {
         return $this->household;
+    }
+
+    public function getLastUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->lastUpdatedAt;
+    }
+
+    public function setLastUpdatedAt(\DateTimeImmutable $lastUpdatedAt): void
+    {
+        $this->lastUpdatedAt = $lastUpdatedAt;
     }
 
     /**

@@ -28,12 +28,14 @@ class ChecklistRepository extends ServiceEntityRepository
     public function save(Checklist $checklist): void
     {
         $em = $this->getEntityManager();
+        $em->persist($checklist);
         $em->flush();
     }
 
     public function remove(Checklist $checklist): void
     {
         $em = $this->getEntityManager();
+        $em->remove($checklist);
         $em->flush();
     }
 }

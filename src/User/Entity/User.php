@@ -2,57 +2,63 @@
 
 namespace App\User\Entity;
 
+use App\Todo\Entity\Checklist;
 use App\User\UserRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use App\User\Entity\UserSettings;
 use App\Household\Entity\HouseholdInvite;
 use App\Household\Entity\Household;
 use Doctrine\Common\Collections\ArrayCollection;
 
- #[ORM\Entity(repositoryClass: UserRepository::class)]
- #[ORM\Table(name: "`user`")]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\Table(name: "`user`")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSerializable
 {
-     #[ORM\Id]
-     #[ORM\GeneratedValue]
-     #[ORM\Column(type: "integer")]
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: "integer")]
     private int|null $id;
 
-     #[ORM\Column(name: "email", type: "string", length: 180, unique: true, nullable: false)]
+    #[ORM\Column(name: "email", type: "string", length: 180, unique: true, nullable: false)]
     private string $mail;
 
-     #[ORM\Column(type: "string", nullable: false)]
+    #[ORM\Column(type: "string", nullable: false)]
     private string $name;
 
     /**
      * @var string[]
      */
-     #[ORM\Column(type: "json", nullable: false)]
+    #[ORM\Column(type: "json", nullable: false)]
     private array $roles = [];
 
-     #[ORM\Column(type: "string", nullable: false)]
+    #[ORM\Column(type: "string", nullable: false)]
     private string $password;
 
     /** @var Collection<int, Household> */
-     #[ORM\ManyToMany(targetEntity: Household::class, mappedBy: "members")]
+    #[ORM\ManyToMany(targetEntity: Household::class, mappedBy: "members")]
     private Collection $households;
 
 
     /** @var Collection<int, HouseholdInvite> */
-    #[ORM\OneToMany(targetEntity: HouseholdInvite::class, mappedBy: "invitee")]
+    #[ORM\OneToMany(mappedBy: "invitee", targetEntity: HouseholdInvite::class)]
     private Collection $invites;
 
-    #[ORM\OneToOne(targetEntity: UserSettings::class, mappedBy: "user")]
+    #[ORM\OneToOne(mappedBy: "user", targetEntity: UserSettings::class)]
     private null|UserSettings $userSettings = null;
+
+
+    /** @var Collection<int, Checklist> */
+    #[ORM\ManyToMany(targetEntity: Checklist::class, mappedBy: "subscribers")]
+    private Collection $checklistSubscriptions;
 
     public function __construct(string $mail, string $name)
     {
         $this->mail = $mail;
         $this->name = $name;
         $this->households = new ArrayCollection();
+        $this->checklistSubscriptions = new ArrayCollection();
         $this->invites = new ArrayCollection();
     }
 
@@ -85,7 +91,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->mail;
+        return (string)$this->mail;
     }
 
     /**
@@ -93,7 +99,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
      */
     public function getUsername(): string
     {
-        return (string) $this->mail;
+        return (string)$this->mail;
     }
 
     /**
@@ -171,6 +177,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
     }
 
     /**
+     * @return Collection<int, Checklist>
+     */
+    public function getChecklistSubscriptions(): Collection
+    {
+        return $this->checklistSubscriptions;
+    }
+
+    /**
      * @return array{
      *      id: int|null,
      *      name: string|null,
@@ -184,8 +198,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
         ];
     }
 
-	function getUserSettings(): UserSettings {
+    function getUserSettings(): UserSettings
+    {
         // TODO: Service to create missing usersettings?
-		return $this->userSettings ?? new UserSettings($this);
-	}
+        return $this->userSettings ?? new UserSettings($this);
+    }
 }

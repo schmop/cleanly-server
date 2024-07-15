@@ -247,11 +247,6 @@ class Household implements \JsonSerializable
             'tasks' => $this->getTasks()->map(
                 static fn(Task $task) => $task->jsonSerialize()
             )->toArray(),
-            /**
-             * For backwards compatibility reasons.
-             * TODO: Remove this after august 2023
-             */
-            'checklist' => [],
             'checklists' => $this->getChecklists()->map(
                 static fn(Checklist $checklist) => $checklist->jsonSerialize()
             )->toArray(),

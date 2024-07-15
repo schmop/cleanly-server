@@ -24,8 +24,8 @@ class UserSettings
         #[ORM\Column(type: 'boolean')]
         public bool $notifyInvites = true,
 
-        #[ORM\Column(type: 'boolean')]
-        public bool $swipeToFinishTasks = true,
+        #[ORM\Column(type: 'boolean', options: ['default' => false])]
+        public bool $swipeToFinishTasks = false,
 
         #[ORM\Column(type: 'string', options: ['default' => 'de'])]
         public string $language = 'de',

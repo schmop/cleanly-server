@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdInvite;
+use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,6 +31,9 @@ class DashboardController extends AbstractController
                 return $invite->jsonSerialize();
             }, $user->getInvites()),
             'user' => $user->jsonSerialize(),
+            'checklistSubscriptions' => array_map(static function (Checklist $checklist) {
+                return $checklist->getUuid();
+            }, $user->getChecklistSubscriptions()->toArray()),
             'settings' => $user->getUserSettings()->jsonSerialize(),
         ]);
     }

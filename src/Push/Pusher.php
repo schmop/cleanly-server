@@ -5,6 +5,7 @@ namespace App\Push;
 use App\Household\Entity\Household;
 use App\Push\Entity\Device;
 use App\Task\Entity\Task;
+use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Exception\FirebaseException;
@@ -22,6 +23,20 @@ readonly class Pusher
         private DeviceRepository $deviceRepository,
         private LoggerInterface  $logger,
     ) {
+    }
+
+    public function publishChecklistUpdate(User $exclude, Checklist $checklist): void
+    {
+        $household = $checklist->getHousehold();
+        $devices = filter(
+            fn(Device $device) => $device->getUser() !== $exclude && $checklist->getSubscribers()->contains($device->getUser()),
+            $this->deviceRepository->findByHousehold($household),
+        );
+        $this->publishToDevices(
+            $devices,
+            'Neuigkeiten in Checkliste!',
+            sprintf('Checkliste "%s" in "%s" wurde aktualisiert!', $checklist->getName(), $household->getName()),
+        );
     }
 
     public function publishTaskDone(Task $task, User $exclude): void
