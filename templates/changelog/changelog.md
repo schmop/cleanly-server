@@ -1,8 +1,24 @@
-# Changelogs - Cleanly
+~~# Changelogs - Cleanly
 
 Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
+
+## 1.23 - 15.07.2024
+
+Haptisches Feedback wurde eingeführt!
+Bei positiver und negativer Rückmeldung von Aktionen wird das Gerät vibrieren. Dies kann über die Android Betriebssystempräferenzen unterbunden werden.
+Aufgaben sortieren sich nun mit weichen Animationen um, wenn sie abgehakt wurden.
+
+Aufgaben haben einen Ladeindikator, nachdem man sie abgehakt hat, bevor es eine Erfolgsrückmeldung gibt.
+
+![task-loading-indicator](assets/changelog/task-loading-indicator.png)
+
+Die Animationen vom Umsortieren der Checklisten-Einträge wurde verbessert.
+
+Checklisten sind abonnierbar. Wenn eine Checkliste abonniert ist und ein anderes Haushaltsmitglied diese bearbeitet, dann wird über eine Push-Benachrichtigung darüber informiert. Dies kann einmal alle 30 Minuten passieren.
+
+![checklist-subscription](assets/changelog/checklist-subscription.png)
 
 ## 1.22 - 12.07.2024
 
@@ -265,4 +281,4 @@ Aufgaben können nun auch nach der Erstellung bearbeitet werden.
 
 Haushalte können verlassen werden.
 
-Die Sitzung läuft nicht mehr nach 90 Tagen ab, sondern erneuert sich regelmäßig.
+Die Sitzung läuft nicht mehr nach 90 Tagen ab, sondern erneuert sich regelmäßig.~~
