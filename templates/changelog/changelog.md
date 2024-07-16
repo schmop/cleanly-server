@@ -1,4 +1,4 @@
-~~# Changelogs - Cleanly
+# Changelogs - Cleanly
 
 Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
