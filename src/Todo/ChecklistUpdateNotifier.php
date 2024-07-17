@@ -19,9 +19,10 @@ readonly class ChecklistUpdateNotifier
     public function notify(User $updatingUser, Checklist $checklist): void
     {
         $now = $this->clock->now();
+        $lastUpdatedAt = $checklist->getLastUpdatedAt();
         $checklist->setLastUpdatedAt($now);
         $this->checklistRepository->save($checklist);
-        if ($checklist->getLastUpdatedAt()->add(new \DateInterval('PT30M')) < $now) {
+        if ($lastUpdatedAt->add(new \DateInterval('PT30M')) < $now) {
             $this->pusher->publishChecklistUpdate($updatingUser, $checklist);
         }
     }
