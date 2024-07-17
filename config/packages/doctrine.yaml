@@ -58,3 +58,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Registration/Entity'
                 prefix: 'App\Registration\Entity'
                 alias: Registration
+            Analytics:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Analytics/Entity'
+                prefix: 'App\Analytics\Entity'
+                alias: Analytics
