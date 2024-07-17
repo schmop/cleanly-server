@@ -7,20 +7,21 @@ use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
 use App\Utils\Clock;
 
-class ChecklistUpdateNotifier
+readonly class ChecklistUpdateNotifier
 {
     public function __construct(
-        private readonly Pusher $pusher,
-        private readonly Clock $clock,
+        private Pusher $pusher,
+        private Clock  $clock,
+        private ChecklistRepository $checklistRepository,
     ) {
     }
 
     public function notify(User $updatingUser, Checklist $checklist): void
     {
-        $lastUpdatedAt = $checklist->getLastUpdatedAt();
         $now = $this->clock->now();
         $checklist->setLastUpdatedAt($now);
-        if ($lastUpdatedAt->add(new \DateInterval('PT30M')) < $now) {
+        $this->checklistRepository->save($checklist);
+        if ($checklist->getLastUpdatedAt()->add(new \DateInterval('PT30M')) < $now) {
             $this->pusher->publishChecklistUpdate($updatingUser, $checklist);
         }
     }
