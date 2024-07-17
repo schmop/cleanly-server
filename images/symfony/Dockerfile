@@ -1,5 +1,5 @@
 # Context need to be set to the root of the project "../.."
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
 # Install php-pgsql, composer, composer dependencies and upgrade database schema
 RUN apt-get update && apt-get install -y \

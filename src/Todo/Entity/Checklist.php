@@ -24,8 +24,6 @@ class Checklist implements \JsonSerializable
     private Collection $subscribers;
 
 
-    #[ORM\Column(type: "datetime_immutable", options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private \DateTimeImmutable $lastUpdatedAt;
 
     public function __construct(
         #[ORM\Id]
@@ -38,6 +36,9 @@ class Checklist implements \JsonSerializable
         #[ORM\ManyToOne(targetEntity: Household::class, inversedBy: "checklist")]
         #[ORM\JoinColumn(name: "household_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
         private readonly Household $household,
+
+        #[ORM\Column(type: "datetime_immutable", nullable: false, options: ['default' => 'CURRENT_TIMESTAMP'])]
+        private \DateTimeImmutable $lastUpdatedAt,
     ) {
         $this->checklist = new ArrayCollection();
         $this->subscribers = new ArrayCollection();

@@ -8,6 +8,7 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
+use App\Todo\ChecklistFactory;
 use App\Todo\ChecklistRepository;
 use App\Todo\ChecklistUpdateNotifier;
 use App\Todo\Entity\Checklist;
@@ -79,11 +80,11 @@ class ChecklistController extends UserAwareController
     #[Route(path: '/api/household/{id}/checklist/add', name: 'household_checklist_add', methods: ['PUT'])]
     public function addChecklist(
         Household           $household,
-        UuidGenerator       $uuidGenerator,
         ChecklistRepository $checklistRepository,
+        ChecklistFactory    $checklistFactory,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_CHECKLISTS, $household);
-        $checklist = new Checklist($uuidGenerator->v4(), 'New Checklist', $household);
+        $checklist = $checklistFactory->create($household);
         $household->getChecklists()->add($checklist);
         $checklistRepository->save($checklist);
 
