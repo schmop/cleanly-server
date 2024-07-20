@@ -8,13 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use App\User\Entity\User;
 use App\Household\Entity\Household;
 
-/**
- * @method Device|null find($id, $lockMode = null, $lockVersion = null)
- * @method Device|null findOneBy(array $criteria, array $orderBy = null)
- * @method Device[]    findAll()
- * @method Device[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @extends ServiceEntityRepository<Device>
- */
 class DeviceRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

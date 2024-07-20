@@ -6,13 +6,6 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\User\Entity\UserSettings;
 
-/**
- * @method UserSettings|null find($id, $lockMode = null, $lockVersion = null)
- * @method UserSettings|null findOneBy(array $criteria, array $orderBy = null)
- * @method UserSettings[]    findAll()
- * @method UserSettings[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @extends ServiceEntityRepository<UserSettings>
- */
 class UserSettingsRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

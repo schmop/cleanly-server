@@ -3,16 +3,10 @@
 namespace App\Household;
 
 use App\Household\Entity\Household;
+use App\Todo\Entity\Checklist;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @method Household|null find($id, $lockMode = null, $lockVersion = null)
- * @method Household|null findOneBy(array $criteria, array $orderBy = null)
- * @method Household[]    findAll()
- * @method Household[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @extends ServiceEntityRepository<Household>
- */
 class HouseholdRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -39,5 +33,12 @@ class HouseholdRepository extends ServiceEntityRepository
             ->setParameter('householdId', $household->getId());
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function save(Household $household): void
+    {
+        $em = $this->getEntityManager();
+        $em->persist($household);
+        $em->flush();
     }
 }

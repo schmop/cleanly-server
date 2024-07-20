@@ -6,13 +6,6 @@ use App\Analytics\Entity\UsageLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @method UsageLog|null find($id, $lockMode = null, $lockVersion = null)
- * @method UsageLog|null findOneBy(array $criteria, array $orderBy = null)
- * @method UsageLog[]    findAll()
- * @method UsageLog[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @extends ServiceEntityRepository<UsageLog>
- */
 final class UsageLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

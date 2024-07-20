@@ -12,13 +12,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use function Lambdish\Phunctional\filter;
 use function Lambdish\Phunctional\map;
 
-/**
- * @method TaskLog|null find($id, $lockMode = null, $lockVersion = null)
- * @method TaskLog|null findOneBy(array $criteria, array $orderBy = null)
- * @method TaskLog[]    findAll()
- * @method TaskLog[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- * @extends ServiceEntityRepository<TaskLog>
- */
 class TaskLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

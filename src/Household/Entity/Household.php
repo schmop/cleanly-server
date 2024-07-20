@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 class Household implements \JsonSerializable
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue(strategy: "SEQUENCE")]
     #[ORM\Column(type: "integer")]
     private int $id;
 
