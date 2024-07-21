@@ -12,9 +12,8 @@ use Doctrine\ORM\Mapping as ORM;
 class Checklist implements \JsonSerializable
 {
     /** @var Collection<int, Todo> */
-    #[ORM\OneToMany(mappedBy: "checklist", targetEntity: Todo::class, cascade: ["all"], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Todo::class, mappedBy: "checklist", cascade: ["all"], orphanRemoval: true)]
     private Collection $checklist;
-
 
     /** @var Collection<int, User> */
     #[ORM\ManyToMany(targetEntity: User::class, inversedBy: "checklistSubscriptions")]
@@ -22,8 +21,6 @@ class Checklist implements \JsonSerializable
     #[ORM\InverseJoinColumn(name: "user_id", referencedColumnName: "id")]
     #[ORM\JoinColumn(name: "checklist_uuid", referencedColumnName: "uuid")]
     private Collection $subscribers;
-
-
 
     public function __construct(
         #[ORM\Id]
@@ -39,6 +36,13 @@ class Checklist implements \JsonSerializable
 
         #[ORM\Column(type: "datetime_immutable", nullable: false, options: ['default' => 'CURRENT_TIMESTAMP'])]
         private \DateTimeImmutable $lastUpdatedAt,
+
+        #[ORM\Column(
+            type: "string",
+            nullable: false,
+            options: ['default' => '0'],
+        )]
+        private string $sortRank,
     ) {
         $this->checklist = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
@@ -113,6 +117,16 @@ class Checklist implements \JsonSerializable
         $this->lastUpdatedAt = $lastUpdatedAt;
     }
 
+    public function getSortRank(): string
+    {
+        return $this->sortRank;
+    }
+
+    public function setSortRank(string $sortRank): void
+    {
+        $this->sortRank = $sortRank;
+    }
+
     /**
      * @return array{
      *     uuid: string,
@@ -128,6 +142,7 @@ class Checklist implements \JsonSerializable
         return [
             'uuid' => $this->getUuid(),
             'name' => $this->getName(),
+            'rank' => $this->getSortRank(),
             'checklist' => $this->getSortedChecklist()
                 ->map(static fn (Todo $todo) => $todo->jsonSerialize())
                 ->toArray(),

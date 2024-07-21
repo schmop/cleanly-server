@@ -39,19 +39,20 @@ class Household implements \JsonSerializable
     private Collection $members;
 
     /** @var Collection<int, HouseholdPrivilege> */
-    #[ORM\OneToMany(mappedBy: "household", targetEntity: HouseholdPrivilege::class, cascade: ["all"], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: HouseholdPrivilege::class, mappedBy: "household", cascade: ["all"], orphanRemoval: true)]
     private Collection $privileges;
 
     /** @var Collection<int, HouseholdInvite> */
-    #[ORM\OneToMany(mappedBy: "household", targetEntity: HouseholdInvite::class)]
+    #[ORM\OneToMany(targetEntity: HouseholdInvite::class, mappedBy: "household")]
     private Collection $invites;
 
     /** @var Collection<int, Task> */
-    #[ORM\OneToMany(mappedBy: "household", targetEntity: Task::class)]
+    #[ORM\OneToMany(targetEntity: Task::class, mappedBy: "household")]
     private Collection $tasks;
 
     /** @var Collection<int, Checklist> */
-    #[ORM\OneToMany(mappedBy: "household", targetEntity: Checklist::class, cascade: ["all"], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Checklist::class, mappedBy: "household", cascade: ["all"], orphanRemoval: true)]
+    #[ORM\OrderBy(["sortRank" => "ASC"])]
     private Collection $checklists;
 
     public function __construct()

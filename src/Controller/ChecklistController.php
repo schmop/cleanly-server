@@ -10,12 +10,13 @@ use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 use App\Todo\ChecklistFactory;
 use App\Todo\ChecklistRepository;
+use App\Todo\ChecklistSorter;
 use App\Todo\ChecklistUpdateNotifier;
 use App\Todo\Entity\Checklist;
 use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
 use App\Todo\TodoPublisher;
-use App\Utils\UuidGenerator;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -59,6 +60,28 @@ class ChecklistController extends UserAwareController
             $checklistRepository->save($checklist);
         } catch (UnexpectedJsonException $e) {
             return JsonErrorResponse::create(['reason' => 'No name given!', 'error' => $e->getTrace()]);
+        }
+
+        return JsonSuccessResponse::create();
+    }
+
+
+
+    #[Route(path: '/api/household/checklist/{uuid}/move', name: 'household_checklist_move', methods: ['POST'])]
+    public function moveChecklist(
+        Checklist           $checklist,
+        Request             $request,
+        ChecklistSorter     $checklistSorter,
+        LoggerInterface     $logger,
+    ): JsonResponse {
+        $household = $checklist->getHousehold();
+        $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_CHECKLISTS, $household);
+        try {
+            $moveAfterUuid = Json::fromRequest($request)->tryString('moveAfterUuid');
+            $checklistSorter->moveAfter($checklist, $moveAfterUuid);
+        } catch (UnexpectedJsonException $e) {
+            $logger->error('Invalid movement given!', ['exception' => $e]);
+            return JsonErrorResponse::create(['reason' => 'Invalid movement given!', 'error' => $e->getTrace()]);
         }
 
         return JsonSuccessResponse::create();
