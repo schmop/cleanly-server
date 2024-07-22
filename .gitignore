@@ -11,8 +11,6 @@
 ###< symfony/framework-bundle ###
 
 .idea
-symfony.lock
-composer.lock
 composer.phar
 
 ###> lexik/jwt-authentication-bundle ###
