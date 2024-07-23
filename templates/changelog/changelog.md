@@ -4,6 +4,11 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
+## 1.25 - 23.07.2024
+
+Es wird jetzt die Sprache "Schwäbisch" unterstützt!
+![schwobi](assets/changelog/schwobi.png)
+
 ## 1.24 - 22.07.2024
 
 Checklisten können nun sortiert werden!
