@@ -6,6 +6,9 @@ use App\Auth\Entity\RefreshToken;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<RefreshToken>
+ */
 final class RefreshTokenRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

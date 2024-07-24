@@ -1,0 +1,35 @@
+name: Cleanly Actions
+run-name: ${{ gitea.actor }} is running ${{ gitea.workflow }} on ${{ gitea.repository }}
+on: [push]
+
+jobs:
+  Check server build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: phpstan, phpunit, composer:v2
+      - name: Install dependencies
+        run: composer install
+      - name: Run PHPStan
+        run: phpstan analyse --memory-limit=1G
+      - name: Phpunit
+        run: phpunit
+      - name: Send mail on failure
+        if: failure()
+        uses: https://github.com/dawidd6/action-send-mail@v3
+        with:
+          connection_url: ${{ secrets.MAIL_CONNECTION }}
+          to: ${{ secrets.MAIL_TO }}
+          from: Gitea <gitea@schmoppo.de>
+          subject: ${{ gitea.repository }} ${{gitea.workflow}} ${{ job.status }}
+          priority: high
+          convert_markdown: true
+          html_body: |
+            ### Job ${{ job.status }}
+
+            ${{ github.repository }}: [${{ github.ref }}@${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/actions)

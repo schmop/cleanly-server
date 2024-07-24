@@ -32,7 +32,7 @@ class CreateAccountCommand extends Command
         $name = $input->getArgument('name');
         $email = $input->getArgument('email');
         $password = $input->getArgument('password');
-        if (null === $name || null === $email || null === $password) {
+        if (!is_string($name) || !is_string($email) || !is_string($password)) {
             $output->writeln('Missing arguments!');
             return Command::FAILURE;
         }

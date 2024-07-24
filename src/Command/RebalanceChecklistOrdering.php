@@ -32,17 +32,35 @@ class RebalanceChecklistOrdering extends Command
             }
             $midIndex = (int) floor($checklists->count() / 2);
             $midRank = Rank::forEmptySequence();
-            $checklists->get($midIndex)->setSortRank($midRank->get());
+            $checklists->get($midIndex)?->setSortRank($midRank->get());
             $currentRank = $midRank;
             for ($i = $midIndex + 1; $i < $checklists->count(); $i++) {
                 $currentRank = Rank::after($currentRank);
                 $checklist = $checklists->get($i);
+                if (null === $checklist) {
+                    $output->writeln(sprintf(
+                        'Checklist at index %d (size %d) is null for household "%s".',
+                        $i,
+                        $checklists->count(),
+                        $household->getName(),
+                    ));
+                    continue;
+                }
                 $checklist->setSortRank($currentRank->get());
             }
             $currentRank = $midRank;
             for ($i = $midIndex - 1; $i >= 0; $i--) {
                 $currentRank = Rank::before($currentRank);
                 $checklist = $checklists->get($i);
+                if (null === $checklist) {
+                    $output->writeln(sprintf(
+                        'Checklist at index %d (size %d) is null for household "%s".',
+                        $i,
+                        $checklists->count(),
+                        $household->getName(),
+                    ));
+                    continue;
+                }
                 $checklist->setSortRank($currentRank->get());
             }
             $output->writeln(sprintf(

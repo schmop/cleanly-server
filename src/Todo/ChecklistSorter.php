@@ -19,11 +19,12 @@ readonly class ChecklistSorter
             return;
         }
         $moveAfter = $checklists->findFirst(fn(int $index, Checklist $list) => $list->getUuid() === $moveAfterUuid);
-        if ($moveAfter === null) {
+        $moveAfterIndex = $checklists->indexOf($moveAfter);
+        if ($moveAfter === null || !is_int($moveAfterIndex)) {
             $this->moveAtStart($checklist);
             return;
         }
-        $moveBefore = $checklists->get($checklists->indexOf($moveAfter) + 1);
+        $moveBefore = $checklists->get($moveAfterIndex + 1);
         if ($moveBefore === null) {
             $this->moveAtEnd($checklist);
             return;
@@ -50,7 +51,7 @@ readonly class ChecklistSorter
     {
         $checklists = $checklist->getHousehold()->getChecklists();
         $lastChecklist = $checklists->last();
-        if ($lastChecklist->getUuid() === $checklist->getUuid()) {
+        if (!$lastChecklist || $lastChecklist->getUuid() === $checklist->getUuid()) {
             // we are already at the end
             return;
         }
@@ -68,7 +69,7 @@ readonly class ChecklistSorter
     {
         $checklists = $checklist->getHousehold()->getChecklists();
         $firstChecklist = $checklists->first();
-        if ($firstChecklist->getUuid() === $checklist->getUuid()) {
+        if (!$firstChecklist || $firstChecklist->getUuid() === $checklist->getUuid()) {
             // we are already at the start
             return;
         }

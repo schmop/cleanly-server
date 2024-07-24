@@ -16,7 +16,7 @@ readonly class ChecklistFactory
     ) {
     }
 
-    public function create(Household $home)
+    public function create(Household $home): Checklist
     {
         $sortrank = $home->getChecklists()->isEmpty()
             ? Rank::forEmptySequence()

@@ -231,7 +231,7 @@ class Household implements \JsonSerializable
      *     webhookUrl: string|null,
      *     users: array<int, mixed>,
      *     tasks: array<int, mixed>,
-     *     checklist: array<int, mixed>,
+     *     checklists: array<int, mixed>,
      *     privileges: array<int, mixed>,
      * }
      */

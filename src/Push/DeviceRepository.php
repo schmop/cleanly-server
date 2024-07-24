@@ -8,6 +8,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use App\User\Entity\User;
 use App\Household\Entity\Household;
 
+/**
+ * @extends ServiceEntityRepository<Device>
+ */
 class DeviceRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

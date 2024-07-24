@@ -6,6 +6,9 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\User\Entity\UserSettings;
 
+/**
+ * @extends ServiceEntityRepository<UserSettings>
+ */
 class UserSettingsRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

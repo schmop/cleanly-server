@@ -6,6 +6,9 @@ use App\Analytics\Entity\UsageLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @extends ServiceEntityRepository<UsageLog>
+ */
 final class UsageLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

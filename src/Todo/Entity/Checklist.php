@@ -117,8 +117,14 @@ class Checklist implements \JsonSerializable
         $this->lastUpdatedAt = $lastUpdatedAt;
     }
 
+    /**
+     * @return non-empty-string
+     */
     public function getSortRank(): string
     {
+        if ('' === $this->sortRank) {
+            throw new \LogicException('Sort rank must not be empty. The administrator must rebalance the checklist sorting.');
+        }
         return $this->sortRank;
     }
 

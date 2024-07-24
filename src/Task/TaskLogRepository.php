@@ -12,6 +12,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use function Lambdish\Phunctional\filter;
 use function Lambdish\Phunctional\map;
 
+/**
+ * @extends ServiceEntityRepository<TaskLog>
+ */
 class TaskLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
