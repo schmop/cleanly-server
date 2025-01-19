@@ -12,6 +12,7 @@ use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Kreait\Firebase\Messaging\SendReport;
 use Psr\Log\LoggerInterface;
 use function Lambdish\Phunctional\filter;
 use function Lambdish\Phunctional\map;
@@ -119,7 +120,19 @@ readonly class Pusher
         $deviceIds = map(fn(Device $device) => $device->getPushId(), $devices);
         try {
             $message = CloudMessage::new()->withNotification(Notification::create($title, $content, $imageUrl));
-            $this->messaging->sendMulticast($message, $deviceIds);
+            $report = $this->messaging->sendMulticast($message, $deviceIds);
+            $this->logger->info('Push notification sent to {count} devices, {success} successful, {failed} failed!', [
+                'count' => count($deviceIds),
+                'success' => $report->successes()->count(),
+                'failed' => $report->failures()->count(),
+                'failures' => map(
+                    fn(SendReport $report) => [
+                        'message' => $report->error(),
+                        'exception' => $report->error(),
+                    ],
+                    $report->failures()->getItems(),
+                ),
+            ]);
         } catch (MessagingException|FirebaseException $e) {
             $this->logger->error('Could not send push notifications, reason: {message}!', [
                 'message' => $e->getMessage(),
