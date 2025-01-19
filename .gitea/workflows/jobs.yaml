@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: composer install
       - name: Run PHPStan
-        run: phpstan analyse --memory-limit=1G
+        run: php vendor/bin/phpstan analyse --memory-limit=1G src
       - name: Phpunit
         run: phpunit
       - name: Send mail on failure
