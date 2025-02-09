@@ -3,7 +3,6 @@
 namespace App\Command;
 
 use App\Push\DeviceRepository;
-use App\Push\Entity\Device;
 use App\Push\Pusher;
 use App\Utils\UuidGenerator;
 use Kreait\Firebase\Contract\Messaging;
@@ -14,7 +13,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
-use function Lambdish\Phunctional\map;
 
 #[AsCommand('cleanly:test-send-push')]
 class TestSendPushNotificationCommand extends Command
