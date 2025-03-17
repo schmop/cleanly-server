@@ -57,7 +57,7 @@ class RegistrationFactory
                 $errors[] = $error;
             }
         }
-        if (null !== $this->userRepository->findByMail($mail) || null !== $this->registrationRepository->findByMail($mail)) {
+        if (null !== $this->userRepository->findByMail($mail)) {
             $errors[] = 'Mail already taken!';
         }
         if (count($errors) > 0) {
@@ -67,14 +67,14 @@ class RegistrationFactory
          * There is no way to dependency inject a user-agnostic password hasher in symfony >= 5.
          */
         $passwordHasher = $this->passwordHasherFactory->getPasswordHasher(new User('dummy', 'user'));
-        $registration = new Registration(
+        $registration = $this->registrationRepository->findByMail($mail) ?? new Registration(
             $this->uuidGenerator->v4(),
             $mail,
             $name,
             $this->random->getRandomString(self::TOKEN_LENGTH),
             $passwordHasher->hash($password),
             $this->clock->now(),
-        );
+        ); // allow resend of registration mails
         $this->registrationRepository->save($registration);
 
         return $registration;
