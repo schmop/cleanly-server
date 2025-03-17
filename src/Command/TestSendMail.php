@@ -2,13 +2,11 @@
 
 namespace App\Command;
 
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use App\Push\DeviceRepository;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -37,7 +35,7 @@ class TestSendMail extends Command
             ->from(new Address('noreply@schmoppo.de', 'Cleanly Bot'))
             ->to($mail)
             ->subject('Your registration on cleanly')
-            ->text(<<<TEXT
+            ->html(<<<TEXT
 <p>Hello!</p>
 
 <p>This is a test mail.</p>
