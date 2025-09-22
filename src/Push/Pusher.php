@@ -117,7 +117,7 @@ readonly class Pusher
         if (empty($devices)) {
             return;
         }
-        $deviceIds = map(fn(Device $device) => $device->getPushId(), $devices);
+        $deviceIds = array_values(array_map(fn(Device $device) => $device->getPushId(), $devices));
         try {
             $message = CloudMessage::new()->withNotification(Notification::create($title, $content, $imageUrl));
             $report = $this->messaging->sendMulticast($message, $deviceIds);

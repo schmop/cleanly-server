@@ -6,6 +6,9 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
+/**
+ * @extends AbstractType<array{mail: string}>
+ */
 class ResetPasswordRequestFormType extends AbstractType
 {
     /**

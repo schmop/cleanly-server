@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand('cleanly:rebalance-checklist-ordering')]
-class RebalanceChecklistOrdering extends Command
+class RebalanceChecklistOrderingCommand extends Command
 {
     public function __construct(
         private readonly HouseholdRepository $householdRepository,

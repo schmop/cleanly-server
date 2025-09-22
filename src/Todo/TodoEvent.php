@@ -10,12 +10,14 @@ class TodoEvent
     public const TYPE_CREATE = 'create';
     public const TYPE_UPDATE = 'update';
     public const TYPE_SORT = 'sort';
+    public const TYPE_CHECK = 'check';
     public const TYPE_DELETE = 'delete';
     private const ALL_TYPES = [
         self::TYPE_CREATE,
         self::TYPE_UPDATE,
         self::TYPE_SORT,
-        self::TYPE_DELETE
+        self::TYPE_DELETE,
+        self::TYPE_CHECK,
     ];
 
     public function __construct(

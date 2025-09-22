@@ -3,16 +3,22 @@
 namespace App\Todo\Entity;
 
 use App\Household\Entity\Household;
+use App\RankSort\RankSortableItem;
+use App\RankSort\RankSortableList;
 use App\User\Entity\User;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
+/**
+ * @implements RankSortableList<Todo>
+ */
 #[ORM\Entity]
-class Checklist implements \JsonSerializable
+class Checklist implements \JsonSerializable, RankSortableItem, RankSortableList
 {
     /** @var Collection<int, Todo> */
     #[ORM\OneToMany(targetEntity: Todo::class, mappedBy: "checklist", cascade: ["all"], orphanRemoval: true)]
+    #[ORM\OrderBy(["sortRank" => "ASC"])]
     private Collection $checklist;
 
     /** @var Collection<int, User> */
@@ -46,29 +52,6 @@ class Checklist implements \JsonSerializable
     ) {
         $this->checklist = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
-    }
-
-    /**
-     * @return Collection<int, Todo>
-     */
-    public function getSortedChecklist(): Collection
-    {
-        $checklist = $this->checklist->toArray();
-        $sortedChecklist = [];
-        $nextUuid = null;
-        while (!empty($checklist)) {
-            foreach ($checklist as $index => $todo) {
-                if ($todo->getNext() === $nextUuid) {
-                    array_unshift($sortedChecklist, $todo);
-                    array_splice($checklist, $index, 1);
-                    $nextUuid = $todo->getUuid();
-                    continue 2;
-                }
-            }
-            throw new \LogicException('Checklist is not sortable, the chain is broken');
-        }
-
-        return new ArrayCollection($sortedChecklist);
     }
 
     /**
@@ -149,9 +132,15 @@ class Checklist implements \JsonSerializable
             'uuid' => $this->getUuid(),
             'name' => $this->getName(),
             'rank' => $this->getSortRank(),
-            'checklist' => $this->getSortedChecklist()
+            'checklist' => $this->getChecklist()
                 ->map(static fn (Todo $todo) => $todo->jsonSerialize())
                 ->toArray(),
         ];
+    }
+
+    public function getList(): RankSortableList
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->household;
     }
 }

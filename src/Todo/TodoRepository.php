@@ -2,6 +2,9 @@
 
 namespace App\Todo;
 
+use App\RankSort\RankSortableItem;
+use App\RankSort\RankSortableItemRepositoryInterface;
+use App\RankSort\RankSortableList;
 use App\Todo\Entity\Todo;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -9,8 +12,9 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Todo>
+ * @implements RankSortableItemRepositoryInterface<Todo>
  */
-class TodoRepository extends ServiceEntityRepository
+class TodoRepository extends ServiceEntityRepository implements RankSortableItemRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -22,80 +26,72 @@ class TodoRepository extends ServiceEntityRepository
         return $this->findOneBy(['uuid' => $uuid]);
     }
 
-
-    public function findByNextUuid(?string $nextUuid, Todo $butNotThis): ?Todo
+    public function findFirst(RankSortableList $list): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('t');
 
-        if (null === $nextUuid) {
-            $qb
-                ->where('t.nextUuid IS NULL');
-        } else {
-            $qb
-                ->where('t.nextUuid = :nextUuid')
-                ->setParameter(':nextUuid', $nextUuid);
-        }
         $qb
-            ->andWhere('t.checklist = :checklist')
-            ->andWhere('t.uuid <> :notThis')
-            ->setParameter(':checklist', $butNotThis->getChecklist())
-            ->setParameter(':notThis', $butNotThis->getUuid())
-            ->setMaxResults(1);
+            ->where('t.checklist = :checklist')
+            ->orderBy('t.sortRank', 'ASC')
+            ->setMaxResults(1)
+            ->setParameter(':checklist', $list)
+        ;
 
-        /**
-         * In order for phpstan to infer the correct return type of getOneOrNullResult
-         * it needs to explicitly have HYDRATE_OBJECT set
-         * @link https://github.com/phpstan/phpstan-doctrine/issues/271
-         * */
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
-    public function addToEndOfList(Todo $todo): void
+    public function findLast(RankSortableList $list): RankSortableItem|null
     {
-        $endOfList = $this->findByNextUuid(null, $todo);
-        if (null === $endOfList) {
-            return; // i am the list now
-        }
-        $endOfList->setNext($todo->getUuid());
-        $this->getEntityManager()->flush();
+        $qb = $this->createQueryBuilder('t');
+
+        $qb
+            ->where('t.checklist = :checklist')
+            ->orderBy('t.sortRank', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter(':checklist', $list)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
-    /**
-     * @throws InconsistentChecklistEventException
-     */
-    public function moveBefore(Todo $todo, ?string $beforeUuid): void
+    public function findAfter(RankSortableList $list, string $afterThisUuid): RankSortableItem|null
     {
-        $this->removeOutOfList($todo);
-        if (null === $beforeUuid) {
-            $this->addToEndOfList($todo);
-            return;
-        }
-        $insertBefore = $this->findByUuid($beforeUuid);
-        if (null === $insertBefore) {
-            throw new InconsistentChecklistEventException('Could not find event to insert after');
-        }
-        if ($todo->getUuid() === $beforeUuid) {
-            throw new InconsistentChecklistEventException("Cannot sort checklist entries to themselves!");
-        }
-        $prevInsertBefore = $this->findByNextUuid($beforeUuid, $todo);
-        if (null !== $prevInsertBefore) {
-            $prevInsertBefore->setNext(null);
-            $this->getEntityManager()->flush();
-            $prevInsertBefore->setNext($todo->getUuid());
-        }
-        $todo->setNext($insertBefore->getUuid());
-        $this->getEntityManager()->flush();
+
+        $qb = $this->createQueryBuilder('t');
+
+        $qb
+            ->where('t.checklist = :checklist')
+            ->andWhere('t.sortRank > (SELECT t2.sortRank FROM App\Todo\Entity\Todo t2 WHERE t2.uuid = :afterThisUuid)')
+            ->orderBy('t.sortRank', 'ASC')
+            ->setMaxResults(1)
+            ->setParameter(':checklist', $list)
+            ->setParameter(':afterThisUuid', $afterThisUuid)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
-    public function removeOutOfList(Todo $todo): void
+    public function findBefore(RankSortableList $list, string $beforeThisUuid): RankSortableItem|null
     {
-        $before = $this->findByNextUuid($todo->getUuid(), $todo);
-        $next = $todo->getNext();
-        $todo->setNext(null);
-        $this->getEntityManager()->flush();
-        if (null !== $before) {
-            $before->setNext($next);
-            $this->getEntityManager()->flush();
-        }
+
+        $qb = $this->createQueryBuilder('t');
+
+        $qb
+            ->where('t.checklist = :checklist')
+            ->andWhere('t.sortRank < (SELECT t2.sortRank FROM App\Todo\Entity\Todo t2 WHERE t2.uuid = :beforeThisUuid)')
+            ->orderBy('t.sortRank', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter(':checklist', $list)
+            ->setParameter(':beforeThisUuid', $beforeThisUuid)
+        ;
+
+        return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
+    }
+
+    public function save(RankSortableItem $item): void
+    {
+        $em = $this->getEntityManager();
+        $em->persist($item);
+        $em->flush();
     }
 }

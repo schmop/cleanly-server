@@ -8,9 +8,9 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
+use App\RankSort\ItemSorter;
 use App\Todo\ChecklistFactory;
 use App\Todo\ChecklistRepository;
-use App\Todo\ChecklistSorter;
 use App\Todo\ChecklistUpdateNotifier;
 use App\Todo\Entity\Checklist;
 use App\Todo\TodoEvent;
@@ -71,13 +71,14 @@ class ChecklistController extends UserAwareController
     public function moveChecklist(
         Checklist           $checklist,
         Request             $request,
-        ChecklistSorter     $checklistSorter,
+        ChecklistRepository $checklistRepository,
         LoggerInterface     $logger,
     ): JsonResponse {
         $household = $checklist->getHousehold();
         $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_CHECKLISTS, $household);
         try {
             $moveAfterUuid = Json::fromRequest($request)->tryString('moveAfterUuid');
+            $checklistSorter = new ItemSorter($checklistRepository);
             $checklistSorter->moveAfter($checklist, $moveAfterUuid);
         } catch (UnexpectedJsonException $e) {
             $logger->error('Invalid movement given!', ['exception' => $e]);

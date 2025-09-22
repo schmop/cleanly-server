@@ -7,10 +7,11 @@ use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 
+/**
+ * @extends AbstractType<array{plainPassword: string}>
+ */
 class ChangePasswordFormType extends AbstractType
 {
-
-
     /**
      * {@inheritdoc}
      * @param array<string, string> $options

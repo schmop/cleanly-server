@@ -12,7 +12,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 #[AsCommand('cleanly:test-send-mail')]
-class TestSendMail extends Command
+class TestSendMailCommand extends Command
 {
     public function __construct(
         private readonly MailerInterface     $mailer,
@@ -27,7 +27,7 @@ class TestSendMail extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $mail = $input->getArgument('mail');
-        if (null === $mail) {
+        if (!is_string($mail)) {
             $output->writeln('No mail address given!');
             return Command::FAILURE;
         }

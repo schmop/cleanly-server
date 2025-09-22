@@ -5,6 +5,7 @@ namespace App\Household\Entity;
 use App\Household\HouseholdRepository;
 use App\Household\NotInHouseholdException;
 use App\Household\ReassignmentStrategy;
+use App\RankSort\RankSortableList;
 use App\Task\Entity\Task;
 use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
@@ -13,8 +14,11 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * @implements RankSortableList<Checklist>
+ */
 #[ORM\Entity(repositoryClass: HouseholdRepository::class)]
-class Household implements \JsonSerializable
+class Household implements \JsonSerializable, RankSortableList
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "SEQUENCE")]
@@ -257,4 +261,8 @@ class Household implements \JsonSerializable
         ];
     }
 
+    public function getUuid(): string
+    {
+        return (string) $this->id;
+    }
 }

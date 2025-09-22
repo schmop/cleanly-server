@@ -8,7 +8,7 @@ class JsonDecoder
 {
     /**
      * @param int<1, max> $depth
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      * @throws \JsonException
      */
     public static function toArray(string $json, int $depth = 512): array

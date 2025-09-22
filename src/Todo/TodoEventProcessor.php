@@ -2,16 +2,23 @@
 
 namespace App\Todo;
 
+use App\RankSort\ItemSorter;
 use App\Todo\Entity\Checklist;
 use App\Todo\Entity\Todo;
+use App\Utils\Clock;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class TodoEventProcessor
 {
+    /** @var ItemSorter<Todo> */
+    private ItemSorter $sorter;
+
     public function __construct(
         private TodoRepository         $todoRepository,
         private EntityManagerInterface $entityManager,
+        private Clock                  $clock,
     ) {
+        $this->sorter = new ItemSorter($this->todoRepository);
     }
 
     /**
@@ -33,6 +40,9 @@ readonly class TodoEventProcessor
                     case TodoEvent::TYPE_UPDATE:
                         $this->update($event);
                         break;
+                    case TodoEvent::TYPE_CHECK:
+                        $this->check($event, $checklist);
+                        break;
                     case TodoEvent::TYPE_DELETE:
                         $this->delete($event, $checklist);
                         break;
@@ -48,8 +58,9 @@ readonly class TodoEventProcessor
     private function create(TodoEvent $event, Checklist $checklist): void
     {
         $todo = new Todo($event->uuid, $event->data ?? '', $checklist);
-        $this->todoRepository->addToEndOfList($todo);
+        $this->sorter->moveAtEnd($todo);
         $checklist->getChecklist()->add($todo);
+        $this->entityManager->persist($todo);
         $this->entityManager->flush();
     }
 
@@ -75,7 +86,20 @@ readonly class TodoEventProcessor
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot sort checklist entries that don't exist!");
         }
-        $this->todoRepository->moveBefore($todo, $event->data);
+        $this->sorter->moveBefore($todo, $event->data);
+    }
+
+    /**
+     * @throws InconsistentChecklistEventException
+     */
+    private function check(TodoEvent $event, Checklist $checklist): void
+    {
+        $todo = $this->todoRepository->findByUuid($event->uuid);
+        if (null === $todo) {
+            throw new InconsistentChecklistEventException("Cannot check checklist entries that don't exist!");
+        }
+        $todo->setCheckedAt(null === $event->data ? null : new \DateTimeImmutable('@'.intval($event->data)));
+        $this->entityManager->flush();
     }
 
     /**
@@ -87,8 +111,8 @@ readonly class TodoEventProcessor
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot delete checklist entries that don't exist!");
         }
-        $this->todoRepository->removeOutOfList($todo);
         $checklist->getChecklist()->removeElement($todo);
+        $this->entityManager->remove($todo);
         $this->entityManager->flush();
     }
 }

@@ -8,6 +8,9 @@ use App\User\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
+/**
+ * @extends Voter<string, Household>
+ */
 class HouseholdVoter extends Voter
 {
     public const MANAGE_TASKS = "manage_tasks";
@@ -29,7 +32,6 @@ class HouseholdVoter extends Voter
     {
         $user = $token->getUser();
         assert($user instanceof User);
-        assert($subject instanceof Household);
         try {
             $privilege = $subject->getUserPrivilege($user);
         } catch (NotInHouseholdException) {
