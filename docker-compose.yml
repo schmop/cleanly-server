@@ -57,8 +57,11 @@ services:
     volumes:
       - ./hub:/usr/src/app
     working_dir: /usr/src/app
-    environment:
-      SSE_PUBLISH_SECRET: ${SSE_PUBLISH_SECRET}
+    env_file:
+      - path: ./.env
+        required: true
+      - path: ./.env.local
+        required: false
     command: >
       sh -c "npm ci && npm run build && npm run start"
     ports:

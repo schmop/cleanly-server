@@ -9,7 +9,7 @@ export async function whoami(token: Auth): Promise<null|UserId> {
     if (token in whoAmICache) {
         return whoAmICache[token];
     }
-    const host = process.env.NODE_ENV === 'production' ? 'https://cleanly.schmoppo.de' : 'http://nginx:8000';
+    const host = process.env.APP_ENV === 'prod' ? 'https://cleanly.schmoppo.de' : 'http://nginx:8000';
     try {
         const response = await fetch(`${host}/api/whoami`, {
             headers: {
