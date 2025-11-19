@@ -5,7 +5,6 @@ namespace App\Todo;
 use App\RankSort\ItemSorter;
 use App\Todo\Entity\Checklist;
 use App\Todo\Entity\Todo;
-use App\Utils\Clock;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class TodoEventProcessor
@@ -16,7 +15,6 @@ readonly class TodoEventProcessor
     public function __construct(
         private TodoRepository         $todoRepository,
         private EntityManagerInterface $entityManager,
-        private Clock                  $clock,
     ) {
         $this->sorter = new ItemSorter($this->todoRepository);
     }
@@ -98,7 +96,7 @@ readonly class TodoEventProcessor
         if (null === $todo) {
             throw new InconsistentChecklistEventException("Cannot check checklist entries that don't exist!");
         }
-        $todo->setCheckedAt(null === $event->data ? null : new \DateTimeImmutable('@'.intval($event->data)));
+        $todo->setCheckedAt(null === $event->data ? null : new \DateTimeImmutable('@' . intval($event->data)));
         $this->entityManager->flush();
     }
 
