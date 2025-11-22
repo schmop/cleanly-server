@@ -41,3 +41,6 @@ composer.phar
 phpstan.neon
 phpstan.dist.neon
 ###< phpstan/phpstan ###
+
+#firebase auth config
+config/cleanly-*.json
