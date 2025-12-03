@@ -6,7 +6,6 @@ use AlexCrawford\LexoRank\Rank;
 use App\RankSort\RankSortableItem;
 use App\RankSort\RankSortableList;
 use App\Todo\TodoRepository;
-use App\Utils\Clock;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TodoRepository::class)]

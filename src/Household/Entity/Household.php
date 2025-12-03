@@ -2,6 +2,7 @@
 
 namespace App\Household\Entity;
 
+use App\Finance\Entity\Transaction;
 use App\Household\HouseholdRepository;
 use App\Household\NotInHouseholdException;
 use App\Household\ReassignmentStrategy;
@@ -54,6 +55,10 @@ class Household implements \JsonSerializable, RankSortableList
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: "household")]
     private Collection $tasks;
 
+    /** @var Collection<int, Transaction> */
+    #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: "household")]
+    private Collection $transactions;
+
     /** @var Collection<int, Checklist> */
     #[ORM\OneToMany(targetEntity: Checklist::class, mappedBy: "household", cascade: ["all"], orphanRemoval: true)]
     #[ORM\OrderBy(["sortRank" => "ASC"])]
@@ -64,6 +69,7 @@ class Household implements \JsonSerializable, RankSortableList
         $this->members = new ArrayCollection();
         $this->invites = new ArrayCollection();
         $this->tasks = new ArrayCollection();
+        $this->transactions = new ArrayCollection();
         $this->privileges = new ArrayCollection();
         $this->checklists = new ArrayCollection();
     }
@@ -174,6 +180,21 @@ class Household implements \JsonSerializable, RankSortableList
     public function getChecklists(): Collection
     {
         return $this->checklists;
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function getTransactions(): Collection
+    {
+        return $this->transactions;
+    }
+
+    public function addTransaction(Transaction $transaction): self
+    {
+        $this->transactions->add($transaction);
+
+        return $this;
     }
 
     /**

@@ -72,11 +72,7 @@ class TaskController extends UserAwareController
         LoggerInterface $logger,
     ): JsonResponse {
         $user = $this->getUser();
-        if (!$task->getHousehold()->getMembers()->contains($user)) {
-            return JsonErrorResponse::create([
-                'reason' => 'You are not a member of this household!'
-            ]);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $task->getHousehold());
         if (!$taskCompleter->markAsComplete($task, $user)) {
             return JsonErrorResponse::create([
                 'reason' => 'Completed twice too soon',
@@ -103,11 +99,8 @@ class TaskController extends UserAwareController
         ?string           $fromId,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
-        if (!$household->getMembers()->contains($this->getUser())) {
-            return JsonErrorResponse::create([
-                'reason' => 'You are not a member of this household!'
-            ]);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
+
         $logs = $taskLogRepository->findByHouseholdPaginated($household, $fromId);
         $upToId = (end($logs) ?: null)?->getUuid();
 
@@ -119,11 +112,8 @@ class TaskController extends UserAwareController
         Household         $household,
         TaskLogRepository $taskLogRepository,
     ): JsonResponse {
-        if (!$household->getMembers()->contains($this->getUser())) {
-            return JsonErrorResponse::create([
-                'reason' => 'You are not a member of this household!'
-            ]);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
+
 
         return JsonSuccessResponse::create([
             'durations' => $taskLogRepository->getDurationStats($household),
@@ -140,11 +130,8 @@ class TaskController extends UserAwareController
         TaskPublisher          $taskPublisher,
         TaskAssigner           $taskAssigner,
     ): JsonResponse {
-        if (!$task->getHousehold()->getMembers()->contains($this->getUser())) {
-            return JsonErrorResponse::create([
-                'reason' => 'You are not a member of this household!'
-            ]);
-        }
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $task->getHousehold());
+
         $data = Json::fromRequest($request);
         $assigneeId = $data->tryInt('assignee');
         $assignee = $assigneeId ? $userRepository->find($assigneeId) : null;

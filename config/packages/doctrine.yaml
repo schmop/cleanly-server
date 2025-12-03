@@ -69,3 +69,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Analytics/Entity'
                 prefix: 'App\Analytics\Entity'
                 alias: Analytics
+            Finance:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/Finance/Entity'
+                prefix: 'App\Finance\Entity'
+                alias: Finance

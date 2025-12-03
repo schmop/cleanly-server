@@ -99,10 +99,9 @@ class HouseholdController extends UserAwareController
         Household              $household,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
+
         $user = $this->getUser();
-        if ($household->getMembers()->contains($user)) {
-            return JsonErrorResponse::create(['reason' => 'You are already a member of this household!']);
-        }
         $invites = $household->getInvites();
         foreach ($invites as $invite) {
             if ($invite->getInvitee() === $user) {

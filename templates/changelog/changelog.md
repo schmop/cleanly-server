@@ -4,6 +4,49 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
+## 1.29 - 03.12.2025
+
+Man kann seine Finanzen nun über Cleanly im Haushalt managen!
+
+Wenn ihr nun einen Haushalt öffnet, seht ihr einen neuen Tab "Finanzen".
+Dort könnt ihr Einnahmen und Ausgaben hinzufügen, Kategorien zuweisen und den Überblick über eure Finanzen behalten.
+Es gibt eine Übersichtsseite, die euch sagt, wer wem wie viel Geld schuldet, um alles auszugleichen.
+
+![finanzübersicht](assets/changelog/finanzübersicht.png)
+
+Es gibt auch eine Historie über die Ausgaben:
+
+![ausgabenübersicht](assets/changelog/ausgabenübersicht.png)
+
+Beim Hinzufügen von Transaktionen muss man vorerst auswählen, ob es eine Einnahme, eine Ausgabe oder ein Transfer im Haushalt ist:
+
+![transaktionsarten](assets/changelog/transaktionsarten.png)
+
+Dann stellt man ein, wie es aufgeteilt werden soll:
+
+![aufteilungsformular](assets/changelog/aufteilungsformular.png)
+
+Und nach ein paar weiteren Details ist die Transaktion erstellt!
+
+![transaktionsformular](assets/changelog/transaktionsformular.png)
+
+## 1.28 - 13.07.2025
+
+Fehler behoben, bei dem die Ansicht der App über den Bildschirmrand hinaus begab.
+Fehler behoben, bei dem die Android-Bildschirmtastatur die Ansicht der App überlappte.
+
+## 1.27 - 20.06.2025
+
+Checklisten-Einträge werden nun nicht mehr sofort gelöscht, wenn man sie abhakt!
+
+![checklist_abhakbar](assets/changelog/checklist_abhakbar.png)
+
+Damit kann man sie wiederherstellen, nachdem man sie versehentlich abgehakt hat.
+
+![checklist_abgehakt](assets/changelog/checklist_abgehakt.png)
+
+Und natürlich kann man auch wieder aufräumen, mit dem "Abgehakte löschen"-Button!
+
 ## 1.26 - 09.02.2025
 
 Abhängigkeiten wurden aus Sicherheitsgründen aktualisiert.

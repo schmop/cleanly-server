@@ -36,6 +36,8 @@ services:
 #      - "9000:9000"
     networks:
       - internal
+#    command: # Just use when not having internet access and a container already exists
+#     - php-fpm
 
   nginx:
     image: nginx:alpine
@@ -44,7 +46,7 @@ services:
       - "8000:8000"
     volumes:
       - ./images/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - webserver_volume:/var/www/html/public:ro
+      - webserver_volume:/var/www/html:ro
     depends_on:
       - symfony
     networks:

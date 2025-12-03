@@ -1,5 +1,5 @@
 # Context need to be set to the root of the project "../.."
-FROM php:8.4-fpm
+FROM php:8.5-fpm
 
 # Install php-pgsql, composer, composer dependencies and upgrade database schema
 RUN apt-get update && apt-get install -y \
@@ -35,7 +35,10 @@ COPY src /var/www/html/src
 COPY templates /var/www/html/templates
 
 # composer install --no-dev --optimize-autoloader
+# Do not exit on failing composer install for development convenience
+# When already having a built container, this will allow restarts
+# of the container without internet access
 CMD php bin/console doctrine:migrations:migrate && \
     (php bin/console lexik:jwt:generate-keypair || echo "No keys were generated!") && \
-    composer install && \
+    (composer install || echo "Composer install was not successful!") && \
     php-fpm

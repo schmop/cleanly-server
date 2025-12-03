@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Controller;
+
+use App\Finance\TransactionFactory;
+use App\Finance\TransactionRepository;
+use App\Household\Entity\Household;
+use App\Household\HouseholdVoter;
+use App\HttpFoundation\JsonErrorResponse;
+use App\HttpFoundation\JsonSuccessResponse;
+use App\Json\Exception\UnexpectedJsonException;
+use App\Json\Json;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+
+class FinanceController extends UserAwareController
+{
+    #[Route(path: '/api/household/{id}/finance/transaction/add', name: 'household_finance_transaction_add', methods: ['PUT'])]
+    public function addTransaction(
+        Household             $household,
+        TransactionFactory    $transactionFactory,
+        TransactionRepository $transactionRepository,
+        Request               $request,
+        LoggerInterface       $logger,
+    ): JsonResponse {
+        $this->denyAccessUnlessGranted(HouseholdVoter::ADD_FINANCE_TRANSACTIONS, $household);
+        try {
+            $data = Json::fromRequest($request);
+            $transaction = $transactionFactory->transactionFromJson($data, $household);
+            $transactionRepository->saveWithShares($transaction);
+        } catch (UnexpectedJsonException $e) {
+            $logger->error('Failed to add transaction: ' . $e->getMessage());
+            return JsonErrorResponse::create([
+                'reason' => 'Invalid data: ' . $e->getMessage(),
+            ]);
+        }
+
+        return JsonSuccessResponse::create();
+    }
+
+    #[Route(path: '/api/household/{id}/finance/transactions', name: 'household_finance_transaction_get', methods: ['GET'])]
+    public function getTransactions(
+        Household $household,
+    ): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
+
+        return JsonSuccessResponse::create([
+            'transactions' => array_map(
+                fn($transaction) => $transaction->jsonSerialize(),
+                $household->getTransactions()->toArray(),
+            ),
+        ]);
+    }
+
+    #[Route(path: '/api/household/{id}/finance/summary', name: 'household_finance_summary_get', methods: ['GET'])]
+    public function getFinanceSummary(
+        Household $household,
+        TransactionRepository $transactionRepository,
+    ): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
+        $income = $transactionRepository->getTotalIncomeForUserInHousehold($this->getUser(), $household);
+        $expense = $transactionRepository->getTotalExpenseForUserInHousehold($this->getUser(), $household);
+
+        return JsonSuccessResponse::create([
+            'totalCosts' => $transactionRepository->getTotalCostsForHousehold($household),
+            'yourCost' => $expense - $income,
+            'yourIncome' => $income,
+            'yourExpense' => $expense,
+            'debts' => $transactionRepository->getDebtsInHousehold($household),
+        ]);
+    }
+}
