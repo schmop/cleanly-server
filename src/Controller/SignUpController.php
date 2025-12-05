@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Json\Exception\UnexpectedJsonException;
 use App\Registration\RegistrationException;
 use App\Registration\RegistrationFactory;
 use App\Registration\RegistrationRepository;
@@ -33,22 +34,33 @@ class SignUpController
         } catch (RegistrationException $e) {
             return JsonErrorResponse::create([
                 'reason' => json_encode($e->errors),
+                "status" => "failure",
+            ]);
+        } catch (UnexpectedJsonException $e) {
+            return JsonErrorResponse::create([
+                'reason' => 'Invalid JSON: ' . $e->getMessage(),
+                "status" => "failure",
             ]);
         }
 
-        $email = (new TemplatedEmail())
-            ->from(new Address('noreply@schmoppo.de', 'Cleanly Bot'))
-            ->to($registration->mail)
-            ->subject('Your registration on cleanly')
-            ->htmlTemplate('registration/email.html.twig')
-            ->context([
-                'registration' => $registration,
-            ]);
+        if (null !== $registration) {
+            $email = (new TemplatedEmail())
+                ->from(new Address('noreply@schmoppo.de', 'Cleanly Bot'))
+                ->to($registration->mail)
+                ->subject('Your registration on cleanly')
+                ->htmlTemplate('registration/email.html.twig')
+                ->context([
+                    'registration' => $registration,
+                ]);
 
-        $mailer->send($email);
+            $mailer->send($email);
+        }
 
         return JsonSuccessResponse::create(
-            ["status" => "success"],
+            [
+                "status" => "success",
+                'verification_required' => null !== $registration,
+            ],
         );
     }
 

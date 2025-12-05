@@ -47,6 +47,11 @@ services:
             $sseHubUrl: '%env(SSE_HUB_URL)%'
             $ssePublishSecret: '%env(SSE_PUBLISH_SECRET)%'
 
+    App\Registration\RegistrationFactory:
+        arguments:
+            $rejectLeakedPasswords: '%env(bool:REJECT_LEAKED_PASSWORDS_ON_REGISTRATION)%'
+            $requireEmailValidation: '%env(bool:REQUIRE_EMAIL_VALIDATION_ON_REGISTRATION)%'
+
     Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
 
     # add more service definitions when explicit configuration is needed

@@ -2,6 +2,7 @@
 
 namespace App\Registration;
 
+use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 use App\Registration\Entity\Registration;
 use App\Utils\Clock;
@@ -28,6 +29,8 @@ class RegistrationFactory
     private EmailValidator $emailValidator;
 
     public function __construct(
+        private readonly bool $rejectLeakedPasswords,
+        private readonly bool $requireEmailValidation,
         private readonly ValidatorInterface $validator,
         private readonly UuidGenerator $uuidGenerator,
         private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
@@ -39,18 +42,30 @@ class RegistrationFactory
         $this->emailValidator = new EmailValidator();
     }
 
-    public function createRegistrationFromRequest(Request $request): Registration
+    /**
+     * @throws RegistrationException
+     * @throws UnexpectedJsonException
+     *
+     * @return Registration|null Returns null if no email validation is required. Therefore, no registration entity is created and the user is created directly.
+     */
+    public function createRegistrationFromRequest(Request $request): ?Registration
     {
         $json = Json::fromRequest($request);
         $name = $json->string('name');
         $mail = $json->string('mail');
         $password = $json->string('password');
-        // generated possible errors
-        $errors = map(fn (ConstraintViolationInterface $violation) => $violation->getMessage(), [
-            ...$this->validator->validate($password, new NotCompromisedPassword()),
+        $violations = [
             ...$this->validator->validate($name, new NotBlank()),
             ...$this->validator->validate($mail, new Email()),
-        ]);
+        ];
+        if ($this->rejectLeakedPasswords) {
+            $violations = [
+                ...$this->validator->validate($password, new NotCompromisedPassword()),
+                ...$violations,
+            ];
+        }
+        // generated possible errors
+        $errors = map(fn (ConstraintViolationInterface $violation) => $violation->getMessage(), $violations);
         if (!$this->emailValidator->isValid($mail, new RFCValidation())) {
             $error = $this->emailValidator->getError()?->reason()?->description();
             if (is_string($error)) {
@@ -63,10 +78,20 @@ class RegistrationFactory
         if (count($errors) > 0) {
             throw new RegistrationException($errors);
         }
+
         /**
          * There is no way to dependency inject a user-agnostic password hasher in symfony >= 5.
          */
         $passwordHasher = $this->passwordHasherFactory->getPasswordHasher(new User('dummy', 'user'));
+
+        if (!$this->requireEmailValidation) {
+            $user = new User($mail, $name);
+            $user->setPassword($passwordHasher->hash($password));
+            $this->userRepository->save($user);
+
+            return null;
+        }
+
         $registration = $this->registrationRepository->findByMail($mail) ?? new Registration(
             $this->uuidGenerator->v4(),
             $mail,
