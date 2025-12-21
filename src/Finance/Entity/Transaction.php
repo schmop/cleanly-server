@@ -2,6 +2,7 @@
 
 namespace App\Finance\Entity;
 
+use App\Finance\TransactionRepository;
 use App\Finance\TransactionType;
 use App\Household\Entity\Household;
 use App\User\Entity\User;
@@ -9,7 +10,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(/**repositoryClass: TransactionRepository::class*/)]
+#[ORM\Entity(repositoryClass: TransactionRepository::class)]
 class Transaction implements \JsonSerializable
 {
 
@@ -44,6 +45,9 @@ class Transaction implements \JsonSerializable
 
         #[ORM\Column(type: "datetime_immutable", nullable: false)]
         public readonly \DateTimeImmutable $date,
+
+        #[ORM\Column(type: "datetime_immutable", nullable: false, options: ['default' => 'CURRENT_TIMESTAMP'])]
+        public readonly \DateTimeImmutable $createdAt,
     ) {
         $this->shares = new ArrayCollection();
     }
@@ -56,6 +60,7 @@ class Transaction implements \JsonSerializable
      *   'amount': int,
      *   'type': string,
      *   'date': string,
+     *   'createdAt': string,
      *   'shares': array<array{
      *     'uuid': string,
      *     'userId': int,
@@ -76,6 +81,7 @@ class Transaction implements \JsonSerializable
             'amount' => $this->amount,
             'type' => $this->transactionType->value,
             'date' => $this->date->format(DATE_ATOM),
+            'createdAt' => $this->createdAt->format(DATE_ATOM),
             'shares' => array_map(
                 fn(TransactionShare $share) => $share->jsonSerialize(),
                 $this->shares->toArray()

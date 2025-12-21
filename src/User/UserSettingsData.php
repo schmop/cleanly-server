@@ -12,6 +12,7 @@ readonly class UserSettingsData
         public bool   $notifyTaskDone,
         public bool   $notifyTaskDue,
         public bool   $notifyInvites,
+        public bool   $notifyNewTransactions,
         public bool   $swipeToFinishTasks,
         public string $language,
     ) {
@@ -26,6 +27,7 @@ readonly class UserSettingsData
             $json->bool('notifyTaskDone'),
             $json->bool('notifyTaskDue'),
             $json->bool('notifyInvites'),
+            $json->bool('notifyNewTransactions'),
             $json->bool('swipeToFinishTasks'),
             $json->string('language'),
         );
@@ -36,6 +38,7 @@ readonly class UserSettingsData
         $userSettings->notifyInvites = $this->notifyInvites;
         $userSettings->notifyTaskDone = $this->notifyTaskDone;
         $userSettings->notifyTaskDue = $this->notifyTaskDue;
+        $userSettings->notifyNewTransactions = $this->notifyNewTransactions;
         $userSettings->swipeToFinishTasks = $this->swipeToFinishTasks;
         $userSettings->language = $this->language;
     }

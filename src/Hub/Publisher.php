@@ -24,7 +24,7 @@ readonly class Publisher
      */
     public function publish(array $targets, string $type, mixed $payload): void
     {
-        $targetIds = map(fn(User $target) => $target->getId(), $targets);
+        $targetIds = array_values(map(fn(User $target) => $target->getId(), $targets));
         try {
             $response = $this->client->request('POST', sprintf("%s/publish", $this->sseHubUrl), [
                 'json' => [

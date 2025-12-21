@@ -26,8 +26,8 @@ function forbidden(response: Response, text: string) {
     response.status(403).send(text);
 }
 
-function badRequest(response: Response, text: string) {
-    console.error(text);
+function badRequest(response: Response, text: string, ...extraLoggingArgs: unknown[]) {
+    console.error(text, ...extraLoggingArgs);
     response.status(400).send(text);
 }
 
@@ -67,7 +67,7 @@ async function publish(request: Request, response: Response) {
     const targets: number[] = request.body.targets;
     const data: any = request.body.data;
     if (targets == null || data == null || !Array.isArray(targets)) {
-        return badRequest(response, 'Invalid publish, data or targets invalid!');
+        return badRequest(response, 'Invalid publish, data or targets invalid!', {targets, data});
     }
     targets.forEach((target) => sendDataToUser(target, data));
 

@@ -36,6 +36,7 @@ readonly class TransactionFactory
                 amount: $transactionData->int('amount'),
                 transactionType: TransactionType::from($transactionData->string('type')),
                 date: new \DateTimeImmutable($transactionData->string('date')),
+                createdAt: new \DateTimeImmutable($transactionData->string('createdAt')),
             );
         } catch (\DateMalformedStringException $e) {
             throw new UnexpectedJsonException($e->getMessage(), previous: $e);

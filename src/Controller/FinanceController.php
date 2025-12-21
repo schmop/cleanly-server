@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Finance\FinanceTransactionPublisher;
 use App\Finance\TransactionFactory;
 use App\Finance\TransactionRepository;
 use App\Household\Entity\Household;
@@ -10,6 +11,7 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
+use App\Push\Pusher;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,17 +21,22 @@ class FinanceController extends UserAwareController
 {
     #[Route(path: '/api/household/{id}/finance/transaction/add', name: 'household_finance_transaction_add', methods: ['PUT'])]
     public function addTransaction(
-        Household             $household,
-        TransactionFactory    $transactionFactory,
-        TransactionRepository $transactionRepository,
-        Request               $request,
-        LoggerInterface       $logger,
+        Household                   $household,
+        TransactionFactory          $transactionFactory,
+        TransactionRepository       $transactionRepository,
+        Pusher                      $pusher,
+        FinanceTransactionPublisher $financeTransactionPublisher,
+        Request                     $request,
+        LoggerInterface             $logger,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::ADD_FINANCE_TRANSACTIONS, $household);
         try {
             $data = Json::fromRequest($request);
             $transaction = $transactionFactory->transactionFromJson($data, $household);
             $transactionRepository->saveWithShares($transaction);
+            $pusher->publishNewFinanceTransaction($transaction, $this->getUser());
+            $financeTransactionPublisher->publish($transaction, $this->getUser());
+
         } catch (UnexpectedJsonException $e) {
             $logger->error('Failed to add transaction: ' . $e->getMessage());
             return JsonErrorResponse::create([
@@ -43,8 +50,7 @@ class FinanceController extends UserAwareController
     #[Route(path: '/api/household/{id}/finance/transactions', name: 'household_finance_transaction_get', methods: ['GET'])]
     public function getTransactions(
         Household $household,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
 
         return JsonSuccessResponse::create([
@@ -57,10 +63,9 @@ class FinanceController extends UserAwareController
 
     #[Route(path: '/api/household/{id}/finance/summary', name: 'household_finance_summary_get', methods: ['GET'])]
     public function getFinanceSummary(
-        Household $household,
+        Household             $household,
         TransactionRepository $transactionRepository,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
         $income = $transactionRepository->getTotalIncomeForUserInHousehold($this->getUser(), $household);
         $expense = $transactionRepository->getTotalExpenseForUserInHousehold($this->getUser(), $household);

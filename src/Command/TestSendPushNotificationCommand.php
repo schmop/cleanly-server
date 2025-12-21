@@ -18,9 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class TestSendPushNotificationCommand extends Command
 {
     public function __construct(
-        private readonly DeviceRepository $deviceRepository,
-        private readonly Messaging $messaging,
-        private readonly UuidGenerator $uuidGenerator,
+        private readonly Pusher $pusher,
     ) {
         parent::__construct();
     }
@@ -32,24 +30,12 @@ class TestSendPushNotificationCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $userId = $input->getArgument('id');
-        if (null === $userId) {
+        if (!is_string($userId)) {
             $output->writeln('No userid given!');
             return Command::FAILURE;
         }
-        $logger = new ConsoleLogger($output, [
-            LogLevel::EMERGENCY => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::ALERT => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::CRITICAL => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::ERROR => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::WARNING => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::INFO => OutputInterface::VERBOSITY_NORMAL,
-            LogLevel::DEBUG => OutputInterface::VERBOSITY_NORMAL,
-        ]);
-        $pusher = new Pusher($this->messaging, $this->deviceRepository, $logger);
-        $uuid = $this->uuidGenerator->v4();
-        $logger->info("Sending push noti: $uuid");
-        $pusher->publishToDevices($this->deviceRepository->findBy(['user' => $userId]), "Testnoti $uuid", "I am a test notification");
+        $userId = intval($userId);
+        $this->pusher->publishTestNotification($userId);
 
         return Command::SUCCESS;
     }
