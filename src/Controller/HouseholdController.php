@@ -99,8 +99,6 @@ class HouseholdController extends UserAwareController
         Household              $household,
         EntityManagerInterface $entityManager,
     ): JsonResponse {
-        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
-
         $user = $this->getUser();
         $invites = $household->getInvites();
         foreach ($invites as $invite) {
