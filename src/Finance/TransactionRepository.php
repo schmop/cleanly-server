@@ -34,6 +34,13 @@ class TransactionRepository extends ServiceEntityRepository
         $em->flush();
     }
 
+    public function remove(Transaction $transaction): void
+    {
+        $em = $this->getEntityManager();
+        $em->remove($transaction);
+        $em->flush();
+    }
+
     public function getTotalCostsForHousehold(Household $household): int
     {
         // add expenses and subtract incomes but ignore transfers

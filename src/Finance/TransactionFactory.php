@@ -19,7 +19,7 @@ readonly class TransactionFactory
     /**
      * @throws UnexpectedJsonException
      */
-    public function transactionFromJson(Json $data, Household $household): Transaction
+    public function transactionFromJson(Json $data, Household $household, ?\DateTimeImmutable $createdAt = null): Transaction
     {
         $transactionData = $data->json('transaction');
         $sender = $this->userRepository->find($transactionData->int('sender'));
@@ -36,7 +36,7 @@ readonly class TransactionFactory
                 amount: $transactionData->int('amount'),
                 transactionType: TransactionType::from($transactionData->string('type')),
                 date: new \DateTimeImmutable($transactionData->string('date')),
-                createdAt: new \DateTimeImmutable($transactionData->string('createdAt')),
+                createdAt: $createdAt ?? new \DateTimeImmutable($transactionData->string('createdAt')),
             );
         } catch (\DateMalformedStringException $e) {
             throw new UnexpectedJsonException($e->getMessage(), previous: $e);

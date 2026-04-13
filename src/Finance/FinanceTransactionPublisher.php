@@ -17,6 +17,21 @@ readonly class FinanceTransactionPublisher
 
     public function publish(Transaction $transaction, User $publisher): void
     {
+        $this->publishWithType($transaction, $publisher, 'create');
+    }
+
+    public function publishDelete(Transaction $transaction, User $publisher): void
+    {
+        $this->publishWithType($transaction, $publisher, 'delete');
+    }
+
+    public function publishUpdate(Transaction $transaction, User $publisher): void
+    {
+        $this->publishWithType($transaction, $publisher, 'update');
+    }
+
+    private function publishWithType(Transaction $transaction, User $publisher, string $type): void
+    {
         $users = filter(
             fn(User $user) => $user->getId() !== $publisher->getId(),
             [
@@ -32,7 +47,7 @@ readonly class FinanceTransactionPublisher
             [
                 'household_id' => $transaction->household->getId(),
                 'transaction' => $transaction->jsonSerialize(),
-                'type' => 'create',
+                'type' => $type,
             ]
         );
     }
