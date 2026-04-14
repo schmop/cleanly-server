@@ -4,6 +4,29 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
+## 1.31 - 14.04.2026
+
+Finanz-Transaktionen können nun innerhalb von 2 Stunden nach dem Erstellen bearbeitet und gelöscht werden.
+Das gilt für alle Haushaltsmitglieder, nicht nur die Person, die die Transaktion erstellt hat.
+
+Außerdem gibt es nun eine Detailansicht für jede Transaktion, die man durch Antippen einer Transaktion in der Ausgabenliste öffnen kann.
+Dort sieht man alle Details auf einen Blick, inklusive der genauen Uhrzeit und der Aufteilung unter den Mitgliedern.
+
+![finance-transaction-detail](assets/changelog/finance-transaction-detail.png)
+
+Beim Auswählen der Farbe einer Aufgabe werden nun die bereits im Haushalt verwendeten Farben als Schnellauswahl angezeigt.
+So lassen sich Aufgaben einfach in bestehenden Farbschemata halten.
+
+![color-picker-used-colors](assets/changelog/color-picker-used-colors.png)
+
+Außerdem wurde ein Fehler behoben, bei dem das Klicken auf das Farbfeld im Aufgaben-Bearbeitungsformular den Farbwähler nicht öffnete.
+
+Fehler behoben, bei dem Haushalt-Einladungen nicht angenommen werden konnten.
+
+Die Anmelde- und Registrierungsseite wurde neu gestaltet.
+
+![login-redesign](assets/changelog/login-redesign.png)
+
 ## 1.29 - 03.12.2025
 
 Man kann seine Finanzen nun über Cleanly im Haushalt managen!
