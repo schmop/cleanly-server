@@ -33,4 +33,9 @@ abstract class UserAwareController
             throw new AccessDeniedException($message);
         }
     }
+
+    protected function isGranted(mixed $attribute, mixed $subject = null): bool
+    {
+        return $this->authorizationChecker->isGranted($attribute, $subject);
+    }
 }

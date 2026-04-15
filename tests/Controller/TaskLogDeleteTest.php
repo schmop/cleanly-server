@@ -6,6 +6,7 @@ namespace App\Tests\Controller;
 
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdPrivilege;
+use App\Household\ReassignmentStrategy;
 use App\Task\Entity\Task;
 use App\Task\Entity\TaskLog;
 use App\User\Entity\User;
@@ -24,30 +25,39 @@ class TaskLogDeleteTest extends WebTestCase
     /** @var User[] */
     private array $users = [];
 
+    private string $runId = '';
+
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->runId = substr(md5(uniqid()), 0, 8);
+        $this->households = [];
+        $this->users = [];
     }
 
     protected function tearDown(): void
     {
-        // Deleting households cascades to tasks and task logs
-        foreach ($this->households as $household) {
-            $household = $this->em->find(Household::class, $household->getId());
-            if ($household !== null) {
-                $this->em->remove($household);
+        try {
+            // Deleting households cascades to tasks and task logs.
+            // Re-fetch entities via a fresh EM in case the current one was closed by a failed flush.
+            $em = static::getContainer()->get(EntityManagerInterface::class);
+            foreach ($this->households as $household) {
+                $h = $em->find(Household::class, $household->getId());
+                if ($h !== null) {
+                    $em->remove($h);
+                }
             }
-        }
-        foreach ($this->users as $user) {
-            $user = $this->em->find(User::class, $user->getId());
-            if ($user !== null) {
-                $this->em->remove($user);
+            foreach ($this->users as $user) {
+                $u = $em->find(User::class, $user->getId());
+                if ($u !== null) {
+                    $em->remove($u);
+                }
             }
+            $em->flush();
+        } finally {
+            parent::tearDown();
         }
-        $this->em->flush();
-
-        parent::tearDown();
     }
 
     // --- Success cases ---
@@ -104,7 +114,7 @@ class TaskLogDeleteTest extends WebTestCase
     public function testNonMemberCannotDeleteLog(): void
     {
         [$owner, $household, $task, $log] = $this->createFixture();
-        $outsider = $this->createUser('outsider@test.example');
+        $outsider = $this->createUser("outsider_{$this->runId}@test.example");
 
         $this->client->loginUser($outsider);
         $this->client->request('DELETE', "/api/task/log/{$log->getUuid()}");
@@ -129,7 +139,10 @@ class TaskLogDeleteTest extends WebTestCase
 
     public function testLastCompletedBecomesNullAfterDeletingOnlyLog(): void
     {
-        [$owner, $household, $task, $log] = $this->createFixture();
+        [$owner, $household, $task] = $this->createBaseFixture();
+        $log = $this->createTaskLog($task, $owner, new \DateTimeImmutable());
+        $task->setLastCompleted($log->getTimestamp());
+        $this->em->flush();
 
         $this->client->loginUser($owner);
         $this->client->request('DELETE', "/api/task/log/{$log->getUuid()}");
@@ -143,7 +156,7 @@ class TaskLogDeleteTest extends WebTestCase
 
     public function testLastCompletedRevertsToPreviousLogAfterDeletingNewest(): void
     {
-        [$owner, $household, $task] = $this->createFixture();
+        [$owner, $household, $task] = $this->createBaseFixture();
 
         $olderTime = new \DateTimeImmutable('-2 hours');
         $newerTime = new \DateTimeImmutable('-1 hour');
@@ -167,7 +180,7 @@ class TaskLogDeleteTest extends WebTestCase
 
     public function testDeletingOlderLogDoesNotAffectLastCompleted(): void
     {
-        [$owner, $household, $task] = $this->createFixture();
+        [$owner, $household, $task] = $this->createBaseFixture();
 
         $olderTime = new \DateTimeImmutable('-2 hours');
         $newerTime = new \DateTimeImmutable('-1 hour');
@@ -195,9 +208,7 @@ class TaskLogDeleteTest extends WebTestCase
      */
     private function createFixture(): array
     {
-        $user = $this->createUser('owner@test.example');
-        $household = $this->createHousehold($user);
-        $task = $this->createTask($household);
+        [$user, $household, $task] = $this->createBaseFixture();
         $log = $this->createTaskLog($task, $user, new \DateTimeImmutable());
 
         $task->setLastCompleted($log->getTimestamp());
@@ -206,9 +217,22 @@ class TaskLogDeleteTest extends WebTestCase
         return [$user, $household, $task, $log];
     }
 
+    /**
+     * @return array{User, Household, Task}
+     */
+    private function createBaseFixture(): array
+    {
+        $user = $this->createUser("owner_{$this->runId}@test.example");
+        $household = $this->createHousehold($user);
+        $task = $this->createTask($household);
+
+        return [$user, $household, $task];
+    }
+
     private function createUser(string $email): User
     {
         $user = new User($email, 'Test User');
+        $user->setPassword('irrelevant'); // loginUser() bypasses password checks
         $this->em->persist($user);
         $this->em->flush();
         $this->users[] = $user;
@@ -230,6 +254,7 @@ class TaskLogDeleteTest extends WebTestCase
     {
         $household = new Household();
         $household->setName('Test Household');
+        $household->setReassignmentStrategy(ReassignmentStrategy::None);
         $household->addMember($owner);
         $household->setUserPrivilege($owner, HouseholdPrivilege::PRIVILEGE_USER);
         $this->em->persist($household);
@@ -244,6 +269,7 @@ class TaskLogDeleteTest extends WebTestCase
         $task = new Task();
         $task->setHousehold($household);
         $task->setName('Test Task');
+        $task->setLastNotifiedAt(new \DateTimeImmutable());
         $this->em->persist($task);
         $this->em->flush();
 

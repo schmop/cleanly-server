@@ -11,6 +11,7 @@ use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Json;
 use App\Push\Pusher;
 use App\Task\Entity\Task;
+use App\Task\Entity\TaskLog;
 use App\Task\Exception\TaskAssignException;
 use App\Task\TaskAssigner;
 use App\Task\TaskCompleter;
@@ -155,6 +156,40 @@ class TaskController extends UserAwareController
 
         $taskRepository->remove($task);
         $taskPublisher->publish($task->getHousehold());
+
+        return JsonSuccessResponse::create([]);
+    }
+
+    #[Route(path: '/api/task/log/{uuid}', name: 'task_log_delete', methods: ['DELETE'])]
+    public function deleteTaskLog(
+        TaskLog           $taskLog,
+        TaskLogRepository $taskLogRepository,
+        TaskRepository    $taskRepository,
+        TaskPublisher     $taskPublisher,
+    ): JsonResponse {
+        $task = $taskLog->getTask();
+        $household = $task->getHousehold();
+        $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $household);
+
+        $user = $this->getUser();
+        $isOwner = $taskLog->getUser()->getId() === $user->getId();
+        $canManage = $this->isGranted(HouseholdVoter::MANAGE_TASKS, $household);
+
+        if (!$isOwner && !$canManage) {
+            return JsonErrorResponse::create(['reason' => 'Not authorized to delete this log entry.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $withinWindow = $taskLog->getTimestamp() > new \DateTimeImmutable('-24 hours');
+        if (!$withinWindow) {
+            return JsonErrorResponse::create(['reason' => 'Log entry is older than 24 hours.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $taskLogRepository->remove($taskLog);
+
+        $newLastLog = $taskLogRepository->findLastByTask($task);
+        $task->setLastCompleted($newLastLog?->getTimestamp());
+        $taskRepository->save($task);
+        $taskPublisher->publish($household);
 
         return JsonSuccessResponse::create([]);
     }

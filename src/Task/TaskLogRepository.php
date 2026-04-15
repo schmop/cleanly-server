@@ -35,6 +35,11 @@ class TaskLogRepository extends ServiceEntityRepository
         return $this->findOneBy(['task' => $task, 'user' => $user], ['timestamp' => 'DESC']);
     }
 
+    public function findLastByTask(Task $task): ?TaskLog
+    {
+        return $this->findOneBy(['task' => $task], ['timestamp' => 'DESC']);
+    }
+
     /**
      * @return TaskLog[]
      */
@@ -99,6 +104,13 @@ class TaskLogRepository extends ServiceEntityRepository
     {
         $em = $this->getEntityManager();
         $em->persist($tasklog);
+        $em->flush();
+    }
+
+    public function remove(TaskLog $taskLog): void
+    {
+        $em = $this->getEntityManager();
+        $em->remove($taskLog);
         $em->flush();
     }
 
