@@ -20,7 +20,7 @@ class TaskSecretary
             return false;
         }
         $dueDate = $lastCompleted->add(
-            new \DateInterval(sprintf('P%dD', $task->getDuration()))
+            new \DateInterval(sprintf('PT%dH', $task->getDuration()))
         );
 
         return $dueDate < $this->clock->now();
