@@ -17,11 +17,11 @@ class TaskLogFactory
     ) {
     }
 
-    public function createTaskLog(User $user, Task $task): TaskLog
+    public function createTaskLog(User $user, Task $task, ?\DateTimeImmutable $timestamp = null): TaskLog
     {
         return new TaskLog(
             $this->uuidGenerator->v4(),
-            $this->clock->now(),
+            $timestamp ?? $this->clock->now(),
             $user,
             $task
         );

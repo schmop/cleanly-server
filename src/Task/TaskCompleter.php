@@ -18,16 +18,27 @@ class TaskCompleter
     ) {
     }
 
-    public function markAsComplete(Task $task, User $user): bool
+    public function markAsComplete(Task $task, User $user, ?\DateTimeImmutable $customTimestamp = null, ?User $asUser = null): bool
     {
-        $lastTaskLogOfUserAndTask = $this->taskLogRepository->findLastByTaskAndUser($task, $user);
-        $lastCompleted = $lastTaskLogOfUserAndTask?->getTimestamp()?->getTimestamp();
-        if (null !== $lastCompleted && ($this->clock->now()->getTimestamp() - $lastCompleted) < self::RATE_LIMIT) {
-            return false;
+        $completingUser = $asUser ?? $user;
+        $completionTime = $customTimestamp ?? new \DateTimeImmutable();
+
+        // Only apply rate limiting for real-time completions (not retroactive logging)
+        if ($customTimestamp === null) {
+            $lastTaskLogOfUserAndTask = $this->taskLogRepository->findLastByTaskAndUser($task, $completingUser);
+            $lastCompleted = $lastTaskLogOfUserAndTask?->getTimestamp()?->getTimestamp();
+            if (null !== $lastCompleted && ($this->clock->now()->getTimestamp() - $lastCompleted) < self::RATE_LIMIT) {
+                return false;
+            }
         }
 
-        $task->setLastCompleted(new \DateTimeImmutable());
-        $taskLog = $this->taskLogFactory->createTaskLog($user, $task);
+        // Only update lastCompleted if this completion is more recent
+        $current = $task->getLastCompleted();
+        if ($current === null || $completionTime > $current) {
+            $task->setLastCompleted($completionTime);
+        }
+
+        $taskLog = $this->taskLogFactory->createTaskLog($completingUser, $task, $customTimestamp);
         $this->taskRepository->save($task);
         $task->addLog($taskLog);
         $this->taskLogRepository->save($taskLog);

@@ -65,16 +65,41 @@ class TaskController extends UserAwareController
     #[Route(path: '/api/task/mark-done/{id}', name: 'task_mark_done', methods: ['POST'])]
     public function markTaskDone(
         Task            $task,
+        Request         $request,
         TaskPublisher   $taskPublisher,
         Pusher          $pusher,
         TaskCompleter   $taskCompleter,
         WebhookNotifier $webhookNotifier,
         TaskAssigner    $taskAssigner,
+        UserRepository  $userRepository,
         LoggerInterface $logger,
     ): JsonResponse {
         $user = $this->getUser();
         $this->denyAccessUnlessGranted(HouseholdVoter::READ_HOUSEHOLD_CONTENTS, $task->getHousehold());
-        if (!$taskCompleter->markAsComplete($task, $user)) {
+
+        $customTimestamp = null;
+        $asUser = null;
+
+        $content = $request->getContent();
+        if ($content !== '') {
+            $data = Json::fromRequest($request);
+
+            $timestampInt = $data->tryInt('timestamp');
+            if ($timestampInt !== null) {
+                $customTimestamp = (new \DateTimeImmutable())->setTimestamp($timestampInt);
+            }
+
+            $userId = $data->tryInt('userId');
+            if ($userId !== null && $userId !== $user->getId()) {
+                $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_TASKS, $task->getHousehold());
+                $asUser = $userRepository->find($userId);
+                if ($asUser === null || !$task->getHousehold()->getMembers()->contains($asUser)) {
+                    return JsonErrorResponse::create(['reason' => 'User is not a member of this household.'], Response::HTTP_BAD_REQUEST);
+                }
+            }
+        }
+
+        if (!$taskCompleter->markAsComplete($task, $user, $customTimestamp, $asUser)) {
             return JsonErrorResponse::create([
                 'reason' => 'Completed twice too soon',
             ], Response::HTTP_TOO_MANY_REQUESTS);
