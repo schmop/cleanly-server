@@ -52,6 +52,11 @@ services:
             $rejectLeakedPasswords: '%env(bool:REJECT_LEAKED_PASSWORDS_ON_REGISTRATION)%'
             $requireEmailValidation: '%env(bool:REQUIRE_EMAIL_VALIDATION_ON_REGISTRATION)%'
 
+    App\Controller\DeleteAccountController:
+        tags: ['controller.service_arguments']
+        arguments:
+            $requireEmailConfirmation: '%env(bool:REQUIRE_EMAIL_CONFIRMATION_ON_ACCOUNT_DELETION)%'
+
     Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
 
     # add more service definitions when explicit configuration is needed

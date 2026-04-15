@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\AccountDeletion\AccountDeleter;
 use App\AccountDeletion\AccountDeletionRequestRepository;
-use App\PasswordReset\ResetPasswordRequestRepository;
-use App\Push\DeviceRepository;
-use App\User\UserRepository;
-use App\User\UserSettingsRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Twig\Environment;
@@ -21,11 +17,7 @@ class ConfirmAccountDeletionController
         string $uuid,
         string $token,
         AccountDeletionRequestRepository $repository,
-        UserRepository $userRepository,
-        UserSettingsRepository $userSettingsRepository,
-        DeviceRepository $deviceRepository,
-        ResetPasswordRequestRepository $resetPasswordRequestRepository,
-        EntityManagerInterface $em,
+        AccountDeleter $accountDeleter,
         Environment $twig,
     ): Response {
         $deletionRequest = $repository->findByUuid($uuid);
@@ -47,23 +39,8 @@ class ConfirmAccountDeletionController
         }
 
         $user = $deletionRequest->user;
-
-        $userSettings = $userSettingsRepository->findOneBy(['user' => $user]);
-        if (null !== $userSettings) {
-            $em->remove($userSettings);
-        }
-
-        foreach ($deviceRepository->findByUser($user) as $device) {
-            $em->remove($device);
-        }
-
-        foreach ($resetPasswordRequestRepository->findBy(['user' => $user]) as $resetRequest) {
-            $em->remove($resetRequest);
-        }
-
-        $em->remove($deletionRequest);
-        $em->remove($user);
-        $em->flush();
+        $repository->remove($deletionRequest);
+        $accountDeleter->delete($user);
 
         return new Response($twig->render('account_deletion/success.html.twig'));
     }

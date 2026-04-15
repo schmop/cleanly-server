@@ -75,3 +75,9 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Finance/Entity'
                 prefix: 'App\Finance\Entity'
                 alias: Finance
+            AccountDeletion:
+                is_bundle: false
+                type: attribute
+                dir: '%kernel.project_dir%/src/AccountDeletion/Entity'
+                prefix: 'App\AccountDeletion\Entity'
+                alias: AccountDeletion

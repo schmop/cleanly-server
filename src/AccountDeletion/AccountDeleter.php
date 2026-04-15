@@ -7,14 +7,12 @@ namespace App\AccountDeletion;
 use App\PasswordReset\ResetPasswordRequestRepository;
 use App\Push\DeviceRepository;
 use App\User\Entity\User;
-use App\User\UserRepository;
 use App\User\UserSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class AccountDeleter
 {
     public function __construct(
-        private readonly UserRepository $userRepository,
         private readonly UserSettingsRepository $userSettingsRepository,
         private readonly DeviceRepository $deviceRepository,
         private readonly ResetPasswordRequestRepository $resetPasswordRequestRepository,
