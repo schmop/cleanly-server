@@ -4,7 +4,29 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.30 - 14.04.2026
+## 1.30 - 16.04.2026
+
+Aufgaben können jetzt **nachträglich erledigt** werden – auch im Namen eines anderen Haushaltsmitglieds! Über das Kontextmenü einer Aufgabe lässt sich auswählen, wer die Aufgabe wann erledigt hat.
+
+![nachtraeglich-erledigen-menue](assets/changelog/nachtraeglich-erledigen-menue.png)
+
+![nachtraeglich-erledigen-modal](assets/changelog/nachtraeglich-erledigen-modal.png)
+
+Einträge in der Aktivitätsliste können jetzt gelöscht werden – eigene Einträge innerhalb von 24 Stunden, als Haushalt-Manager auch die anderer Mitglieder.
+
+![aktivitaet-loeschen](assets/changelog/aktivitaet-loeschen.png)
+
+Das Konto kann nun direkt in den Einstellungen gelöscht werden. Zur Sicherheit wird ein Bestätigungslink per E-Mail verschickt.
+
+![konto-loeschen](assets/changelog/konto-loeschen.png)
+
+Im Menü wird jetzt der eigene Benutzername angezeigt.
+
+![menu-benutzername](assets/changelog/menu-benutzername.png)
+
+Aufgaben-Intervalle werden jetzt in Stunden statt in Tagen angegeben, was kürzere Wiederholungszyklen ermöglicht.
+
+Aufgaben können per **Wischgeste** als erledigt markiert werden. Die Funktion lässt sich in den Einstellungen aktivieren.
 
 Die Anmelde- und Registrierungsseite wurde neu gestaltet!
 
@@ -21,6 +43,8 @@ Beim Erstellen oder Bearbeiten einer Aufgabe zeigt die Farbauswahl jetzt schnell
 Transaktionen können nun direkt aus der Detailansicht heraus bearbeitet oder gelöscht werden.
 
 Fehler behoben, bei dem Haushalts-Einladungen nicht angenommen werden konnten.
+
+Fehler behoben, bei dem die Wischgeste zum Erledigen einer Aufgabe blockiert wurde, wenn ein Aufgaben Filter ausgewählt wurde.
 
 ## 1.29 - 03.12.2025
 
