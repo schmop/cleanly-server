@@ -39,7 +39,9 @@ class NotifyTaskDueCommand extends Command
             $households = $this->householdRepository->findAll();
             foreach ($households as $household) {
                 $dueTasks = filter(
-                    fn(Task $task) => $this->taskSecretary->isTaskDue($task) && !$this->taskSecretary->wasAlreadyNotified($task),
+                    fn(Task $task) => $task->getReminderConfig() !== null
+                        ? $this->taskSecretary->isReminderDue($task)
+                        : $this->taskSecretary->isTaskDue($task) && !$this->taskSecretary->wasAlreadyNotified($task),
                     $household->getTasks(),
                 );
                 if (empty($dueTasks)) {
@@ -58,7 +60,7 @@ class NotifyTaskDueCommand extends Command
                 }
                 foreach ($dueTasks as $task) {
                     $this->pusher->publishTaskDue($task);
-                    $this->taskSecretary->markTaskAsNotified($task);
+                    $this->taskSecretary->markTaskAsPushed($task);
                 }
                 $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
             }

@@ -13,6 +13,7 @@ use App\Push\Pusher;
 use App\Task\Entity\Task;
 use App\Task\Entity\TaskLog;
 use App\Task\Exception\TaskAssignException;
+use App\Task\Entity\ReminderConfig;
 use App\Task\TaskAssigner;
 use App\Task\TaskCompleter;
 use App\Task\TaskFactory;
@@ -56,6 +57,12 @@ class TaskController extends UserAwareController
         $task->setHue($data->tryInt('hue'));
         $task->setDuration($data->tryInt('duration'));
         $task->setStars($data->int('stars'));
+
+        $reminderJson = $data->tryJson('reminder');
+        $task->setReminderConfig(
+            $reminderJson !== null ? ReminderConfig::fromJson($reminderJson) : null
+        );
+
         $taskRepository->save($task);
         $taskPublisher->publish($task->getHousehold());
 

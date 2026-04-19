@@ -21,8 +21,8 @@ class Task implements \JsonSerializable
     #[ORM\Column(type: "datetime_immutable", nullable: true)]
     private ?\DateTimeImmutable $lastCompleted = null;
 
-    #[ORM\Column(type: "datetime_immutable", options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private \DateTimeImmutable $lastNotifiedAt;
+    #[ORM\Column(type: "datetime_immutable", nullable: true)]
+    private ?\DateTimeImmutable $lastPushedAt = null;
 
     #[ORM\Column(type: "integer", nullable: true)]
     private ?int $duration;
@@ -41,6 +41,9 @@ class Task implements \JsonSerializable
 
     #[ORM\Column(type: "integer", options: ['default' => 0])]
     private int $stars = 0;
+
+    #[ORM\OneToOne(mappedBy: 'task', targetEntity: ReminderConfig::class, cascade: ['persist'], orphanRemoval: true)]
+    private ?ReminderConfig $reminderConfig = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'assignee_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
@@ -154,14 +157,14 @@ class Task implements \JsonSerializable
         $this->hue = $hue;
     }
 
-    public function getLastNotifiedAt(): ?\DateTimeImmutable
+    public function getLastPushedAt(): ?\DateTimeImmutable
     {
-        return $this->lastNotifiedAt;
+        return $this->lastPushedAt;
     }
 
-    public function setLastNotifiedAt(\DateTimeImmutable $lastNotifiedAt): void
+    public function setLastPushedAt(?\DateTimeImmutable $lastPushedAt): void
     {
-        $this->lastNotifiedAt = $lastNotifiedAt;
+        $this->lastPushedAt = $lastPushedAt;
     }
 
     /**
@@ -175,6 +178,7 @@ class Task implements \JsonSerializable
      *     lastComplete: int|null,
      *     duration: int|null,
      *     stars: int,
+     *     reminder: ReminderConfig|null,
      * }
      */
     public function jsonSerialize(): array
@@ -189,6 +193,7 @@ class Task implements \JsonSerializable
             'lastComplete' => $this->getLastCompleted()?->getTimestamp(),
             'duration' => $this->getDuration(),
             'stars' => $this->getStars(),
+            'reminder' => $this->getReminderConfig(),
         ];
     }
 
@@ -213,5 +218,27 @@ class Task implements \JsonSerializable
     public function setStars(int $stars): void
     {
         $this->stars = $stars;
+    }
+
+    public function getReminderConfig(): ?ReminderConfig
+    {
+        return $this->reminderConfig;
+    }
+
+    public function setReminderConfig(?ReminderConfig $config): void
+    {
+        if ($config === null) {
+            // orphanRemoval will delete the existing row on flush.
+            $this->reminderConfig = null;
+            return;
+        }
+        if ($this->reminderConfig === null) {
+            $config->setTask($this);
+            $this->reminderConfig = $config;
+            return;
+        }
+        // Replace in place so the UNIQUE task_id isn't violated by
+        // INSERT-before-DELETE on flush.
+        $this->reminderConfig->overwriteWith($config);
     }
 }

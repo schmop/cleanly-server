@@ -269,7 +269,6 @@ class TaskLogDeleteTest extends WebTestCase
         $task = new Task();
         $task->setHousehold($household);
         $task->setName('Test Task');
-        $task->setLastNotifiedAt(new \DateTimeImmutable());
         $this->em->persist($task);
         $this->em->flush();
 

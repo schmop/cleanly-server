@@ -5,8 +5,8 @@ namespace App\Task;
 use App\Household\HouseholdRepository;
 use App\Household\HouseholdVoter;
 use App\Json\Json;
+use App\Task\Entity\ReminderConfig;
 use App\Task\Entity\Task;
-use App\Utils\Clock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -15,7 +15,6 @@ final class TaskFactory
     public function __construct(
         private readonly HouseholdRepository           $householdRepository,
         private readonly AuthorizationCheckerInterface $authorizationChecker,
-        private readonly Clock                         $clock,
     ) {
     }
 
@@ -31,12 +30,16 @@ final class TaskFactory
         $task = new Task();
         $task->setName($json->string('name'));
         $task->setDuration($json->tryInt('duration'));
-        $task->setLastNotifiedAt($this->clock->now());
         $task->setDescription($json->tryString('description'));
         $task->setIcon($json->tryString('icon'));
         $task->setHue($json->tryInt('hue'));
         $task->setStars($json->tryInt('stars') ?? 0);
         $task->setHousehold($household);
+
+        $reminderJson = $json->tryJson('reminder');
+        if ($reminderJson !== null) {
+            $task->setReminderConfig(ReminderConfig::fromJson($reminderJson));
+        }
 
         return $task;
     }
