@@ -2,6 +2,7 @@
 
 namespace App\Registration;
 
+use App\Persistence\PersistenceException;
 use App\Registration\Entity\Registration;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,17 +27,19 @@ class RegistrationRepository extends ServiceEntityRepository
         return $this->findOneBy(['mail' => $mail]);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(Registration $registration): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($registration);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $registration);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(Registration $registration): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($registration);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $registration);
     }
 }

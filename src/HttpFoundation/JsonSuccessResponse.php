@@ -19,6 +19,8 @@ class JsonSuccessResponse
      */
     public static function create(array $data = [], array $headers = []): JsonResponse
     {
+        // Status code is hardcoded valid; suppress Symfony's @throws InvalidArgumentException noise.
+        // @phpstan-ignore missingType.checkedException
         return new JsonResponse($data, Response::HTTP_OK, $headers);
     }
 }

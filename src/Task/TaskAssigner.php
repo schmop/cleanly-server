@@ -3,6 +3,7 @@
 namespace App\Task;
 
 use App\Household\ReassignmentStrategy;
+use App\Persistence\PersistenceException;
 use App\Push\Pusher;
 use App\Task\Entity\Task;
 use App\Task\Exception\TaskAssignException;
@@ -21,6 +22,7 @@ readonly class TaskAssigner
 
     /**
      * @throws TaskAssignException
+     * @throws PersistenceException
      */
     public function assignTo(Task $task, ?User $assignee): void
     {
@@ -32,11 +34,12 @@ readonly class TaskAssigner
         if (null !== $assignee) {
             $this->pusher->publishTaskAssign($task, $assignee);
         }
-        $this->entityManager->flush();
+        PersistenceException::flush($this->entityManager);
     }
 
     /**
      * @throws TaskAssignException
+     * @throws PersistenceException
      */
     public function autoAssign(Task $task, User $activeUser): void
     {

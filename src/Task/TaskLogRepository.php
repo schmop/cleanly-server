@@ -3,6 +3,7 @@
 namespace App\Task;
 
 use App\Household\Entity\Household;
+use App\Persistence\PersistenceException;
 use App\Phunctional\Statistics;
 use App\Task\Entity\Task;
 use App\Task\Entity\TaskLog;
@@ -100,18 +101,20 @@ class TaskLogRepository extends ServiceEntityRepository
         return $this->findBy(['user' => $user]);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(TaskLog $tasklog): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($tasklog);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $tasklog);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(TaskLog $taskLog): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($taskLog);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $taskLog);
     }
 
     /**
@@ -146,6 +149,7 @@ class TaskLogRepository extends ServiceEntityRepository
      *          max: int,
      *      }
      *  >
+     * @throws \Webmozart\Assert\InvalidArgumentException
      */
     public function getDurationStats(Household $household): array
     {

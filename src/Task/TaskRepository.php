@@ -2,6 +2,7 @@
 
 namespace App\Task;
 
+use App\Persistence\PersistenceException;
 use App\Task\Entity\Task;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -21,17 +22,19 @@ class TaskRepository extends ServiceEntityRepository
         return $this->findOneBy(['id' => $id]);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(Task $task): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($task);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $task);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(Task $task): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($task);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $task);
     }
 }

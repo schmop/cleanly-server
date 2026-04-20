@@ -3,6 +3,7 @@
 namespace App\Analytics;
 
 use App\Analytics\Entity\UsageLog;
+use App\Persistence\PersistenceException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,11 +17,12 @@ final class UsageLogRepository extends ServiceEntityRepository
         parent::__construct($registry, UsageLog::class);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(UsageLog $usageLog): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($usageLog);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $usageLog);
     }
 
     /**

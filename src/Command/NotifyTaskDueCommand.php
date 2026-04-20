@@ -33,6 +33,9 @@ class NotifyTaskDueCommand extends Command
         $this->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Just returns the devices and push notifications, but does not send any push notifications!');
     }
 
+    /**
+     * @throws \DivisionByZeroError
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {

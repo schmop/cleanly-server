@@ -2,6 +2,7 @@
 
 namespace App\Todo;
 
+use App\Persistence\PersistenceException;
 use App\RankSort\RankSortableItem;
 use App\RankSort\RankSortableItemRepositoryInterface;
 use App\RankSort\RankSortableList;
@@ -26,6 +27,9 @@ class TodoRepository extends ServiceEntityRepository implements RankSortableItem
         return $this->findOneBy(['uuid' => $uuid]);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findFirst(RankSortableList $list): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('t');
@@ -40,6 +44,9 @@ class TodoRepository extends ServiceEntityRepository implements RankSortableItem
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findLast(RankSortableList $list): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('t');
@@ -54,6 +61,9 @@ class TodoRepository extends ServiceEntityRepository implements RankSortableItem
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findAfter(RankSortableList $list, string $afterThisUuid): RankSortableItem|null
     {
 
@@ -71,6 +81,9 @@ class TodoRepository extends ServiceEntityRepository implements RankSortableItem
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findBefore(RankSortableList $list, string $beforeThisUuid): RankSortableItem|null
     {
 
@@ -88,10 +101,11 @@ class TodoRepository extends ServiceEntityRepository implements RankSortableItem
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(RankSortableItem $item): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($item);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $item);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Task;
 
 use App\Household\HouseholdRepository;
 use App\Household\HouseholdVoter;
+use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 use App\Task\Entity\ReminderConfig;
 use App\Task\Entity\Task;
@@ -18,6 +19,10 @@ final class TaskFactory
     ) {
     }
 
+    /**
+     * @throws UnexpectedJsonException
+     * @throws \InvalidArgumentException
+     */
     public function createTaskFromRequest(Request $request): Task
     {
         $json = Json::fromRequest($request);

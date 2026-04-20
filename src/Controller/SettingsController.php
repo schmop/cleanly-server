@@ -24,21 +24,25 @@ class SettingsController
         UserSettingsRepository $userSettingsRepository,
         LoggerInterface $logger,
     ): Response {
-        $user = $userFetcher->getUser();
-        $settings = $user->getUserSettings();
         try {
-            $settingsData = UserSettingsData::createFromJson(Json::fromRequest($request));
-            $settingsData->applyTo($settings);
-            $userSettingsRepository->save($settings);
-        } catch (\Exception $e) {
-            $logger->error('Could not save settings, reason: {reason}', [
-                'reason' => $e->getMessage(),
-                'exception' => $e
-            ]);
+            $user = $userFetcher->getUser();
+            $settings = $user->getUserSettings();
+            try {
+                $settingsData = UserSettingsData::createFromJson(Json::fromRequest($request));
+                $settingsData->applyTo($settings);
+                $userSettingsRepository->save($settings);
+            } catch (\Exception $e) {
+                $logger->error('Could not save settings, reason: {reason}', [
+                    'reason' => $e->getMessage(),
+                    'exception' => $e
+                ]);
 
-            return JsonErrorResponse::create(['reason' => $e->getMessage()]);
+                return JsonErrorResponse::create(['reason' => $e->getMessage()]);
+            }
+
+            return JsonSuccessResponse::create([]);
+        } catch (\RuntimeException $e) {
+            return JsonErrorResponse::fromException($logger, $e, 'Failed to update user settings');
         }
-
-        return JsonSuccessResponse::create([]);
     }
 }

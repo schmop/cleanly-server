@@ -32,6 +32,7 @@ readonly class TransactionShare implements \JsonSerializable
      *   'userId': int,
      *   'share': int,
      * }
+     * @throws \LogicException
      */
     public function jsonSerialize(): array
     {

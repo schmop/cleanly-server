@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\HttpFoundation\HtmlResponse;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Exception\UnexpectedJsonException;
+use App\Persistence\PersistenceException;
 use App\Registration\RegistrationException;
 use App\Registration\RegistrationFactory;
 use App\Registration\RegistrationRepository;
+use App\Template\TemplateRenderException;
 use App\User\Entity\User;
 use App\User\UserRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
@@ -28,6 +33,7 @@ class SignUpController
         Request             $request,
         RegistrationFactory $registrationFactory,
         MailerInterface     $mailer,
+        LoggerInterface     $logger,
     ): JsonResponse {
         try {
             $registration = $registrationFactory->createRegistrationFromRequest($request);
@@ -41,6 +47,8 @@ class SignUpController
                 'reason' => 'Invalid JSON: ' . $e->getMessage(),
                 "status" => "failure",
             ]);
+        } catch (\RuntimeException $e) {
+            return JsonErrorResponse::fromException($logger, $e, 'Failed to create registration');
         }
 
         if (null !== $registration) {
@@ -53,7 +61,11 @@ class SignUpController
                     'registration' => $registration,
                 ]);
 
-            $mailer->send($email);
+            try {
+                $mailer->send($email);
+            } catch (TransportExceptionInterface $e) {
+                return JsonErrorResponse::fromException($logger, $e, 'Failed to send registration email');
+            }
         }
 
         return JsonSuccessResponse::create(
@@ -71,18 +83,24 @@ class SignUpController
         RegistrationRepository $registrationRepository,
         UserRepository         $userRepository,
         Environment            $twig,
+        LoggerInterface        $logger,
     ): Response {
-        $registration = $registrationRepository->findByUuid($uuid);
-        if (null === $registration || $registration->token !== $token) {
-            return JsonErrorResponse::create([
-                'error' => 'Invalid registration token!'
-            ], JsonResponse::HTTP_FORBIDDEN);
-        }
-        $user = new User($registration->mail, $registration->name);
-        $user->setPassword($registration->password);
-        $userRepository->save($user);
-        $registrationRepository->remove($registration);
+        try {
+            $registration = $registrationRepository->findByUuid($uuid);
+            if (null === $registration || $registration->token !== $token) {
+                return JsonErrorResponse::create([
+                    'error' => 'Invalid registration token!'
+                ], JsonResponse::HTTP_FORBIDDEN);
+            }
+            $user = new User($registration->mail, $registration->name);
+            $user->setPassword($registration->password);
+            $userRepository->save($user);
+            $registrationRepository->remove($registration);
 
-        return new Response($twig->render('registration/registration_success.html.twig'));
+            return HtmlResponse::ok(TemplateRenderException::render($twig, 'registration/registration_success.html.twig'));
+        } catch (TemplateRenderException | PersistenceException $e) {
+            $logger->error('Sign-up verification failed', ['exception' => $e]);
+            return HtmlResponse::serverError();
+        }
     }
 }

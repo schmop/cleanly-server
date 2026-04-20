@@ -24,6 +24,9 @@ class TestSendMailCommand extends Command
         $this->addArgument('mail', InputArgument::REQUIRED, 'Mail-address to send mail to');
     }
 
+    /**
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $mail = $input->getArgument('mail');

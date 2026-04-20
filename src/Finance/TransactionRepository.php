@@ -4,6 +4,7 @@ namespace App\Finance;
 
 use App\Finance\Entity\Transaction;
 use App\Household\Entity\Household;
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
@@ -24,23 +25,33 @@ class TransactionRepository extends ServiceEntityRepository
         parent::__construct($registry, Transaction::class);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function saveWithShares(Transaction $transaction): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($transaction);
-        foreach ($transaction->shares as $share) {
-            $em->persist($share);
-        }
-        $em->flush();
+        PersistenceException::wrap(function () use ($transaction): void {
+            $em = $this->getEntityManager();
+            $em->persist($transaction);
+            foreach ($transaction->shares as $share) {
+                $em->persist($share);
+            }
+            $em->flush();
+        });
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(Transaction $transaction): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($transaction);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $transaction);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function getTotalCostsForHousehold(Household $household): int
     {
         // add expenses and subtract incomes but ignore transfers
@@ -57,6 +68,10 @@ class TransactionRepository extends ServiceEntityRepository
         return (int)$result;
     }
 
+    /**
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function getTotalIncomeForUserInHousehold(User $user, Household $household): int
     {
         $rsm = new ResultSetMapping();
@@ -86,6 +101,10 @@ EOF, $rsm)
         return (int)$query->getSingleScalarResult();
     }
 
+    /**
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function getTotalExpenseForUserInHousehold(User $user, Household $household): int
     {
         $rsm = new ResultSetMapping();
@@ -116,6 +135,7 @@ EOF, $rsm)
 
     /**
      * @return list<Debt>
+     * @throws \RuntimeException
      */
     public function getDebtsInHousehold(Household $household): array
     {

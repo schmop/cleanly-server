@@ -8,6 +8,7 @@ use App\Household\Entity\Household;
 use App\Household\HouseholdRepository;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -17,13 +18,18 @@ class StarController extends UserAwareController
     public function fetchStarsInHousehold(
         Household           $household,
         HouseholdRepository $householdRepository,
+        LoggerInterface     $logger,
     ): JsonResponse {
-        $user = $this->getUser();
+        try {
+            $user = $this->getUser();
 
-        if (!$household->getMembers()->contains($user)) {
-            return JsonErrorResponse::create(['reason' => 'You are not a member of this household!']);
+            if (!$household->getMembers()->contains($user)) {
+                return JsonErrorResponse::create(['reason' => 'You are not a member of this household!']);
+            }
+
+            return JsonSuccessResponse::create($householdRepository->retrieveStars($household));
+        } catch (\LogicException $e) {
+            return JsonErrorResponse::fromException($logger, $e, 'Failed to fetch stars');
         }
-
-        return JsonSuccessResponse::create($householdRepository->retrieveStars($household));
     }
 }

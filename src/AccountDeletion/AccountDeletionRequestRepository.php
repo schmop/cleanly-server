@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\AccountDeletion;
 
 use App\AccountDeletion\Entity\AccountDeletionRequest;
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -29,17 +30,19 @@ class AccountDeletionRequestRepository extends ServiceEntityRepository
         return $this->findOneBy(['user' => $user]);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(AccountDeletionRequest $request): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($request);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $request);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(AccountDeletionRequest $request): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($request);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $request);
     }
 }

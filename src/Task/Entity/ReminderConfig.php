@@ -110,6 +110,7 @@ class ReminderConfig implements \JsonSerializable
 
     /**
      * @throws UnexpectedJsonException
+     * @throws \InvalidArgumentException
      */
     public static function fromJson(Json $json): self
     {

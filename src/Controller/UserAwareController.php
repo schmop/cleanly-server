@@ -14,6 +14,9 @@ abstract class UserAwareController
         private readonly AuthorizationCheckerInterface $authorizationChecker,
     ) {
     }
+    /**
+     * @throws \LogicException
+     */
     public function getUser(): User
     {
         $user = $this->tokenStorage->getToken()?->getUser();

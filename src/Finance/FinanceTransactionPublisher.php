@@ -15,21 +15,33 @@ readonly class FinanceTransactionPublisher
     {
     }
 
+    /**
+     * @throws \LogicException
+     */
     public function publish(Transaction $transaction, User $publisher): void
     {
         $this->publishWithType($transaction, $publisher, 'create');
     }
 
+    /**
+     * @throws \LogicException
+     */
     public function publishDelete(Transaction $transaction, User $publisher): void
     {
         $this->publishWithType($transaction, $publisher, 'delete');
     }
 
+    /**
+     * @throws \LogicException
+     */
     public function publishUpdate(Transaction $transaction, User $publisher): void
     {
         $this->publishWithType($transaction, $publisher, 'update');
     }
 
+    /**
+     * @throws \LogicException
+     */
     private function publishWithType(Transaction $transaction, User $publisher, string $type): void
     {
         $users = filter(

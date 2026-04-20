@@ -3,6 +3,7 @@
 namespace App\Auth;
 use App\Auth\RefreshTokenCreator;
 use App\Auth\Entity\RefreshToken;
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use App\Utils\Random;
 
@@ -15,6 +16,10 @@ class RandomRefreshTokenCreator implements RefreshTokenCreator
     ) {
     }
 
+    /**
+     * @throws \Webmozart\Assert\InvalidArgumentException
+     * @throws PersistenceException
+     */
     function create(User $user): RefreshToken
     {
         $token = new RefreshToken(

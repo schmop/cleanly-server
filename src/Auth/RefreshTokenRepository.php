@@ -3,6 +3,7 @@
 namespace App\Auth;
 
 use App\Auth\Entity\RefreshToken;
+use App\Persistence\PersistenceException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,11 +17,12 @@ final class RefreshTokenRepository extends ServiceEntityRepository
         parent::__construct($registry, RefreshToken::class);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(RefreshToken $refreshToken): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($refreshToken);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $refreshToken);
     }
 
     public function findByToken(string $token): ?RefreshToken

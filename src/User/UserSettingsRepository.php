@@ -3,6 +3,7 @@
 namespace App\User;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Persistence\PersistenceException;
 use Doctrine\Persistence\ManagerRegistry;
 use App\User\Entity\UserSettings;
 
@@ -16,17 +17,19 @@ class UserSettingsRepository extends ServiceEntityRepository
         parent::__construct($registry, UserSettings::class);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(UserSettings $userSettings): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($userSettings);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $userSettings);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(UserSettings $userSettings): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($userSettings);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $userSettings);
     }
 }

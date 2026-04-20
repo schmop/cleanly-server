@@ -3,6 +3,7 @@
 namespace App\PasswordReset;
 
 use App\PasswordReset\Entity\ResetPasswordRequest;
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
@@ -23,22 +24,37 @@ class ResetPasswordRequestRepository extends ServiceEntityRepository implements 
         parent::__construct($registry, ResetPasswordRequest::class);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function add(ResetPasswordRequest $entity, bool $flush = true): void
     {
-        $this->getEntityManager()->persist($entity);
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        PersistenceException::wrap(function () use ($entity, $flush): void {
+            $em = $this->getEntityManager();
+            $em->persist($entity);
+            if ($flush) {
+                $em->flush();
+            }
+        });
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(ResetPasswordRequest $entity, bool $flush = true): void
     {
-        $this->getEntityManager()->remove($entity);
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        PersistenceException::wrap(function () use ($entity, $flush): void {
+            $em = $this->getEntityManager();
+            $em->remove($entity);
+            if ($flush) {
+                $em->flush();
+            }
+        });
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function createResetPasswordRequest(object $user, \DateTimeInterface $expiresAt, string $selector, string $hashedToken): ResetPasswordRequestInterface
     {
         if (!($user instanceof User)) {

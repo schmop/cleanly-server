@@ -2,6 +2,7 @@
 
 namespace App\Todo;
 
+use App\Persistence\PersistenceException;
 use App\RankSort\ItemSorter;
 use App\Todo\Entity\Checklist;
 use App\Todo\Entity\Todo;
@@ -22,6 +23,8 @@ readonly class TodoEventProcessor
     /**
      * @param TodoEvent[] $events
      * @throws InconsistentChecklistEventException
+     * @throws PersistenceException
+     * @throws \Exception
      */
     public function process(array $events, Checklist $checklist): void
     {
@@ -53,17 +56,20 @@ readonly class TodoEventProcessor
         $this->entityManager->commit();
     }
 
+    /**
+     * @throws PersistenceException
+     */
     private function create(TodoEvent $event, Checklist $checklist): void
     {
         $todo = new Todo($event->uuid, $event->data ?? '', $checklist);
         $this->sorter->moveAtEnd($todo);
         $checklist->getChecklist()->add($todo);
-        $this->entityManager->persist($todo);
-        $this->entityManager->flush();
+        PersistenceException::persistAndFlush($this->entityManager, $todo);
     }
 
     /**
      * @throws InconsistentChecklistEventException
+     * @throws PersistenceException
      */
     private function update(TodoEvent $event): void
     {
@@ -72,7 +78,7 @@ readonly class TodoEventProcessor
             throw new InconsistentChecklistEventException("Cannot update checklist entries that don't exist!");
         }
         $todo->setContent($event->data ?? '');
-        $this->entityManager->flush();
+        PersistenceException::flush($this->entityManager);
     }
 
     /**
@@ -89,6 +95,8 @@ readonly class TodoEventProcessor
 
     /**
      * @throws InconsistentChecklistEventException
+     * @throws PersistenceException
+     * @throws \DateMalformedStringException
      */
     private function check(TodoEvent $event, Checklist $checklist): void
     {
@@ -97,11 +105,12 @@ readonly class TodoEventProcessor
             throw new InconsistentChecklistEventException("Cannot check checklist entries that don't exist!");
         }
         $todo->setCheckedAt(null === $event->data ? null : new \DateTimeImmutable('@' . intval($event->data)));
-        $this->entityManager->flush();
+        PersistenceException::flush($this->entityManager);
     }
 
     /**
      * @throws InconsistentChecklistEventException
+     * @throws PersistenceException
      */
     private function delete(TodoEvent $event, Checklist $checklist): void
     {
@@ -110,7 +119,6 @@ readonly class TodoEventProcessor
             throw new InconsistentChecklistEventException("Cannot delete checklist entries that don't exist!");
         }
         $checklist->getChecklist()->removeElement($todo);
-        $this->entityManager->remove($todo);
-        $this->entityManager->flush();
+        PersistenceException::removeAndFlush($this->entityManager, $todo);
     }
 }

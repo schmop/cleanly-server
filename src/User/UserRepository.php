@@ -2,6 +2,7 @@
 
 namespace App\User;
 
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -21,6 +22,8 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
     /**
      * Used to upgrade (rehash) the user's password automatically over time.
+     * @throws PersistenceException
+     * @throws \Symfony\Component\Security\Core\Exception\UnsupportedUserException
      */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
@@ -29,8 +32,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
 
         $user->setPassword($newHashedPassword);
-        $this->getEntityManager()->persist($user);
-        $this->getEntityManager()->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $user);
     }
 
     public function findByMail(string $mail): ?User
@@ -51,17 +53,19 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ;
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(User $user): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($user);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $user);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(User $user): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($user);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $user);
     }
 }

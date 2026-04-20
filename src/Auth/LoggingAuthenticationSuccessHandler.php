@@ -4,6 +4,7 @@ namespace App\Auth;
 
 use App\Analytics\ActivityType;
 use App\Analytics\UsageTracker;
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use Lexik\Bundle\JWTAuthenticationBundle\Security\Http\Authentication\AuthenticationSuccessHandler;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +20,9 @@ readonly class LoggingAuthenticationSuccessHandler implements AuthenticationSucc
     ) {
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token): ?Response
     {
         $user = $token->getUser();

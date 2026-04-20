@@ -18,6 +18,8 @@ readonly class TransactionFactory
 
     /**
      * @throws UnexpectedJsonException
+     * @throws \TypeError
+     * @throws \ValueError
      */
     public function transactionFromJson(Json $data, Household $household, ?\DateTimeImmutable $createdAt = null): Transaction
     {

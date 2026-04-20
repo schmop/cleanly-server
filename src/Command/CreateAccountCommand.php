@@ -27,6 +27,10 @@ class CreateAccountCommand extends Command
         $this->addArgument('password', InputArgument::REQUIRED, 'Password');
     }
 
+    /**
+     * @throws \RuntimeException
+     * @throws \Symfony\Component\PasswordHasher\Exception\InvalidPasswordException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $name = $input->getArgument('name');

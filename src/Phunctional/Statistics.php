@@ -23,6 +23,7 @@ class Statistics
 
     /**
      * @param array<int> $values
+     * @throws \Webmozart\Assert\InvalidArgumentException
      */
     static function min(array $values): ?int
     {
@@ -41,6 +42,7 @@ class Statistics
 
     /**
      * @param array<int> $values
+     * @throws \Webmozart\Assert\InvalidArgumentException
      */
     static function max(array $values): ?int
     {
@@ -60,6 +62,7 @@ class Statistics
 
     /**
      * @param array<int> $values
+     * @throws \Webmozart\Assert\InvalidArgumentException
      */
     static function average(array $values): ?float
     {
@@ -72,6 +75,7 @@ class Statistics
 
     /**
      * @param array<int> $values
+     * @throws \Webmozart\Assert\InvalidArgumentException
      */
     static function sum(array $values): int
     {

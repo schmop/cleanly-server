@@ -74,6 +74,9 @@ class Household implements \JsonSerializable, RankSortableList
         $this->checklists = new ArrayCollection();
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public static function createFromRequest(Request $request, User $user): self
     {
         $name = $request->request->get('name');
@@ -205,6 +208,9 @@ class Household implements \JsonSerializable, RankSortableList
         return $this->privileges;
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function setUserPrivilege(User $user, int $level): void
     {
         if (!in_array($level, HouseholdPrivilege::PRIVILEGES)) {
@@ -259,6 +265,7 @@ class Household implements \JsonSerializable, RankSortableList
      *     checklists: array<int, mixed>,
      *     privileges: array<int, mixed>,
      * }
+     * @throws \LogicException
      */
     public function jsonSerialize(): array
     {

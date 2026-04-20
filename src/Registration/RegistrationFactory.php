@@ -47,6 +47,11 @@ class RegistrationFactory
      * @throws UnexpectedJsonException
      *
      * @return Registration|null Returns null if no email validation is required. Therefore, no registration entity is created and the user is created directly.
+     * @throws \RuntimeException
+     * @throws \Symfony\Component\PasswordHasher\Exception\InvalidPasswordException
+     * @throws \Symfony\Component\Validator\Exception\ConstraintDefinitionException
+     * @throws \Symfony\Component\Validator\Exception\InvalidOptionsException
+     * @throws \Symfony\Component\Validator\Exception\MissingOptionsException
      */
     public function createRegistrationFromRequest(Request $request): ?Registration
     {

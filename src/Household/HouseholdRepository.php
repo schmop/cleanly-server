@@ -3,6 +3,7 @@
 namespace App\Household;
 
 use App\Household\Entity\Household;
+use App\Persistence\PersistenceException;
 use App\Todo\Entity\Checklist;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -38,10 +39,11 @@ class HouseholdRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(Household $household): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($household);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $household);
     }
 }

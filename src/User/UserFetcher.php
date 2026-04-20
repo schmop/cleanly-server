@@ -13,6 +13,9 @@ class UserFetcher {
     {
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function getUser(): User
     {
         $user = $this->tokenStorage->getToken()?->getUser();

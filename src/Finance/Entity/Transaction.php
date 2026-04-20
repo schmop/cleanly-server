@@ -67,6 +67,7 @@ class Transaction implements \JsonSerializable
      *     'share': int,
      *   }>,
      * }
+     * @throws \LogicException
      */
     public function jsonSerialize(): array
     {

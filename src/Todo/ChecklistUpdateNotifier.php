@@ -2,6 +2,7 @@
 
 namespace App\Todo;
 
+use App\Persistence\PersistenceException;
 use App\Push\Pusher;
 use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
@@ -16,6 +17,9 @@ readonly class ChecklistUpdateNotifier
     ) {
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function notify(User $updatingUser, Checklist $checklist): void
     {
         $now = $this->clock->now();

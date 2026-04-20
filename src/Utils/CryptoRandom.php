@@ -6,6 +6,7 @@ final class CryptoRandom implements Random
 {
     /**
      * @param int<1, max> $bytes
+     * @throws \Random\RandomException
      */
     public function getRandomString(int $bytes): string
     {

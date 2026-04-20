@@ -13,6 +13,9 @@ class RefreshTokenRefresher
     ) {
     }
 
+    /**
+     * @throws \Webmozart\Assert\InvalidArgumentException
+     */
     function refresh(RefreshToken $refreshToken): void
     {
         $interval = \DateInterval::createFromDateString(

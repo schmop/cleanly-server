@@ -2,6 +2,7 @@
 
 namespace App\Task;
 
+use App\Persistence\PersistenceException;
 use App\Task\Entity\Task;
 use App\User\Entity\User;
 use App\Utils\Clock;
@@ -18,6 +19,9 @@ class TaskCompleter
     ) {
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function markAsComplete(Task $task, User $user, ?\DateTimeImmutable $customTimestamp = null, ?User $asUser = null): bool
     {
         $completingUser = $asUser ?? $user;

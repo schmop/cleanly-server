@@ -2,6 +2,7 @@
 
 namespace App\Todo;
 
+use App\Persistence\PersistenceException;
 use App\RankSort\RankSortableItem;
 use App\RankSort\RankSortableItemRepositoryInterface;
 use App\RankSort\RankSortableList;
@@ -26,13 +27,17 @@ class ChecklistRepository extends ServiceEntityRepository implements RankSortabl
         return $this->findOneBy(['uuid' => $uuid]);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function remove(Checklist $checklist): void
     {
-        $em = $this->getEntityManager();
-        $em->remove($checklist);
-        $em->flush();
+        PersistenceException::removeAndFlush($this->getEntityManager(), $checklist);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findFirst(RankSortableList $list): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('c');
@@ -47,6 +52,9 @@ class ChecklistRepository extends ServiceEntityRepository implements RankSortabl
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findLast(RankSortableList $list): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('c');
@@ -61,13 +69,17 @@ class ChecklistRepository extends ServiceEntityRepository implements RankSortabl
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function save(RankSortableItem $item): void
     {
-        $em = $this->getEntityManager();
-        $em->persist($item);
-        $em->flush();
+        PersistenceException::persistAndFlush($this->getEntityManager(), $item);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findAfter(RankSortableList $list, string $afterThisUuid): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('c');
@@ -84,6 +96,9 @@ class ChecklistRepository extends ServiceEntityRepository implements RankSortabl
         return $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_OBJECT);
     }
 
+    /**
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function findBefore(RankSortableList $list, string $beforeThisUuid): RankSortableItem|null
     {
         $qb = $this->createQueryBuilder('c');

@@ -4,6 +4,7 @@ namespace App\Command;
 
 use AlexCrawford\LexoRank\Rank;
 use App\Household\HouseholdRepository;
+use App\Persistence\PersistenceException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,6 +22,9 @@ class RebalanceChecklistOrderingCommand extends Command
     protected function configure(): void {
     }
 
+    /**
+     * @throws PersistenceException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $households = $this->householdRepository->findAll();

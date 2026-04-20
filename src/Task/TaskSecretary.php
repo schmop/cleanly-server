@@ -2,8 +2,10 @@
 
 namespace App\Task;
 
+use App\Persistence\PersistenceException;
 use App\Task\Entity\ReminderConfig;
 use App\Task\Entity\Task;
+use App\Task\Exception\ReminderComputationException;
 use App\Utils\Clock;
 
 readonly class TaskSecretary
@@ -15,19 +17,21 @@ readonly class TaskSecretary
     }
 
     /**
-     * @throws \DateMalformedIntervalStringException
+     * @throws ReminderComputationException
      */
     public function isTaskDue(Task $task): bool
     {
-        $lastCompleted = $task->getLastCompleted();
-        if (null === $lastCompleted || null === $task->getDuration()) {
-            return false;
-        }
-        $dueDate = $lastCompleted->add(
-            new \DateInterval(sprintf('PT%dH', $task->getDuration()))
-        );
+        return ReminderComputationException::wrap(function () use ($task): bool {
+            $lastCompleted = $task->getLastCompleted();
+            if (null === $lastCompleted || null === $task->getDuration()) {
+                return false;
+            }
+            $dueDate = $lastCompleted->add(
+                new \DateInterval(sprintf('PT%dH', $task->getDuration()))
+            );
 
-        return $dueDate < $this->clock->now();
+            return $dueDate < $this->clock->now();
+        });
     }
 
     public function wasAlreadyNotified(Task $task): bool
@@ -40,6 +44,9 @@ readonly class TaskSecretary
         return $lastPushedAt !== null && $lastCompleted < $lastPushedAt;
     }
 
+    /**
+     * @throws ReminderComputationException
+     */
     public function isReminderDue(Task $task): bool
     {
         $next = $this->computeNextReminderAt($task);
@@ -50,51 +57,63 @@ readonly class TaskSecretary
         return $next <= $this->clock->now();
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function markTaskAsPushed(Task $task): void
     {
         $task->setLastPushedAt($this->clock->now());
         $this->taskRepository->save($task);
     }
 
+    /**
+     * @throws ReminderComputationException
+     */
     public function computeNextReminderAt(Task $task): ?\DateTimeImmutable
     {
-        $config = $task->getReminderConfig();
-        if ($config === null) {
-            return null;
-        }
+        return ReminderComputationException::wrap(function () use ($task): ?\DateTimeImmutable {
+            $config = $task->getReminderConfig();
+            if ($config === null) {
+                return null;
+            }
 
-        [$hour, $minute] = array_map('intval', explode(':', $config->time));
+            [$hour, $minute] = array_map('intval', explode(':', $config->time));
 
-        // If the task was never completed, use now as the anchor so the first
-        // reminder fires at the next natural occurrence from now.
-        $lastCompleted = $task->getLastCompleted() ?? $this->clock->now();
-        $lastPushedAt = $task->getLastPushedAt() ?? new \DateTimeImmutable('@0');
-        $afterDate = $lastCompleted > $lastPushedAt ? $lastCompleted : $lastPushedAt;
+            // If the task was never completed, use now as the anchor so the first
+            // reminder fires at the next natural occurrence from now.
+            $lastCompleted = $task->getLastCompleted() ?? $this->clock->now();
+            $lastPushedAt = $task->getLastPushedAt() ?? new \DateTimeImmutable('@0');
+            $afterDate = $lastCompleted > $lastPushedAt ? $lastCompleted : $lastPushedAt;
 
-        return match ($config->type) {
-            ReminderConfig::TYPE_DAILY => $this->computeNextDaily(
-                $lastCompleted, $afterDate, $config->interval, $hour, $minute
-            ),
-            ReminderConfig::TYPE_WEEKLY => $this->computeNextWeekly(
-                $lastCompleted, $afterDate, $config->interval, $config->daysOfWeek ?? 1, $hour, $minute
-            ),
-            ReminderConfig::TYPE_MONTHLY_DAY => $this->computeNextMonthlyDay(
-                $lastCompleted, $afterDate, $config->interval, $config->monthDay ?? 1, $hour, $minute
-            ),
-            ReminderConfig::TYPE_MONTHLY_WEEKDAY => $this->computeNextMonthlyWeekday(
-                $lastCompleted, $afterDate, $config->interval, $config->weekOccurrence ?? 1, $config->weekDay ?? 1, $hour, $minute
-            ),
-            ReminderConfig::TYPE_YEARLY => $this->computeNextYearly(
-                $lastCompleted, $afterDate, $config->interval, $config->month ?? 1, $config->day ?? 1, $hour, $minute
-            ),
-            default => null,
-        };
+            return match ($config->type) {
+                ReminderConfig::TYPE_DAILY => $this->computeNextDaily(
+                    $lastCompleted, $afterDate, $config->interval, $hour, $minute
+                ),
+                ReminderConfig::TYPE_WEEKLY => $this->computeNextWeekly(
+                    $lastCompleted, $afterDate, $config->interval, $config->daysOfWeek ?? 1, $hour, $minute
+                ),
+                ReminderConfig::TYPE_MONTHLY_DAY => $this->computeNextMonthlyDay(
+                    $lastCompleted, $afterDate, $config->interval, $config->monthDay ?? 1, $hour, $minute
+                ),
+                ReminderConfig::TYPE_MONTHLY_WEEKDAY => $this->computeNextMonthlyWeekday(
+                    $lastCompleted, $afterDate, $config->interval, $config->weekOccurrence ?? 1, $config->weekDay ?? 1, $hour, $minute
+                ),
+                ReminderConfig::TYPE_YEARLY => $this->computeNextYearly(
+                    $lastCompleted, $afterDate, $config->interval, $config->month ?? 1, $config->day ?? 1, $hour, $minute
+                ),
+                default => null,
+            };
+        });
     }
 
     // -------------------------------------------------------------------------
     // Daily
     // -------------------------------------------------------------------------
 
+    /**
+     * @throws \DateMalformedIntervalStringException
+     * @throws \DivisionByZeroError
+     */
     private function computeNextDaily(
         \DateTimeImmutable $lastCompleted,
         \DateTimeImmutable $afterDate,
@@ -123,6 +142,9 @@ readonly class TaskSecretary
 
     /**
      * @param int $daysOfWeekMask Bitmask: bit 0=Mon, 1=Tue … 5=Sat, 6=Sun. Bit position = offset from Monday.
+     * @throws \DateInvalidOperationException
+     * @throws \DateMalformedIntervalStringException
+     * @throws \DivisionByZeroError
      */
     private function computeNextWeekly(
         \DateTimeImmutable $lastCompleted,
@@ -187,6 +209,10 @@ readonly class TaskSecretary
     // Monthly – fixed day
     // -------------------------------------------------------------------------
 
+    /**
+     * @throws \DivisionByZeroError
+     * @throws \DateMalformedStringException
+     */
     private function computeNextMonthlyDay(
         \DateTimeImmutable $lastCompleted,
         \DateTimeImmutable $afterDate,
@@ -225,6 +251,9 @@ readonly class TaskSecretary
         return $candidate;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     private function monthDayOccurrence(int $year, int $month, int $monthDay, int $hour, int $minute): \DateTimeImmutable
     {
         $maxDay = (int) (new \DateTimeImmutable(sprintf('%d-%02d-01', $year, $month)))->format('t');
@@ -238,6 +267,12 @@ readonly class TaskSecretary
     // Monthly – nth weekday of month
     // -------------------------------------------------------------------------
 
+    /**
+     * @throws \DivisionByZeroError
+     * @throws \DateInvalidOperationException
+     * @throws \DateMalformedIntervalStringException
+     * @throws \DateMalformedStringException
+     */
     private function computeNextMonthlyWeekday(
         \DateTimeImmutable $lastCompleted,
         \DateTimeImmutable $afterDate,
@@ -276,7 +311,13 @@ readonly class TaskSecretary
         return $candidate;
     }
 
-    /** @param int $weekOccurrence  negative = nth-from-last (-1=last, -2=2nd-last, …), positive = nth-from-start (1–4) */
+    /**
+     * @param int $weekOccurrence  negative = nth-from-last (-1=last, -2=2nd-last, …), positive = nth-from-start (1–4)
+     *
+     * @throws \DateInvalidOperationException
+     * @throws \DateMalformedIntervalStringException
+     * @throws \DateMalformedStringException
+     */
     private function monthWeekdayOccurrence(int $year, int $month, int $weekOccurrence, int $weekDay, int $hour, int $minute): \DateTimeImmutable
     {
         if ($weekOccurrence < 0) {
@@ -308,6 +349,10 @@ readonly class TaskSecretary
     // Yearly
     // -------------------------------------------------------------------------
 
+    /**
+     * @throws \DivisionByZeroError
+     * @throws \DateMalformedStringException
+     */
     private function computeNextYearly(
         \DateTimeImmutable $lastCompleted,
         \DateTimeImmutable $afterDate,
@@ -341,6 +386,9 @@ readonly class TaskSecretary
         return $candidate;
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     private function yearlyOccurrence(int $year, int $month, int $day, int $hour, int $minute): \DateTimeImmutable
     {
         $maxDay = (int) (new \DateTimeImmutable(sprintf('%d-%02d-01', $year, $month)))->format('t');

@@ -16,6 +16,9 @@ readonly class ChecklistFactory
     ) {
     }
 
+    /**
+     * @throws \LogicException
+     */
     public function create(Household $home): Checklist
     {
         $sortrank = $home->getChecklists()->isEmpty()

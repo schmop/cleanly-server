@@ -102,6 +102,7 @@ class Checklist implements \JsonSerializable, RankSortableItem, RankSortableList
 
     /**
      * @return non-empty-string
+     * @throws \LogicException
      */
     public function getSortRank(): string
     {
@@ -125,6 +126,7 @@ class Checklist implements \JsonSerializable, RankSortableItem, RankSortableList
      *          content: string,
      *     }>
      * }
+     * @throws \LogicException
      */
     public function jsonSerialize(): array
     {

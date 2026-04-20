@@ -3,6 +3,7 @@
 namespace App\Analytics;
 
 use App\Analytics\Entity\UsageLog;
+use App\Persistence\PersistenceException;
 use App\User\Entity\User;
 use App\Utils\Clock;
 use App\Utils\UuidGenerator;
@@ -16,6 +17,9 @@ readonly class UsageTracker
     ) {
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function track(User $user, ActivityType $activityType): void
     {
         $usageLog = new UsageLog(

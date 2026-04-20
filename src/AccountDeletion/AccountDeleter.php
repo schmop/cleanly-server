@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\AccountDeletion;
 
 use App\PasswordReset\ResetPasswordRequestRepository;
+use App\Persistence\PersistenceException;
 use App\Push\DeviceRepository;
 use App\User\Entity\User;
 use App\User\UserSettingsRepository;
@@ -20,22 +21,27 @@ class AccountDeleter
     ) {
     }
 
+    /**
+     * @throws PersistenceException
+     */
     public function delete(User $user): void
     {
-        $userSettings = $this->userSettingsRepository->findOneBy(['user' => $user]);
-        if (null !== $userSettings) {
-            $this->em->remove($userSettings);
-        }
+        PersistenceException::wrap(function () use ($user): void {
+            $userSettings = $this->userSettingsRepository->findOneBy(['user' => $user]);
+            if (null !== $userSettings) {
+                $this->em->remove($userSettings);
+            }
 
-        foreach ($this->deviceRepository->findByUser($user) as $device) {
-            $this->em->remove($device);
-        }
+            foreach ($this->deviceRepository->findByUser($user) as $device) {
+                $this->em->remove($device);
+            }
 
-        foreach ($this->resetPasswordRequestRepository->findBy(['user' => $user]) as $resetRequest) {
-            $this->em->remove($resetRequest);
-        }
+            foreach ($this->resetPasswordRequestRepository->findBy(['user' => $user]) as $resetRequest) {
+                $this->em->remove($resetRequest);
+            }
 
-        $this->em->remove($user);
-        $this->em->flush();
+            $this->em->remove($user);
+            $this->em->flush();
+        });
     }
 }
