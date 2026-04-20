@@ -86,7 +86,7 @@ class ChecklistRepository extends ServiceEntityRepository implements RankSortabl
 
         $qb
             ->where('c.household = :household')
-            ->andWhere('c.sortRank > (SELECT t2.sortRank FROM App\Todo\Entity\Todo t2 WHERE t2.uuid = :afterThisUuid)')
+            ->andWhere('c.sortRank > (SELECT c2.sortRank FROM App\Todo\Entity\Checklist c2 WHERE c2.uuid = :afterThisUuid)')
             ->orderBy('c.sortRank', 'ASC')
             ->setMaxResults(1)
             ->setParameter(':household', $list)
@@ -105,7 +105,7 @@ class ChecklistRepository extends ServiceEntityRepository implements RankSortabl
 
         $qb
             ->where('c.household = :household')
-            ->andWhere('c.sortRank < (SELECT t2.sortRank FROM App\Todo\Entity\Todo t2 WHERE t2.uuid = :beforeThisUuid)')
+            ->andWhere('c.sortRank < (SELECT c2.sortRank FROM App\Todo\Entity\Checklist c2 WHERE c2.uuid = :beforeThisUuid)')
             ->orderBy('c.sortRank', 'DESC')
             ->setMaxResults(1)
             ->setParameter(':household', $list)
