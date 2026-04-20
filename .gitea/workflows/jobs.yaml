@@ -12,8 +12,8 @@ jobs:
           POSTGRES_DB: cleanly_test
           POSTGRES_USER: cleanly
           POSTGRES_PASSWORD: cleanly
-        ports:
-          - 5432:5432
+        # No host port mapping — the runner host may already have Postgres on 5432.
+        # Reach Postgres via the Gitea Actions service network using the `db` hostname.
         options: >-
           --health-cmd="pg_isready -U cleanly"
           --health-interval=10s
@@ -23,7 +23,7 @@ jobs:
       APP_ENV: test
       APP_SECRET: ci-test-secret
       JWT_PASSPHRASE: ci-test-passphrase
-      DATABASE_URL: postgresql://cleanly:cleanly@localhost:5432/cleanly_test
+      DATABASE_URL: postgresql://cleanly:cleanly@db:5432/cleanly_test
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
