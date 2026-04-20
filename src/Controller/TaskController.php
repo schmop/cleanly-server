@@ -51,6 +51,8 @@ class TaskController extends UserAwareController
             return JsonSuccessResponse::create([]);
         } catch (UnexpectedJsonException | PersistenceException | \InvalidArgumentException $e) {
             return JsonErrorResponse::fromException($logger, $e, 'Failed to create task');
+        } catch (AccessDeniedException $e) {
+            return JsonErrorResponse::fromException($logger, $e, 'Access denied');
         }
     }
 

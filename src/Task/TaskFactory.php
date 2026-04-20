@@ -10,18 +10,20 @@ use App\Task\Entity\ReminderConfig;
 use App\Task\Entity\Task;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
-final class TaskFactory
+final readonly class TaskFactory
 {
     public function __construct(
-        private readonly HouseholdRepository           $householdRepository,
-        private readonly AuthorizationCheckerInterface $authorizationChecker,
+        private HouseholdRepository           $householdRepository,
+        private AuthorizationCheckerInterface $authorizationChecker,
     ) {
     }
 
     /**
      * @throws UnexpectedJsonException
      * @throws \InvalidArgumentException
+     * @throws AccessDeniedException
      */
     public function createTaskFromRequest(Request $request): Task
     {
@@ -30,7 +32,7 @@ final class TaskFactory
             throw new \InvalidArgumentException('Task must be linked to household!');
         }
         if (!$this->authorizationChecker->isGranted(HouseholdVoter::MANAGE_TASKS, $household)) {
-            throw new \InvalidArgumentException('Not enough privileges to create task in this household!');
+            throw new AccessDeniedException('Not enough privileges to create task in this household!');
         }
         $task = new Task();
         $task->setName($json->string('name'));

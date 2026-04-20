@@ -5,6 +5,25 @@ on: [push]
 jobs:
   Check server build:
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_DB: cleanly_test
+          POSTGRES_USER: cleanly
+          POSTGRES_PASSWORD: cleanly
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U cleanly"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: test
+      APP_SECRET: ci-test-secret
+      JWT_PASSPHRASE: ci-test-passphrase
+      DATABASE_URL: postgresql://cleanly:cleanly@localhost:5432/cleanly_test
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -12,9 +31,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
+          extensions: intl, pdo_pgsql, pgsql, zip
           tools: phpstan, phpunit, composer:v2
       - name: Install dependencies
         run: composer install
+      - name: Generate JWT keypair
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+      - name: Create test DB schema
+        run: php bin/console doctrine:migrations:migrate --no-interaction --env=test
       - name: Run PHPStan
         run: php vendor/bin/phpstan analyse --memory-limit=1G src
       - name: Phpunit

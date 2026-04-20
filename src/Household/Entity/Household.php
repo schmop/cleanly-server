@@ -72,6 +72,8 @@ class Household implements \JsonSerializable, RankSortableList
         $this->transactions = new ArrayCollection();
         $this->privileges = new ArrayCollection();
         $this->checklists = new ArrayCollection();
+        $this->webhookSecret = null;
+        $this->webhookUrl = null;
     }
 
     /**
