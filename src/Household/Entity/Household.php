@@ -10,6 +10,7 @@ use App\RankSort\RankSortableList;
 use App\Task\Entity\Task;
 use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
+use AlexCrawford\LexoRank\Rank;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -47,6 +48,10 @@ class Household implements \JsonSerializable, RankSortableList
     #[ORM\OneToMany(targetEntity: HouseholdPrivilege::class, mappedBy: "household", cascade: ["all"], orphanRemoval: true)]
     private Collection $privileges;
 
+    /** @var Collection<int, HouseholdRank> */
+    #[ORM\OneToMany(targetEntity: HouseholdRank::class, mappedBy: "household", cascade: ["all"], orphanRemoval: true)]
+    private Collection $ranks;
+
     /** @var Collection<int, HouseholdInvite> */
     #[ORM\OneToMany(targetEntity: HouseholdInvite::class, mappedBy: "household")]
     private Collection $invites;
@@ -71,6 +76,7 @@ class Household implements \JsonSerializable, RankSortableList
         $this->tasks = new ArrayCollection();
         $this->transactions = new ArrayCollection();
         $this->privileges = new ArrayCollection();
+        $this->ranks = new ArrayCollection();
         $this->checklists = new ArrayCollection();
         $this->webhookSecret = null;
         $this->webhookUrl = null;
@@ -78,6 +84,7 @@ class Household implements \JsonSerializable, RankSortableList
 
     /**
      * @throws \InvalidArgumentException
+     * @throws \LogicException
      */
     public static function createFromRequest(Request $request, User $user): self
     {
@@ -143,9 +150,30 @@ class Household implements \JsonSerializable, RankSortableList
         return $this->members;
     }
 
+    /**
+     * @throws \LogicException
+     */
     public function addMember(User $member): self
     {
+        if ($this->members->contains($member)) {
+            return $this;
+        }
         $this->members->add($member);
+
+        $hasRank = false;
+        foreach ($this->ranks as $existing) {
+            if ($existing->user === $member) {
+                $hasRank = true;
+                break;
+            }
+        }
+        if (!$hasRank) {
+            $rank = new HouseholdRank($this, $member, self::nextRankSortRank($member));
+            $this->ranks->add($rank);
+            // Keep the inverse collection in sync in-memory so sibling calls
+            // in the same request see this new rank when computing the next one.
+            $member->getHouseholdRanks()->add($rank);
+        }
 
         return $this;
     }
@@ -156,6 +184,12 @@ class Household implements \JsonSerializable, RankSortableList
         foreach ($this->privileges as $privilege) {
             if ($privilege->user === $member) {
                 $this->privileges->removeElement($privilege);
+                break;
+            }
+        }
+        foreach ($this->ranks as $rank) {
+            if ($rank->user === $member) {
+                $this->ranks->removeElement($rank);
                 break;
             }
         }
@@ -211,6 +245,14 @@ class Household implements \JsonSerializable, RankSortableList
     }
 
     /**
+     * @return Collection<int, HouseholdRank>
+     */
+    public function getRanks(): Collection
+    {
+        return $this->ranks;
+    }
+
+    /**
      * @throws \InvalidArgumentException
      */
     public function setUserPrivilege(User $user, int $level): void
@@ -227,6 +269,23 @@ class Household implements \JsonSerializable, RankSortableList
         }
 
         $this->privileges->add(new HouseholdPrivilege($this, $user, $level));
+    }
+
+    /**
+     * @throws \LogicException
+     */
+    private static function nextRankSortRank(User $user): string
+    {
+        $lastRank = null;
+        foreach ($user->getHouseholdRanks() as $existing) {
+            if ($lastRank === null || strcmp($existing->getSortRank(), $lastRank) > 0) {
+                $lastRank = $existing->getSortRank();
+            }
+        }
+
+        return $lastRank === null
+            ? Rank::forEmptySequence()->get()
+            : Rank::after(Rank::fromString($lastRank))->get();
     }
 
     /**

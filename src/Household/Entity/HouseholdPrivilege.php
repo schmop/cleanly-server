@@ -2,12 +2,12 @@
 
 namespace App\Household\Entity;
 
-use App\Household\HouseholdInviteRepository;
+use App\Household\HouseholdPrivilegeRepository;
 use App\User\Entity\User;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
-#[ORM\Entity(repositoryClass:HouseholdInviteRepository::class)]
+#[ORM\Entity(repositoryClass: HouseholdPrivilegeRepository::class)]
 #[UniqueEntity(
     fields: ['household', 'user'],
 )]
@@ -25,16 +25,16 @@ class HouseholdPrivilege implements \JsonSerializable
 
     public function __construct(
         #[ORM\Id]
-        #[ORM\ManyToOne(targetEntity:Household::class, inversedBy:"privileges")]
-        #[ORM\JoinColumn(name:"household", referencedColumnName: 'id')]
+        #[ORM\ManyToOne(targetEntity: Household::class, inversedBy: "privileges")]
+        #[ORM\JoinColumn(name: "household", referencedColumnName: 'id')]
         public Household $household,
 
         #[ORM\Id]
-        #[ORM\ManyToOne(targetEntity:User::class)]
-        #[ORM\JoinColumn(name:"`user`", referencedColumnName: 'id')]
+        #[ORM\ManyToOne(targetEntity: User::class)]
+        #[ORM\JoinColumn(name: "`user`", referencedColumnName: 'id')]
         public User $user,
 
-        #[ORM\Column(type:"integer")]
+        #[ORM\Column(type: "integer")]
         public int $level,
     ) {
     }

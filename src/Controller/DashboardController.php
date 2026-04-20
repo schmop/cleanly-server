@@ -8,6 +8,7 @@ use App\Analytics\ActivityType;
 use App\Analytics\UsageTracker;
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdInvite;
+use App\Household\Entity\HouseholdRank;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Persistence\PersistenceException;
@@ -25,10 +26,15 @@ class DashboardController extends UserAwareController
             $user = $this->getUser();
             $tracker->track($user, ActivityType::AppOpen);
 
+            $orderedHouseholds = array_map(
+                static fn (HouseholdRank $rank) => $rank->household,
+                $user->getHouseholdRanks()->toArray(),
+            );
+
             return JsonSuccessResponse::create([
                 'households' => array_map(static function (Household $houseHold) {
                     return $houseHold->jsonSerialize();
-                }, $user->getHouseholds()),
+                }, $orderedHouseholds),
                 'invites' => array_map(static function (HouseholdInvite $invite) {
                     return $invite->jsonSerialize();
                 }, $user->getInvites()),

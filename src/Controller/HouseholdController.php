@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdInvite;
 use App\Household\Entity\HouseholdPrivilege;
+use App\Household\HouseholdRankRepository;
 use App\Household\HouseholdVoter;
 use App\Household\NotInHouseholdException;
 use App\Household\ReassignmentStrategy;
@@ -17,6 +18,7 @@ use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
 use App\Persistence\PersistenceException;
 use App\Push\Pusher;
+use App\RankSort\ItemSorter;
 use App\User\Entity\User;
 use App\User\UserRepository;
 use App\Utils\Base64UrlInterface;
@@ -317,6 +319,39 @@ class HouseholdController extends UserAwareController
             return JsonSuccessResponse::create();
         } catch (AccessDeniedException | PersistenceException | \TypeError $e) {
             return JsonErrorResponse::fromException($logger, $e, 'Failed to set reassignment strategy');
+        }
+    }
+
+    #[Route(path: '/api/household/{id}/move', name: 'household_move', methods: ['POST'])]
+    public function moveHousehold(
+        Household $household,
+        Request $request,
+        HouseholdRankRepository $householdRankRepository,
+        LoggerInterface $logger,
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            if (!$household->getMembers()->contains($user)) {
+                return JsonErrorResponse::create(['reason' => 'You are not a member of this household.'], Response::HTTP_FORBIDDEN);
+            }
+            $rank = $householdRankRepository->findOneBy(['user' => $user, 'household' => $household]);
+            if ($rank === null) {
+                return JsonErrorResponse::create(['reason' => 'No rank record for this membership.'], Response::HTTP_CONFLICT);
+            }
+            try {
+                $moveAfterId = Json::fromRequest($request)->tryInt('moveAfterId');
+            } catch (UnexpectedJsonException $e) {
+                return JsonErrorResponse::create(['reason' => 'Invalid movement given!', 'error' => $e->getTrace()]);
+            }
+            $moveAfterUuid = $moveAfterId === null
+                ? null
+                : HouseholdRankRepository::buildCompositeUuid($user, $moveAfterId);
+            $sorter = new ItemSorter($householdRankRepository);
+            $sorter->moveAfter($rank, $moveAfterUuid);
+
+            return JsonSuccessResponse::create();
+        } catch (PersistenceException | \LogicException $e) {
+            return JsonErrorResponse::fromException($logger, $e, 'Failed to move household');
         }
     }
 }

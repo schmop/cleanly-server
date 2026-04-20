@@ -91,7 +91,7 @@ class ChecklistSortingTest extends WebTestCase
         $this->assertSortOrder($household, [$b, $a, $c]);
     }
 
-    public function testMoveWithNullUuidSendsChecklistToEnd(): void
+    public function testMoveWithNullUuidSendsChecklistToStart(): void
     {
         $admin = $this->createUser('admin');
         $household = $this->createHousehold($admin);
@@ -101,9 +101,29 @@ class ChecklistSortingTest extends WebTestCase
         $b = $this->addChecklistViaApi($household);
         $c = $this->addChecklistViaApi($household);
 
-        // Start: A, B, C. Move A to end → B, C, A.
-        $this->moveChecklist($a, null);
+        // Start: A, B, C. Move C to start (null moveAfterUuid) → C, A, B.
+        $this->moveChecklist($c, null);
 
+        $this->assertSortOrder($household, [$c, $a, $b]);
+    }
+
+    public function testMoveBottomChecklistToTopViaNull(): void
+    {
+        // Reproduces the dashboard-drag-to-top case for checklists: dragging
+        // the bottom item to the top sends moveAfterUuid=null, which must land
+        // it at the start rather than silently falling through to "move to end".
+        $admin = $this->createUser('admin');
+        $household = $this->createHousehold($admin);
+        $this->authenticateAs($admin);
+
+        $a = $this->addChecklistViaApi($household);
+        $b = $this->addChecklistViaApi($household);
+        $c = $this->addChecklistViaApi($household);
+
+        $this->moveChecklist($c, null);
+        $this->assertSortOrder($household, [$c, $a, $b]);
+
+        $this->moveChecklist($b, null);
         $this->assertSortOrder($household, [$b, $c, $a]);
     }
 
@@ -157,8 +177,8 @@ class ChecklistSortingTest extends WebTestCase
         $this->moveChecklist($a, $c); // D, B, C, A
         $this->assertSortOrder($household, [$d, $b, $c, $a]);
 
-        $this->moveChecklist($b, null); // D, C, A, B
-        $this->assertSortOrder($household, [$d, $c, $a, $b]);
+        $this->moveChecklist($b, null); // B, D, C, A
+        $this->assertSortOrder($household, [$b, $d, $c, $a]);
     }
 
     private function authenticateAs(User $user): void

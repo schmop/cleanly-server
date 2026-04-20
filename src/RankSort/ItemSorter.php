@@ -18,17 +18,26 @@ readonly class ItemSorter
     }
 
     /**
+     * Place $item after the item identified by $moveAfterUuid.
+     * A null $moveAfterUuid means "move to the start" — there is no
+     * item to land after. To move to the end, pass the current last item's uuid;
+     * with no successor in the list moveBetween falls through to moveAtEnd.
+     *
      * @param T $item
      */
     public function moveAfter(RankSortableItem $item, string|null $moveAfterUuid): void
     {
         if ($moveAfterUuid === null) {
-            $this->moveAtEnd($item);
+            $this->moveAtStart($item);
             return;
         }
         $moveAfterItem = $this->sortableRepository->findByUuid($moveAfterUuid);
+        if ($moveAfterItem === null) {
+            $this->moveAtStart($item);
+            return;
+        }
         $moveBeforeItem = $this->sortableRepository->findAfter($item->getList(), $moveAfterUuid);
-        if ($moveAfterItem === null || $moveBeforeItem === null) {
+        if ($moveBeforeItem === null) {
             $this->moveAtEnd($item);
             return;
         }
@@ -36,17 +45,26 @@ readonly class ItemSorter
     }
 
     /**
+     * Place $item before the item identified by $moveBeforeUuid.
+     * A null $moveBeforeUuid means "move to the end" — there is no successor to land before.
+     * To move to the start, pass the current first item's uuid; with no predecessor in the
+     * list moveBetween falls through to moveAtStart.
+     *
      * @param T $item
      */
     public function moveBefore(RankSortableItem $item, string|null $moveBeforeUuid): void
     {
         if ($moveBeforeUuid === null) {
-            $this->moveAtStart($item);
+            $this->moveAtEnd($item);
             return;
         }
         $moveBeforeItem = $this->sortableRepository->findByUuid($moveBeforeUuid);
+        if ($moveBeforeItem === null) {
+            $this->moveAtEnd($item);
+            return;
+        }
         $moveAfterItem = $this->sortableRepository->findBefore($item->getList(), $moveBeforeUuid);
-        if ($moveAfterItem === null || $moveBeforeItem === null) {
+        if ($moveAfterItem === null) {
             $this->moveAtStart($item);
             return;
         }

@@ -2,19 +2,24 @@
 
 namespace App\User\Entity;
 
+use App\Household\Entity\Household;
+use App\Household\Entity\HouseholdInvite;
+use App\Household\Entity\HouseholdRank;
+use App\RankSort\RankSortableList;
 use App\Todo\Entity\Checklist;
 use App\User\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use App\Household\Entity\HouseholdInvite;
-use App\Household\Entity\Household;
-use Doctrine\Common\Collections\ArrayCollection;
 
+/**
+ * @implements RankSortableList<HouseholdRank>
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: "`user`")]
-class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSerializable
+class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSerializable, RankSortableList
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "SEQUENCE")]
@@ -53,6 +58,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
     #[ORM\ManyToMany(targetEntity: Checklist::class, mappedBy: "subscribers")]
     private Collection $checklistSubscriptions;
 
+    /** @var Collection<int, HouseholdRank> */
+    #[ORM\OneToMany(mappedBy: "user", targetEntity: HouseholdRank::class)]
+    #[ORM\OrderBy(["sortRank" => "ASC"])]
+    private Collection $householdRanks;
+
     public function __construct(string $mail, string $name)
     {
         $this->mail = $mail;
@@ -60,6 +70,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
         $this->households = new ArrayCollection();
         $this->checklistSubscriptions = new ArrayCollection();
         $this->invites = new ArrayCollection();
+        $this->householdRanks = new ArrayCollection();
+    }
+
+    public function getUuid(): string
+    {
+        return (string)$this->id;
+    }
+
+    /**
+     * @return Collection<int, HouseholdRank>
+     */
+    public function getHouseholdRanks(): Collection
+    {
+        return $this->householdRanks;
     }
 
     public function getId(): ?int
