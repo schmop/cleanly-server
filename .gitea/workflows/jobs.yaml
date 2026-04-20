@@ -23,7 +23,11 @@ jobs:
       APP_ENV: test
       APP_SECRET: ci-test-secret
       JWT_PASSPHRASE: ci-test-passphrase
-      DATABASE_URL: postgresql://cleanly:cleanly@db:5432/cleanly_test
+      # serverVersion prevents DoctrineBundle from probing the DB during
+      # composer install's cache:clear hook (service may not be reachable
+      # yet, and without a version it emits "Invalid platform version").
+      DATABASE_URL: postgresql://cleanly:cleanly@db:5432/cleanly_test?serverVersion=16&charset=utf8
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
