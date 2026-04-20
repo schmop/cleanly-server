@@ -91,7 +91,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
      */
     public function getUserIdentifier(): string
     {
-        return (string)$this->mail;
+        \assert($this->mail !== '');
+
+        return $this->mail;
     }
 
     /**
@@ -99,7 +101,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, \JsonSe
      */
     public function getUsername(): string
     {
-        return (string)$this->mail;
+        return $this->mail;
     }
 
     /**
