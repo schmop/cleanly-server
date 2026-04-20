@@ -65,6 +65,9 @@ jobs:
           subject: ${{ gitea.repository }} ${{gitea.workflow}} ${{ job.status }}
           priority: high
           convert_markdown: true
+          # Print the full nodemailer SMTP conversation so we can see
+          # whether TLS is being attempted, which port is used, etc.
+          debug: true
           html_body: |
             ### Job ${{ job.status }}
 
