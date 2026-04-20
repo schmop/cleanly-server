@@ -9,7 +9,11 @@ jobs:
       db:
         image: postgres:16
         env:
-          POSTGRES_DB: cleanly_test
+          # The actual test DB is cleanly_test — config/packages/test/doctrine.yaml
+          # auto-appends `_test` to the dbname for the test env. We create the
+          # suffixed DB below via `doctrine:database:create --env=test`, so
+          # here we only need the default DB to exist for the initial connect.
+          POSTGRES_DB: cleanly
           POSTGRES_USER: cleanly
           POSTGRES_PASSWORD: cleanly
         # No host port mapping — the runner host may already have Postgres on 5432.
@@ -26,7 +30,9 @@ jobs:
       # serverVersion prevents DoctrineBundle from probing the DB during
       # composer install's cache:clear hook (service may not be reachable
       # yet, and without a version it emits "Invalid platform version").
-      DATABASE_URL: postgresql://cleanly:cleanly@db:5432/cleanly_test?serverVersion=16&charset=utf8
+      # DB name omits the `_test` suffix — config/packages/test/doctrine.yaml
+      # appends it automatically under APP_ENV=test.
+      DATABASE_URL: postgresql://cleanly:cleanly@db:5432/cleanly?serverVersion=16&charset=utf8
 
     steps:
       - name: Check out repository code
@@ -41,6 +47,8 @@ jobs:
         run: composer install
       - name: Generate JWT keypair
         run: php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+      - name: Create test DB
+        run: php bin/console doctrine:database:create --if-not-exists --no-interaction --env=test
       - name: Create test DB schema
         run: php bin/console doctrine:migrations:migrate --no-interaction --env=test
       - name: Run PHPStan
