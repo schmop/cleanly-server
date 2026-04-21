@@ -43,6 +43,11 @@ readonly class Pusher
             $devices,
             'Neuigkeiten in Checkliste!',
             sprintf('Checkliste "%s" in "%s" wurde aktualisiert!', $checklist->getName(), $household->getName()),
+            data: [
+                'type' => 'checklist_update',
+                'householdId' => (string) $household->getId(),
+                'checklistUuid' => $checklist->getUuid(),
+            ],
         );
     }
 
@@ -61,6 +66,11 @@ readonly class Pusher
                 $task->getHousehold()->getName(),
                 $task->getName(),
             ),
+            data: [
+                'type' => 'task_done',
+                'householdId' => (string) $task->getHousehold()->getId(),
+                'taskId' => (string) $task->getId(),
+            ],
         );
     }
 
@@ -79,6 +89,11 @@ readonly class Pusher
                 $task->getName(),
                 $household->getName(),
             ),
+            data: [
+                'type' => 'task_due',
+                'householdId' => (string) $household->getId(),
+                'taskId' => (string) $task->getId(),
+            ],
         );
     }
 
@@ -120,6 +135,11 @@ readonly class Pusher
                 TransactionType::Income => sprintf('%s hat für %s Geld erhalten, dein Anteil ist %s.', $transaction->sender->getName(), $transaction->title, $shareFormatted),
                 TransactionType::Transfer => sprintf('%s hat dir %s für %s gegeben.', $transaction->sender->getName(), $shareFormatted, $transaction->title),
             },
+            data: [
+                'type' => 'finance_transaction',
+                'householdId' => (string) $transaction->household->getId(),
+                'transactionUuid' => $transaction->uuid,
+            ],
         );
     }
 
@@ -141,6 +161,11 @@ readonly class Pusher
                 TransactionType::Income => sprintf('%s hat deine Einnahme %s über %s erstellt.', $messenger->getName(), $transaction->title, $shareFormatted),
                 TransactionType::Transfer => sprintf('%s hat deine Überweisung über %s für %s erstellt.', $messenger->getName(), $shareFormatted, $transaction->title),
             },
+            data: [
+                'type' => 'finance_transaction',
+                'householdId' => (string) $transaction->household->getId(),
+                'transactionUuid' => $transaction->uuid,
+            ],
         );
     }
 
@@ -161,6 +186,10 @@ readonly class Pusher
                 $inviter->getName(),
                 $household->getName(),
             ),
+            data: [
+                'type' => 'invite',
+                'householdId' => (string) $household->getId(),
+            ],
         );
     }
 
@@ -174,6 +203,11 @@ readonly class Pusher
                 $task->getName(),
                 $task->getHousehold()->getName(),
             ),
+            data: [
+                'type' => 'task_assign',
+                'householdId' => (string) $task->getHousehold()->getId(),
+                'taskId' => (string) $task->getId(),
+            ],
         );
     }
 
@@ -186,8 +220,9 @@ readonly class Pusher
 
     /**
      * @param Device[] $devices
+     * @param array<non-empty-string, string> $data
      */
-    private function publishToDevices(array $devices, string $title, string $content, ?string $imageUrl = null): void
+    private function publishToDevices(array $devices, string $title, string $content, ?string $imageUrl = null, array $data = []): void
     {
         if (empty($devices)) {
             return;
@@ -195,6 +230,9 @@ readonly class Pusher
         $deviceIds = array_values(array_map(fn(Device $device) => $device->getPushId(), $devices));
         try {
             $message = CloudMessage::new()->withNotification(Notification::create($title, $content, $imageUrl));
+            if ($data !== []) {
+                $message = $message->withData($data);
+            }
             $report = $this->messaging->sendMulticast($message, $deviceIds);
             $this->logger->info('Push notification sent to {count} devices, {success} successful, {failed} failed!', [
                 'count' => count($deviceIds),
