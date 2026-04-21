@@ -4,13 +4,21 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
-## 1.31 - 21.04.2026
+## 1.30 - 21.04.2026
 
 Haushalte lassen sich jetzt auf dem Dashboard per Drag & Drop in die gewünschte Reihenfolge bringen. Die Sortierung wird pro Benutzer gespeichert – jedes Haushaltsmitglied sieht seine eigene Reihenfolge.
 
 ![dashboard-haushalt-sortieren](assets/changelog/dashboard-haushalt-sortieren.png)
 
 Aufgaben können jetzt mit wiederkehrenden Erinnerungen versehen werden – täglich, wöchentlich, monatlich an einem festen Tag, am n-ten Wochentag eines Monats oder jährlich.
+
+![erinnerung-taeglich](assets/changelog/erinnerung-taeglich.png)
+
+![erinnerung-woechentlich](assets/changelog/erinnerung-woechentlich.png)
+
+![erinnerung-monatlich](assets/changelog/erinnerung-monatlich.png)
+
+![erinnerung-jaehrlich](assets/changelog/erinnerung-jaehrlich.png)
 
 Fehler behoben, bei dem Checklisten-Einträge beim Ziehen ans Listenende stattdessen am Anfang gelandet sind.
 
@@ -19,8 +27,6 @@ Fehler behoben, bei dem das Umsortieren von Checklisten die Liste immer nur ans 
 Fehler behoben, bei dem die Stern-Animation auf Android hängen geblieben ist.
 
 Fehler behoben, bei dem die „Wischen zum Erledigen"-Einstellung erst nach einem App-Neustart aktiv wurde.
-
-## 1.30 - 16.04.2026
 
 Aufgaben können jetzt **nachträglich erledigt** werden – auch im Namen eines anderen Haushaltsmitglieds! Über das Kontextmenü einer Aufgabe lässt sich auswählen, wer die Aufgabe wann erledigt hat.
 
@@ -41,8 +47,6 @@ Im Menü wird jetzt der eigene Benutzername angezeigt.
 ![menu-benutzername](assets/changelog/menu-benutzername.png)
 
 Aufgaben-Intervalle werden jetzt in Stunden statt in Tagen angegeben, was kürzere Wiederholungszyklen ermöglicht.
-
-Aufgaben können per **Wischgeste** als erledigt markiert werden. Die Funktion lässt sich in den Einstellungen aktivieren.
 
 Die Anmelde- und Registrierungsseite wurde neu gestaltet!
 
