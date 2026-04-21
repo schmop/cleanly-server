@@ -1,5 +1,5 @@
 kreait_firebase:
     projects:
         cleanly:
-            credentials: '%kernel.project_dir%/config/cleanly-ad0f1-864cfd0c1c39.json'
+            credentials: '%env(FIREBASE_CREDENTIALS)%'
             default: true

@@ -32,6 +32,7 @@ services:
       - .:/var/www/html                  # live source code from host
       - /var/www/html/vendor             # vendor stays in the image
       - symfony_var:/var/www/html/var    # cache + logs isolated in container
+      - ${SECRETS_HOST_PATH:-./secrets}:/var/www/secrets:ro  # firebase + other credential files
     environment:
       SYMFONY_ENV: "${APP_ENV}"
 #    ports:
