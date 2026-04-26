@@ -322,6 +322,30 @@ class HouseholdController extends UserAwareController
         }
     }
 
+    #[Route(path: '/api/household/rename/{id}', name: 'household_rename', methods: ['POST'])]
+    public function renameHousehold(
+        Household              $household,
+        EntityManagerInterface $entityManager,
+        Request                $request,
+        LoggerInterface        $logger,
+    ): JsonResponse {
+        try {
+            $this->denyAccessUnlessGranted(HouseholdVoter::MANAGE_HOUSEHOLD, $household);
+            $name = trim(Json::fromRequest($request)->string('name'));
+            if ($name === '' || mb_strlen($name) > 255) {
+                return JsonErrorResponse::create([
+                    'reason' => 'Household name must be between 1 and 255 characters.',
+                ]);
+            }
+            $household->setName($name);
+            PersistenceException::flush($entityManager);
+
+            return JsonSuccessResponse::create();
+        } catch (AccessDeniedException | UnexpectedJsonException | PersistenceException $e) {
+            return JsonErrorResponse::fromException($logger, $e, 'Failed to rename household');
+        }
+    }
+
     #[Route(path: '/api/household/{id}/move', name: 'household_move', methods: ['POST'])]
     public function moveHousehold(
         Household $household,
