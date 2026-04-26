@@ -14,8 +14,8 @@ use App\Utils\UuidGenerator;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Exception\MessagingException;
+use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
 use Kreait\Firebase\Messaging\SendReport;
 use Psr\Log\LoggerInterface;
 use function Lambdish\Phunctional\filter;
@@ -48,6 +48,8 @@ readonly class Pusher
                 'householdId' => (string) $household->getId(),
                 'checklistUuid' => $checklist->getUuid(),
             ],
+            groupKey: sprintf('checklist_update_%d', $household->getId()),
+            groupSummary: $household->getName(),
         );
     }
 
@@ -71,6 +73,8 @@ readonly class Pusher
                 'householdId' => (string) $task->getHousehold()->getId(),
                 'taskId' => (string) $task->getId(),
             ],
+            groupKey: sprintf('task_done_%d', $task->getHousehold()->getId()),
+            groupSummary: $task->getHousehold()->getName(),
         );
     }
 
@@ -94,6 +98,8 @@ readonly class Pusher
                 'householdId' => (string) $household->getId(),
                 'taskId' => (string) $task->getId(),
             ],
+            groupKey: sprintf('task_due_%d', $household->getId()),
+            groupSummary: $household->getName(),
         );
     }
 
@@ -140,6 +146,8 @@ readonly class Pusher
                 'householdId' => (string) $transaction->household->getId(),
                 'transactionUuid' => $transaction->uuid,
             ],
+            groupKey: sprintf('finance_transaction_%d', $transaction->household->getId()),
+            groupSummary: $transaction->household->getName(),
         );
     }
 
@@ -166,6 +174,8 @@ readonly class Pusher
                 'householdId' => (string) $transaction->household->getId(),
                 'transactionUuid' => $transaction->uuid,
             ],
+            groupKey: sprintf('finance_transaction_%d', $transaction->household->getId()),
+            groupSummary: $transaction->household->getName(),
         );
     }
 
@@ -190,6 +200,8 @@ readonly class Pusher
                 'type' => 'invite',
                 'householdId' => (string) $household->getId(),
             ],
+            groupKey: sprintf('invite_%d', $household->getId()),
+            groupSummary: $household->getName(),
         );
     }
 
@@ -208,6 +220,8 @@ readonly class Pusher
                 'householdId' => (string) $task->getHousehold()->getId(),
                 'taskId' => (string) $task->getId(),
             ],
+            groupKey: sprintf('task_assign_%d', $task->getHousehold()->getId()),
+            groupSummary: $task->getHousehold()->getName(),
         );
     }
 
@@ -221,18 +235,41 @@ readonly class Pusher
     /**
      * @param Device[] $devices
      * @param array<non-empty-string, string> $data
+     * @param non-empty-string|null $groupKey Used by the Android `MessagingService` as the
+     *        `setGroup()` key — notifications sharing this key bundle under a single drawer summary.
+     * @param string|null $groupSummary Human-readable label shown on the bundle's summary
+     *        notification (typically the household name).
      */
-    private function publishToDevices(array $devices, string $title, string $content, ?string $imageUrl = null, array $data = []): void
-    {
+    private function publishToDevices(
+        array   $devices,
+        string  $title,
+        string  $content,
+        array   $data = [],
+        ?string $groupKey = null,
+        ?string $groupSummary = null,
+    ): void {
         if (empty($devices)) {
             return;
         }
         $deviceIds = array_values(array_map(fn(Device $device) => $device->getPushId(), $devices));
+
+        // Data-only payload: our custom Android FirebaseMessagingService builds notifications via
+        // NotificationCompat so it can apply setGroup()/setGroupSummary(). Top-level `notification`
+        // would make FCM auto-display in background and skip our service entirely.
+        $payload = $data;
+        $payload['title'] = $title;
+        $payload['body'] = $content;
+        if ($groupKey !== null) {
+            $payload['groupKey'] = $groupKey;
+        }
+        if ($groupSummary !== null && $groupSummary !== '') {
+            $payload['groupSummary'] = $groupSummary;
+        }
+
         try {
-            $message = CloudMessage::new()->withNotification(Notification::create($title, $content, $imageUrl));
-            if ($data !== []) {
-                $message = $message->withData($data);
-            }
+            $message = CloudMessage::new()
+                ->withData($payload)
+                ->withAndroidConfig(AndroidConfig::new()->withHighMessagePriority());
             $report = $this->messaging->sendMulticast($message, $deviceIds);
             $this->logger->info('Push notification sent to {count} devices, {success} successful, {failed} failed!', [
                 'count' => count($deviceIds),
