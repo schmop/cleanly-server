@@ -76,6 +76,22 @@ readonly class Pusher
             groupKey: sprintf('task_done_%d', $task->getHousehold()->getId()),
             groupSummary: $task->getHousehold()->getName(),
         );
+        $this->revokeTaskDue($task);
+    }
+
+    private function revokeTaskDue(Task $task): void
+    {
+        $household = $task->getHousehold();
+        // Same audience as the original task_due — anyone else cannot have the notification anyway.
+        $devices = filter(
+            fn(Device $device) => $device->getUser()->getUserSettings()->notifyTaskDue === true,
+            $this->deviceRepository->findByHousehold($household),
+        );
+        $this->revokeOnDevices(
+            $devices,
+            revokeGroupKey: sprintf('task_due_%d', $household->getId()),
+            revokeEntityId: (string) $task->getId(),
+        );
     }
 
     public function publishTaskDue(Task $task): void
@@ -285,6 +301,41 @@ readonly class Pusher
             ]);
         } catch (MessagingException|FirebaseException $e) {
             $this->logger->error('Could not send push notifications, reason: {message}!', [
+                'message' => $e->getMessage(),
+                'exception' => $e
+            ]);
+        }
+    }
+
+    /**
+     * Sends a data-only "revoke" message. Our Android service cancels the matching grouped
+     * notification (and its summary if it has no siblings left).
+     *
+     * @param Device[] $devices
+     * @param non-empty-string $revokeGroupKey
+     * @param non-empty-string $revokeEntityId
+     */
+    private function revokeOnDevices(array $devices, string $revokeGroupKey, string $revokeEntityId): void
+    {
+        if (empty($devices)) {
+            return;
+        }
+        $deviceIds = array_values(array_map(fn(Device $device) => $device->getPushId(), $devices));
+        try {
+            $message = CloudMessage::new()
+                ->withData([
+                    'revokeGroupKey' => $revokeGroupKey,
+                    'revokeEntityId' => $revokeEntityId,
+                ])
+                ->withAndroidConfig(AndroidConfig::new()->withHighMessagePriority());
+            $report = $this->messaging->sendMulticast($message, $deviceIds);
+            $this->logger->info('Push revoke sent to {count} devices, {success} successful, {failed} failed!', [
+                'count' => count($deviceIds),
+                'success' => $report->successes()->count(),
+                'failed' => $report->failures()->count(),
+            ]);
+        } catch (MessagingException|FirebaseException $e) {
+            $this->logger->error('Could not send push revoke, reason: {message}!', [
                 'message' => $e->getMessage(),
                 'exception' => $e
             ]);
