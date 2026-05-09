@@ -51,6 +51,44 @@ describe('POST /publish', () => {
         expect(res.status).toBe(200);
         expect(res.text).toBe('ok');
     });
+
+    it('returns 200 and forwards the payload to a connected recipient', async () => {
+        const { app, clients } = appWithFakeWhoami(7);
+        const server = app.listen(0);
+        try {
+            const address = server.address();
+            const port = typeof address === 'object' && address ? address.port : 0;
+
+            // Kick off the SSE request — but don't await its `response` event.
+            // The hub calls `writeHead` but never flushes until the first
+            // `response.write`, so headers don't reach the client until the
+            // publish below actually triggers a payload write.
+            let sseStream: IncomingMessage | null = null;
+            const req = http.get(`http://127.0.0.1:${port}/events?token=ok`);
+            req.on('response', (res) => { sseStream = res; });
+
+            await waitFor(() => Object.keys(clients).length === 1);
+
+            const payload = { type: 'task_done', payload: { taskId: 99 } };
+            const publishRes = await postJson(
+                `http://127.0.0.1:${port}/publish`,
+                { Authorization: `Bearer ${SECRET}` },
+                { targets: [7], data: payload },
+            );
+            expect(publishRes.status).toBe(200);
+            expect(publishRes.body).toBe('ok');
+
+            // The publish flushed headers + the data frame; collect the frame.
+            await waitFor(() => sseStream !== null);
+            const received = await readNextSseFrame(sseStream!);
+            expect(received).toBe(`data: ${JSON.stringify(payload)}\n\n`);
+
+            req.destroy();
+            await waitFor(() => Object.keys(clients).length === 0);
+        } finally {
+            server.close();
+        }
+    });
 });
 
 describe('GET /events', () => {
@@ -90,6 +128,49 @@ describe('client registry', () => {
         }
     });
 });
+
+import http, { IncomingMessage } from 'node:http';
+
+function postJson(url: string, headers: Record<string, string>, body: unknown): Promise<{ status: number; body: string }> {
+    return new Promise((resolve, reject) => {
+        const data = JSON.stringify(body);
+        const req = http.request(
+            url,
+            {
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data).toString() },
+            },
+            (res) => {
+                const chunks: Buffer[] = [];
+                res.on('data', (c: Buffer) => chunks.push(c));
+                res.on('end', () => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString('utf8') }));
+            },
+        );
+        req.on('error', reject);
+        req.write(data);
+        req.end();
+    });
+}
+
+function readNextSseFrame(stream: IncomingMessage, timeoutMs = 2000): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const decoder = new TextDecoder();
+        let buf = '';
+        const timer = setTimeout(() => {
+            stream.removeListener('data', onData);
+            reject(new Error('readNextSseFrame timed out'));
+        }, timeoutMs);
+        const onData = (chunk: Buffer) => {
+            buf += decoder.decode(chunk, { stream: true });
+            const idx = buf.indexOf('\n\n');
+            if (idx === -1) return;
+            clearTimeout(timer);
+            stream.removeListener('data', onData);
+            resolve(buf.slice(0, idx + 2));
+        };
+        stream.on('data', onData);
+    });
+}
 
 async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void> {
     const start = Date.now();
