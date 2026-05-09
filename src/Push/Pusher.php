@@ -53,10 +53,22 @@ readonly class Pusher
         );
     }
 
-    public function publishTaskDone(Task $task, User $exclude): void
+    /**
+     * @param User $completer The user credited with completing the task. Their
+     *        name appears in the notification body and they are excluded from
+     *        the recipient list (the system already attributes the action to them).
+     * @param User|null $clicker The user who triggered the request, when different
+     *        from the completer (e.g. a moderator marking done on someone else's
+     *        behalf). Also excluded from the recipient list so they don't receive
+     *        a push for an action they just performed.
+     */
+    public function publishTaskDone(Task $task, User $completer, ?User $clicker = null): void
     {
         $devices = filter(
-            fn(Device $device) => $device->getUser() !== $exclude && $device->getUser()->getUserSettings()->notifyTaskDone === true,
+            fn(Device $device) =>
+                $device->getUser() !== $completer
+                && $device->getUser() !== $clicker
+                && $device->getUser()->getUserSettings()->notifyTaskDone === true,
             $this->deviceRepository->findByHousehold($task->getHousehold()),
         );
         $this->publishToDevices(
@@ -64,7 +76,7 @@ readonly class Pusher
             sprintf('%s wurde erledigt!', $task->getName()),
             sprintf(
                 '%s hat in %s gerade %s erledigt!',
-                $exclude->getName(),
+                $completer->getName(),
                 $task->getHousehold()->getName(),
                 $task->getName(),
             ),

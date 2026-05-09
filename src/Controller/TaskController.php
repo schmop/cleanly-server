@@ -131,11 +131,16 @@ class TaskController extends UserAwareController
                     'reason' => 'Completed twice too soon',
                 ], Response::HTTP_TOO_MANY_REQUESTS);
             }
+            // Side effects below attribute the action to the credited user, not
+            // the clicker — otherwise the push body, the webhook payload, and
+            // the auto-rotate decision all describe the wrong person when a
+            // moderator records a completion on behalf of another member.
+            $completer = $asUser ?? $user;
             $taskPublisher->publish($task->getHousehold());
-            $pusher->publishTaskDone($task, $user);
-            $webhookNotifier->notify($task, $user);
+            $pusher->publishTaskDone($task, $completer, $asUser !== null ? $user : null);
+            $webhookNotifier->notify($task, $completer);
             try {
-                $taskAssigner->autoAssign($task, $user);
+                $taskAssigner->autoAssign($task, $completer);
             } catch (TaskAssignException $e) {
                 $logger->error('Could not auto reassign task!', ['exception' => $e]);
             }
