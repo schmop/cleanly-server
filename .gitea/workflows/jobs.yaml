@@ -72,3 +72,36 @@ jobs:
             ### Job ${{ job.status }}
 
             ${{ github.repository }}: [${{ github.ref }}@${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/actions)
+
+  Check hub build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25
+      - name: Install dependencies
+        run: cd hub && npm ci
+      - name: Build
+        run: cd hub && npm run build
+      - name: Test
+        run: cd hub && npm test
+      - name: Send mail on failure
+        if: failure()
+        uses: https://github.com/dawidd6/action-send-mail@v3
+        with:
+          connection_url: ${{ secrets.MAIL_CONNECTION }}
+          to: ${{ secrets.MAIL_TO }}
+          from: Gitea <gitea@schmoppo.de>
+          subject: ${{ gitea.repository }} ${{gitea.workflow}} ${{ job.status }}
+          priority: high
+          convert_markdown: true
+          # Print the full nodemailer SMTP conversation so we can see
+          # whether TLS is being attempted, which port is used, etc.
+          debug: true
+          html_body: |
+            ### Job ${{ job.status }}
+
+            ${{ github.repository }}: [${{ github.ref }}@${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/actions)
