@@ -44,3 +44,23 @@ The Makefile wraps `docker compose` so that both `.env` and (when present)
 Compose does not consult `env_file:` directives for that kind of interpolation.
 
 Other targets: `make down`, `make restart`, `make logs`, `make ps`.
+
+## Testing
+
+Tests run inside the running stack — `make up` first, then:
+
+```
+make test            # full suite: PHPUnit (Symfony) + Vitest (hub)
+make test-server     # PHPUnit only
+make test-server FILTER=Json   # filter by class/method substring
+make test-hub        # hub Vitest only
+make phpstan         # static analysis (level 9)
+```
+
+Symfony tests hit a real PostgreSQL database (`cleanly_test`, schema kept in
+sync via `doctrine:schema:update --env=test`). Pure unit tests live alongside
+domain modules in `tests/<Module>/`; integration tests extending
+`WebTestCase` live in `tests/Controller/`.
+
+The hub suite (`hub/hub.test.ts`) covers the `/events` and `/publish`
+endpoints with supertest.
