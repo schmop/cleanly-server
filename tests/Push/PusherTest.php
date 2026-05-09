@@ -103,7 +103,8 @@ class PusherTest extends TestCase
     public function testTaskDoneNotificationCreditsTheCompleterNotTheClicker(): void
     {
         // Scenario: moderator Alice records a completion on behalf of Bob.
-        // Charlie is a third member who should receive the push.
+        // Charlie is a third member who should receive the household-wide push;
+        // Bob himself receives a separate "Alice recorded this for you" notice.
         $alice = $this->buildUser('Alice', notifyTaskDone: true);
         $bob = $this->buildUser('Bob', notifyTaskDone: true);
         $charlie = $this->buildUser('Charlie', notifyTaskDone: true);
@@ -123,6 +124,9 @@ class PusherTest extends TestCase
             $this->buildDevice($bob, 'bob-push-id'),
             $this->buildDevice($charlie, 'charlie-push-id'),
         ]);
+        $deviceRepository->method('findByUser')->willReturnCallback(
+            fn(User $u): array => $u === $bob ? [$this->buildDevice($bob, 'bob-push-id')] : [],
+        );
 
         $capturedMessages = [];
         $capturedRecipients = [];
@@ -143,21 +147,30 @@ class PusherTest extends TestCase
 
         $pusher->publishTaskDone($task, completer: $bob, clicker: $alice);
 
-        // Only Charlie should be paged: Bob is credited (already attributed),
-        // Alice just clicked the button (already knows).
-        $this->assertNotEmpty($capturedRecipients);
-        $this->assertSame(['charlie-push-id'], $capturedRecipients[0]);
+        // Two distinct sends: the household announcement and Bob's personal notice.
+        $this->assertCount(2, $capturedRecipients);
 
-        $payload = $capturedMessages[0]->jsonSerialize()['data'] ?? null;
-        $this->assertIsArray($payload);
-        $this->assertSame('task_done', $payload['type']);
-        $this->assertStringContainsString('Bob', (string)$payload['body']);
-        $this->assertStringNotContainsString('Alice', (string)$payload['body']);
+        // First send: household-wide. Only Charlie — Bob is credited, Alice clicked.
+        $this->assertSame(['charlie-push-id'], $capturedRecipients[0]);
+        $householdPayload = $capturedMessages[0]->jsonSerialize()['data'] ?? null;
+        $this->assertIsArray($householdPayload);
+        $this->assertSame('task_done', $householdPayload['type']);
+        $this->assertStringContainsString('Bob', (string)$householdPayload['body']);
+        $this->assertStringNotContainsString('Alice', (string)$householdPayload['body']);
+
+        // Second send: direct to Bob, telling him Alice recorded the completion.
+        $this->assertSame(['bob-push-id'], $capturedRecipients[1]);
+        $onBehalfPayload = $capturedMessages[1]->jsonSerialize()['data'] ?? null;
+        $this->assertIsArray($onBehalfPayload);
+        $this->assertSame('task_done', $onBehalfPayload['type']);
+        $this->assertStringContainsString('Alice', (string)$onBehalfPayload['body']);
+        $this->assertStringContainsString('für dich', (string)$onBehalfPayload['body']);
     }
 
     public function testTaskDoneNotificationFallsBackToSelfWhenNoClicker(): void
     {
-        // Self-completion: the credited user is the one who clicked, exclude only them.
+        // Self-completion: the credited user is the one who clicked, exclude only them
+        // and skip the on-behalf notice entirely.
         $alice = $this->buildUser('Alice', notifyTaskDone: true);
         $bob = $this->buildUser('Bob', notifyTaskDone: true);
 
@@ -175,6 +188,8 @@ class PusherTest extends TestCase
             $this->buildDevice($alice, 'alice-push-id'),
             $this->buildDevice($bob, 'bob-push-id'),
         ]);
+        // findByUser must never fire for self-completions — the on-behalf path is skipped.
+        $deviceRepository->expects($this->never())->method('findByUser');
 
         $capturedRecipients = [];
         $messaging = $this->createMock(Messaging::class);
@@ -193,6 +208,7 @@ class PusherTest extends TestCase
 
         $pusher->publishTaskDone($task, completer: $alice);
 
+        $this->assertCount(1, $capturedRecipients);
         $this->assertSame(['bob-push-id'], $capturedRecipients[0]);
     }
 

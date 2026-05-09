@@ -56,11 +56,14 @@ readonly class Pusher
     /**
      * @param User $completer The user credited with completing the task. Their
      *        name appears in the notification body and they are excluded from
-     *        the recipient list (the system already attributes the action to them).
+     *        the household-wide recipient list (the system already attributes
+     *        the action to them). When a different `$clicker` recorded the
+     *        completion on their behalf, the completer additionally receives a
+     *        direct notice naming the clicker — see `publishTaskDoneOnBehalf`.
      * @param User|null $clicker The user who triggered the request, when different
      *        from the completer (e.g. a moderator marking done on someone else's
-     *        behalf). Also excluded from the recipient list so they don't receive
-     *        a push for an action they just performed.
+     *        behalf). Excluded from the household-wide recipient list so they
+     *        don't receive a push for an action they just performed.
      */
     public function publishTaskDone(Task $task, User $completer, ?User $clicker = null): void
     {
@@ -88,7 +91,40 @@ readonly class Pusher
             groupKey: sprintf('task_done_%d', $task->getHousehold()->getId()),
             groupSummary: $task->getHousehold()->getName(),
         );
+        if ($clicker !== null && $clicker !== $completer) {
+            $this->publishTaskDoneOnBehalf($task, $clicker, $completer);
+        }
         $this->revokeTaskDue($task);
+    }
+
+    /**
+     * Notifies the credited user that a completion was recorded for them by
+     * someone else. Reuses the `task_done` payload type so the client routes
+     * the tap into the same task view as the household-wide notification.
+     */
+    private function publishTaskDoneOnBehalf(Task $task, User $clicker, User $completer): void
+    {
+        $devices = filter(
+            fn(Device $device) => $device->getUser()->getUserSettings()->notifyTaskDone === true,
+            $this->deviceRepository->findByUser($completer),
+        );
+        $this->publishToDevices(
+            $devices,
+            sprintf('%s wurde für dich vermerkt!', $task->getName()),
+            sprintf(
+                '%s hat in %s %s für dich vermerkt!',
+                $clicker->getName(),
+                $task->getHousehold()->getName(),
+                $task->getName(),
+            ),
+            data: [
+                'type' => 'task_done',
+                'householdId' => (string) $task->getHousehold()->getId(),
+                'taskId' => (string) $task->getId(),
+            ],
+            groupKey: sprintf('task_done_%d', $task->getHousehold()->getId()),
+            groupSummary: $task->getHousehold()->getName(),
+        );
     }
 
     private function revokeTaskDue(Task $task): void
