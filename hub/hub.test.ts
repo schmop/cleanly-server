@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
-import { createApp } from './hub';
+import { createApp } from './hub.js';
 
 const SECRET = 'test-secret';
 

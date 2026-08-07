@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# The "--" matters: without it env-cmd 11 eats flags from the wrapped command
+# (a "-e" turns into its own --environments and makes -f expect a JSON rc file).
 if [ -f ../.env.local ]; then
-  npx env-cmd -f ../.env.local "$@"
+  npx env-cmd -f ../.env.local -- "$@"
 elif [ -f ../.env ]; then
-  npx env-cmd -f ../.env "$@"
+  npx env-cmd -f ../.env -- "$@"
 else
   echo "No ../.env.local or ../.env file found"
   exit 1

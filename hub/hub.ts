@@ -1,8 +1,8 @@
-import express, {Express} from 'express';
+import express, {Express, Request, Response} from 'express';
 import cors from 'cors';
 import { v4 } from 'uuid';
-import { Request, Response } from 'express-serve-static-core';
-import {UserId, whoami as defaultWhoami} from './whoami';
+import { pathToFileURL } from 'node:url';
+import {UserId, whoami as defaultWhoami} from './whoami.js';
 
 type Uuid = string;
 
@@ -100,7 +100,7 @@ export function createApp(publishSecret: string, whoamiFn: WhoamiFn = defaultWho
 
 // Only boot the listener when invoked as the entry point — keeps the module
 // importable from tests without colliding on the bound port.
-if (require.main === module) {
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
     const publishSecret = process.env.SSE_PUBLISH_SECRET;
     if (publishSecret === undefined) {
         console.error('No SSE_PUBLISH_SECRET environment variable set! Exiting!');
