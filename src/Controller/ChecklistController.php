@@ -18,9 +18,10 @@ use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
 use App\Todo\TodoPublisher;
 use Psr\Log\LoggerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use function Lambdish\Phunctional\map;
 
@@ -28,6 +29,7 @@ class ChecklistController extends UserAwareController
 {
     #[Route(path: '/api/household/checklist/{uuid}/update', name: 'household_checklist_update', methods: ['POST'])]
     public function updateChecklist(
+        #[MapEntity(id: 'uuid')]
         Checklist               $checklist,
         Request                 $request,
         TodoEventProcessor      $todoEventProcessor,
@@ -56,6 +58,7 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}/rename', name: 'household_checklist_rename', methods: ['POST'])]
     public function renameChecklist(
+        #[MapEntity(id: 'uuid')]
         Checklist           $checklist,
         Request             $request,
         ChecklistRepository $checklistRepository,
@@ -79,6 +82,7 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}/move', name: 'household_checklist_move', methods: ['POST'])]
     public function moveChecklist(
+        #[MapEntity(id: 'uuid')]
         Checklist           $checklist,
         Request             $request,
         ChecklistRepository $checklistRepository,
@@ -104,6 +108,7 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}', name: 'household_checklist_remove', methods: ['DELETE'])]
     public function removeChecklist(
+        #[MapEntity(id: 'uuid')]
         Checklist           $checklist,
         ChecklistRepository $checklistRepository,
         LoggerInterface     $logger,
@@ -141,6 +146,7 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}/subscribe', name: 'household_checklist_subscribe', methods: ['POST'])]
     public function subscribeToChecklistUpdates(
+        #[MapEntity(id: 'uuid')]
         Checklist           $checklist,
         ChecklistRepository $checklistRepository,
         LoggerInterface     $logger,
@@ -158,6 +164,7 @@ class ChecklistController extends UserAwareController
 
     #[Route(path: '/api/household/checklist/{uuid}/unsubscribe', name: 'household_checklist_unsubscribe', methods: ['POST'])]
     public function unsubscribeToChecklistUpdates(
+        #[MapEntity(id: 'uuid')]
         Checklist           $checklist,
         ChecklistRepository $checklistRepository,
         LoggerInterface     $logger,

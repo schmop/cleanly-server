@@ -7,7 +7,7 @@ namespace App\Controller;
 
 use App\Persistence\PersistenceException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Push\DeviceRepository;

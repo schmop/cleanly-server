@@ -8,7 +8,7 @@ use App\HttpFoundation\HtmlResponse;
 use App\HttpFoundation\JsonErrorResponse;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/whoami')]
 class WhoAmIController extends UserAwareController

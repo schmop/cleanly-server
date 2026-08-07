@@ -8,7 +8,7 @@ use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Json\Json;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use App\User\UserFetcher;
 use App\User\UserSettingsData;
 use App\User\UserSettingsRepository;

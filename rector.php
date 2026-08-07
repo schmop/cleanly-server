@@ -20,7 +20,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rule(InlineConstructorDefaultToPropertyRector::class);
     $rectorConfig->ruleWithConfiguration(
         AnnotationToAttributeRector::class,
-        [new AnnotationToAttribute('Symfony\Component\Routing\Annotation\Route')]
+        [new AnnotationToAttribute('Symfony\Component\Routing\Attribute\Route')]
     );
 
     /**$rectorConfig->sets([

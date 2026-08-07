@@ -31,7 +31,7 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class HouseholdController extends UserAwareController
@@ -87,6 +87,7 @@ class HouseholdController extends UserAwareController
 
     #[Route(path: '/api/household/join-by-token/{token}', name: 'household_join')]
     public function join(
+        #[MapEntity(id: 'token')]
         HouseholdInvite        $invite,
         EntityManagerInterface $entityManager,
         LoggerInterface        $logger,

@@ -26,10 +26,11 @@ use App\User\UserRepository;
 use App\Webhook\WebhookNotifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class TaskController extends UserAwareController
@@ -245,6 +246,7 @@ class TaskController extends UserAwareController
 
     #[Route(path: '/api/task/log/{uuid}', name: 'task_log_delete', methods: ['DELETE'])]
     public function deleteTaskLog(
+        #[MapEntity(id: 'uuid')]
         TaskLog           $taskLog,
         TaskLogRepository $taskLogRepository,
         TaskRepository    $taskRepository,

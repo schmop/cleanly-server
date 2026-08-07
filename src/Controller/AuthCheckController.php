@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\HttpFoundation\HtmlResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/auth_check')]
 class AuthCheckController extends AbstractController

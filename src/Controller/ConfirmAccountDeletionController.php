@@ -11,7 +11,7 @@ use App\Persistence\PersistenceException;
 use App\Template\TemplateRenderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Twig\Environment;
 
 #[Route("/account/delete/{uuid}/{token}", "confirm_account_deletion", methods: ["GET"])]

@@ -15,7 +15,7 @@ use App\Persistence\PersistenceException;
 use App\Todo\Entity\Checklist;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/dashboard')]
 class DashboardController extends UserAwareController
