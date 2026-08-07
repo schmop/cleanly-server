@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\PasswordHasher\PasswordHasherInterface;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -32,20 +33,20 @@ class RegistrationFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = $this->createMock(ValidatorInterface::class);
+        $this->validator = $this->createStub(ValidatorInterface::class);
         $this->validator->method('validate')->willReturn(new ConstraintViolationList([]));
 
-        $this->uuid = $this->createMock(UuidGenerator::class);
+        $this->uuid = $this->createStub(UuidGenerator::class);
         $this->uuid->method('v4')->willReturn('reg-uuid');
 
-        $hasher = $this->createMock(PasswordHasherInterface::class);
+        $hasher = $this->createStub(PasswordHasherInterface::class);
         $hasher->method('hash')->willReturnCallback(fn(string $p) => 'hashed:' . $p);
-        $this->hasherFactory = $this->createMock(PasswordHasherFactoryInterface::class);
+        $this->hasherFactory = $this->createStub(PasswordHasherFactoryInterface::class);
         $this->hasherFactory->method('getPasswordHasher')->willReturn($hasher);
 
         $this->registrationRepository = $this->createMock(RegistrationRepository::class);
         $this->userRepository = $this->createMock(UserRepository::class);
-        $this->random = $this->createMock(Random::class);
+        $this->random = $this->createStub(Random::class);
         $this->random->method('getRandomString')->willReturnCallback(fn(int $n) => str_repeat('x', $n));
 
         $this->clock = new FakeClock('2024-06-15 12:00:00');
@@ -104,6 +105,7 @@ class RegistrationFactoryTest extends TestCase
         $this->registrationRepository->method('findByMail')->willReturn($existing);
 
         $this->registrationRepository->expects($this->once())->method('save')->with($existing);
+        $this->userRepository->expects($this->never())->method('save');
 
         $result = $factory->createRegistrationFromRequest($this->request([
             'name' => 'Alice', 'mail' => 'a@b.com', 'password' => 'hunter22',
@@ -116,6 +118,8 @@ class RegistrationFactoryTest extends TestCase
     public function testInvalidEmailIsRejected(): void
     {
         $factory = $this->makeFactory(rejectLeakedPasswords: false, requireEmailValidation: false);
+        $this->registrationRepository->expects($this->never())->method('save');
+        $this->userRepository->expects($this->never())->method('save');
 
         $this->expectException(RegistrationException::class);
         $factory->createRegistrationFromRequest($this->request([
@@ -126,7 +130,9 @@ class RegistrationFactoryTest extends TestCase
     public function testMailAlreadyTakenIsRejected(): void
     {
         $factory = $this->makeFactory(rejectLeakedPasswords: false, requireEmailValidation: false);
-        $this->userRepository->method('findByMail')->willReturn($this->createMock(User::class));
+        $this->userRepository->method('findByMail')->willReturn($this->createStub(User::class));
+        $this->registrationRepository->expects($this->never())->method('save');
+        $this->userRepository->expects($this->never())->method('save');
 
         try {
             $factory->createRegistrationFromRequest($this->request([
@@ -140,12 +146,15 @@ class RegistrationFactoryTest extends TestCase
 
     public function testLeakedPasswordCheckOnlyRunsWhenEnabled(): void
     {
-        $validator = $this->createMock(ValidatorInterface::class);
+        $validator = $this->createStub(ValidatorInterface::class);
         $callCount = 0;
         $validator->method('validate')->willReturnCallback(function () use (&$callCount) {
             $callCount++;
             return new ConstraintViolationList([]);
         });
+        // Email validation is off in both factories below, so each run saves a User directly.
+        $this->userRepository->expects($this->exactly(2))->method('save');
+        $this->registrationRepository->expects($this->never())->method('save');
 
         $factory = new RegistrationFactory(
             rejectLeakedPasswords: false,
@@ -188,10 +197,12 @@ class RegistrationFactoryTest extends TestCase
 
     public function testValidationErrorsAreCollected(): void
     {
-        $validator = $this->createMock(ValidatorInterface::class);
-        $blank = $this->createMock(\Symfony\Component\Validator\ConstraintViolationInterface::class);
+        $validator = $this->createStub(ValidatorInterface::class);
+        $blank = $this->createStub(ConstraintViolationInterface::class);
         $blank->method('getMessage')->willReturn('Name should not be blank.');
         $validator->method('validate')->willReturn(new ConstraintViolationList([$blank]));
+        $this->registrationRepository->expects($this->never())->method('save');
+        $this->userRepository->expects($this->never())->method('save');
 
         $factory = new RegistrationFactory(
             rejectLeakedPasswords: false,

@@ -23,7 +23,7 @@ class TransactionFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->userRepository = $this->createMock(UserRepository::class);
+        $this->userRepository = $this->createStub(UserRepository::class);
         $this->userRepository->method('find')->willReturnCallback(
             fn(int $id) => $this->usersById[$id] ?? null,
         );
@@ -246,7 +246,7 @@ class TransactionFactoryTest extends TestCase
 
     private function makeUser(int $id): User
     {
-        $user = $this->createMock(User::class);
+        $user = $this->createStub(User::class);
         $user->method('getId')->willReturn($id);
         $user->method('getName')->willReturn("u$id");
         $this->usersById[$id] = $user;
@@ -258,7 +258,7 @@ class TransactionFactoryTest extends TestCase
      */
     private function makeHousehold(array $members): Household
     {
-        $household = $this->createMock(Household::class);
+        $household = $this->createStub(Household::class);
         $household->method('getMembers')->willReturn(new ArrayCollection($members));
         return $household;
     }

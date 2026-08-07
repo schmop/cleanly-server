@@ -35,11 +35,11 @@ class PusherTest extends TestCase
         // The transport must never be called when there are no devices.
         $messaging->expects($this->never())->method('sendMulticast');
 
-        $deviceRepository = $this->createMock(DeviceRepository::class);
+        $deviceRepository = $this->createStub(DeviceRepository::class);
         $deviceRepository->method('findBy')->willReturn([]);
 
-        $logger = $this->createMock(LoggerInterface::class);
-        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $logger = $this->createStub(LoggerInterface::class);
+        $uuidGenerator = $this->createStub(UuidGenerator::class);
         $uuidGenerator->method('v4')->willReturn('test-uuid');
 
         $pusher = new Pusher($messaging, $deviceRepository, $logger, $uuidGenerator);
@@ -48,14 +48,14 @@ class PusherTest extends TestCase
 
     public function testTransportFailureIsLoggedAndSwallowed(): void
     {
-        $messaging = $this->createMock(Messaging::class);
+        $messaging = $this->createStub(Messaging::class);
         $messaging->method('sendMulticast')
             ->willThrowException(new NotFound('FCM said no'));
 
-        $device = $this->createMock(\App\Push\Entity\Device::class);
+        $device = $this->createStub(\App\Push\Entity\Device::class);
         $device->method('getPushId')->willReturn('push-id-1');
 
-        $deviceRepository = $this->createMock(DeviceRepository::class);
+        $deviceRepository = $this->createStub(DeviceRepository::class);
         $deviceRepository->method('findBy')->willReturn([$device]);
 
         $logger = $this->createMock(LoggerInterface::class);
@@ -67,7 +67,7 @@ class PusherTest extends TestCase
                 $this->callback(fn(array $ctx): bool => isset($ctx['exception']) && $ctx['exception'] instanceof NotFound),
             );
 
-        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $uuidGenerator = $this->createStub(UuidGenerator::class);
         $uuidGenerator->method('v4')->willReturn('test-uuid');
 
         $pusher = new Pusher($messaging, $deviceRepository, $logger, $uuidGenerator);
@@ -77,7 +77,7 @@ class PusherTest extends TestCase
 
     public function testSuccessfulSendLogsCountsAndDoesNotError(): void
     {
-        $device = $this->createMock(Device::class);
+        $device = $this->createStub(Device::class);
         $device->method('getPushId')->willReturn('push-id-1');
 
         $emptyReport = MulticastSendReport::withItems([]);
@@ -87,13 +87,13 @@ class PusherTest extends TestCase
             ->method('sendMulticast')
             ->willReturn($emptyReport);
 
-        $deviceRepository = $this->createMock(DeviceRepository::class);
+        $deviceRepository = $this->createStub(DeviceRepository::class);
         $deviceRepository->method('findBy')->willReturn([$device]);
 
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())->method('error');
 
-        $uuidGenerator = $this->createMock(UuidGenerator::class);
+        $uuidGenerator = $this->createStub(UuidGenerator::class);
         $uuidGenerator->method('v4')->willReturn('test-uuid');
 
         $pusher = new Pusher($messaging, $deviceRepository, $logger, $uuidGenerator);
@@ -109,16 +109,16 @@ class PusherTest extends TestCase
         $bob = $this->buildUser('Bob', notifyTaskDone: true);
         $charlie = $this->buildUser('Charlie', notifyTaskDone: true);
 
-        $household = $this->createMock(Household::class);
+        $household = $this->createStub(Household::class);
         $household->method('getName')->willReturn('Shared Flat');
         $household->method('getId')->willReturn(7);
 
-        $task = $this->createMock(Task::class);
+        $task = $this->createStub(Task::class);
         $task->method('getName')->willReturn('Take out trash');
         $task->method('getId')->willReturn(13);
         $task->method('getHousehold')->willReturn($household);
 
-        $deviceRepository = $this->createMock(DeviceRepository::class);
+        $deviceRepository = $this->createStub(DeviceRepository::class);
         $deviceRepository->method('findByHousehold')->willReturn([
             $this->buildDevice($alice, 'alice-push-id'),
             $this->buildDevice($bob, 'bob-push-id'),
@@ -130,7 +130,7 @@ class PusherTest extends TestCase
 
         $capturedMessages = [];
         $capturedRecipients = [];
-        $messaging = $this->createMock(Messaging::class);
+        $messaging = $this->createStub(Messaging::class);
         $messaging->method('sendMulticast')
             ->willReturnCallback(function (CloudMessage $message, array $deviceIds) use (&$capturedMessages, &$capturedRecipients): MulticastSendReport {
                 $capturedMessages[] = $message;
@@ -141,8 +141,8 @@ class PusherTest extends TestCase
         $pusher = new Pusher(
             $messaging,
             $deviceRepository,
-            $this->createMock(LoggerInterface::class),
-            $this->createMock(UuidGenerator::class),
+            $this->createStub(LoggerInterface::class),
+            $this->createStub(UuidGenerator::class),
         );
 
         $pusher->publishTaskDone($task, completer: $bob, clicker: $alice);
@@ -174,11 +174,11 @@ class PusherTest extends TestCase
         $alice = $this->buildUser('Alice', notifyTaskDone: true);
         $bob = $this->buildUser('Bob', notifyTaskDone: true);
 
-        $household = $this->createMock(Household::class);
+        $household = $this->createStub(Household::class);
         $household->method('getName')->willReturn('Shared Flat');
         $household->method('getId')->willReturn(7);
 
-        $task = $this->createMock(Task::class);
+        $task = $this->createStub(Task::class);
         $task->method('getName')->willReturn('Take out trash');
         $task->method('getId')->willReturn(13);
         $task->method('getHousehold')->willReturn($household);
@@ -192,7 +192,7 @@ class PusherTest extends TestCase
         $deviceRepository->expects($this->never())->method('findByUser');
 
         $capturedRecipients = [];
-        $messaging = $this->createMock(Messaging::class);
+        $messaging = $this->createStub(Messaging::class);
         $messaging->method('sendMulticast')
             ->willReturnCallback(function (CloudMessage $message, array $deviceIds) use (&$capturedRecipients): MulticastSendReport {
                 $capturedRecipients[] = $deviceIds;
@@ -202,8 +202,8 @@ class PusherTest extends TestCase
         $pusher = new Pusher(
             $messaging,
             $deviceRepository,
-            $this->createMock(LoggerInterface::class),
-            $this->createMock(UuidGenerator::class),
+            $this->createStub(LoggerInterface::class),
+            $this->createStub(UuidGenerator::class),
         );
 
         $pusher->publishTaskDone($task, completer: $alice);
@@ -214,7 +214,7 @@ class PusherTest extends TestCase
 
     private function buildUser(string $name, bool $notifyTaskDone): User
     {
-        $user = $this->createMock(User::class);
+        $user = $this->createStub(User::class);
         $user->method('getName')->willReturn($name);
         // notifyTaskDue: false so revokeTaskDue's filter empties out and
         // we only inspect the publishTaskDone send.
@@ -225,7 +225,7 @@ class PusherTest extends TestCase
 
     private function buildDevice(User $owner, string $pushId): Device
     {
-        $device = $this->createMock(Device::class);
+        $device = $this->createStub(Device::class);
         $device->method('getUser')->willReturn($owner);
         $device->method('getPushId')->willReturn($pushId);
         return $device;

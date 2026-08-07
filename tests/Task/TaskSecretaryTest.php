@@ -249,7 +249,7 @@ class TaskSecretaryTest extends TestCase
     {
         return new TaskSecretary(
             new FakeClock($now),
-            $this->createMock(TaskRepository::class),
+            $this->createStub(TaskRepository::class),
         );
     }
 

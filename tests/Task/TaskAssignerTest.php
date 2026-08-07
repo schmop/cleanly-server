@@ -47,6 +47,7 @@ class TaskAssignerTest extends TestCase
         $this->publisher->expects($this->once())->method('publish')->with($task->getHousehold());
         $this->pusher->expects($this->once())->method('publishTaskAssign')->with($task, $member);
         $this->em->expects($this->once())->method('flush');
+        $this->taskLogRepository->expects($this->never())->method('getNextAssignmentRotation');
 
         $this->assigner->assignTo($task, $member);
         $this->assertSame($member, $task->getAssignee());
@@ -61,6 +62,7 @@ class TaskAssignerTest extends TestCase
         $this->publisher->expects($this->once())->method('publish');
         $this->pusher->expects($this->never())->method('publishTaskAssign');
         $this->em->expects($this->once())->method('flush');
+        $this->taskLogRepository->expects($this->never())->method('getNextAssignmentRotation');
 
         $this->assigner->assignTo($task, null);
         $this->assertNull($task->getAssignee());
@@ -75,6 +77,7 @@ class TaskAssignerTest extends TestCase
         $this->publisher->expects($this->never())->method('publish');
         $this->pusher->expects($this->never())->method('publishTaskAssign');
         $this->em->expects($this->never())->method('flush');
+        $this->taskLogRepository->expects($this->never())->method('getNextAssignmentRotation');
 
         $this->expectException(TaskAssignException::class);
         $this->assigner->assignTo($task, $stranger);
@@ -90,6 +93,7 @@ class TaskAssignerTest extends TestCase
         $this->publisher->expects($this->never())->method('publish');
         $this->em->expects($this->never())->method('flush');
         $this->taskLogRepository->expects($this->never())->method('getNextAssignmentRotation');
+        $this->pusher->expects($this->never())->method('publishTaskAssign');
 
         $this->assigner->autoAssign($task, $other);
         $this->assertSame($assignee, $task->getAssignee());
@@ -103,6 +107,8 @@ class TaskAssignerTest extends TestCase
 
         $this->publisher->expects($this->never())->method('publish');
         $this->em->expects($this->never())->method('flush');
+        $this->taskLogRepository->expects($this->never())->method('getNextAssignmentRotation');
+        $this->pusher->expects($this->never())->method('publishTaskAssign');
 
         $this->assigner->autoAssign($task, $assignee);
         $this->assertSame($assignee, $task->getAssignee());
@@ -116,6 +122,8 @@ class TaskAssignerTest extends TestCase
 
         $this->publisher->expects($this->once())->method('publish');
         $this->em->expects($this->once())->method('flush');
+        $this->taskLogRepository->expects($this->never())->method('getNextAssignmentRotation');
+        $this->pusher->expects($this->never())->method('publishTaskAssign');
 
         $this->assigner->autoAssign($task, $assignee);
         $this->assertNull($task->getAssignee());
@@ -148,10 +156,11 @@ class TaskAssignerTest extends TestCase
         $task = $this->makeTask([$current], strategy: ReassignmentStrategy::Rotate);
         $task->assignTo($current);
 
-        $this->taskLogRepository->method('getNextAssignmentRotation')->willReturn(null);
+        $this->taskLogRepository->expects($this->once())->method('getNextAssignmentRotation')->willReturn(null);
 
         $this->pusher->expects($this->never())->method('publishTaskAssign');
         $this->publisher->expects($this->once())->method('publish');
+        $this->em->expects($this->once())->method('flush');
 
         $this->assigner->autoAssign($task, $current);
         $this->assertNull($task->getAssignee());
@@ -162,7 +171,7 @@ class TaskAssignerTest extends TestCase
      */
     private function makeTask(array $members, ReassignmentStrategy $strategy = ReassignmentStrategy::None): Task
     {
-        $household = $this->createMock(Household::class);
+        $household = $this->createStub(Household::class);
         $household->method('getMembers')->willReturn(new ArrayCollection($members));
         $household->method('getReassignmentStrategy')->willReturn($strategy);
 
@@ -176,7 +185,7 @@ class TaskAssignerTest extends TestCase
 
     private function makeUser(int $id): User
     {
-        $user = $this->createMock(User::class);
+        $user = $this->createStub(User::class);
         $user->method('getId')->willReturn($id);
         return $user;
     }

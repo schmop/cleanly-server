@@ -33,10 +33,10 @@ class TaskCompleterTest extends TestCase
         $this->taskRepository = $this->createMock(TaskRepository::class);
         $this->taskLogRepository = $this->createMock(TaskLogRepository::class);
 
-        $uuidGen = $this->createMock(UuidGenerator::class);
+        $uuidGen = $this->createStub(UuidGenerator::class);
         $uuidGen->method('v4')->willReturn('fixed-uuid');
 
-        $this->user = $this->createMock(User::class);
+        $this->user = $this->createStub(User::class);
         $this->completer = new TaskCompleter(
             $this->taskRepository,
             new TaskLogFactory($uuidGen, $this->clock),
@@ -82,6 +82,9 @@ class TaskCompleterTest extends TestCase
         $log = $this->makeLogAt('2024-06-15 11:55:00', $task);
         $this->taskLogRepository->method('findLastByTaskAndUser')->willReturn($log);
 
+        $this->taskRepository->expects($this->once())->method('save');
+        $this->taskLogRepository->expects($this->once())->method('save');
+
         // 12:00:00 - 11:55:00 = 300s. Strict less-than: 300 < 300 is false → not rate limited.
         $this->assertTrue($this->completer->markAsComplete($task, $this->user));
     }
@@ -93,6 +96,7 @@ class TaskCompleterTest extends TestCase
         $this->taskLogRepository->method('findLastByTaskAndUser')->willReturn($oldLog);
 
         $this->taskRepository->expects($this->once())->method('save');
+        $this->taskLogRepository->expects($this->once())->method('save');
         $this->assertTrue($this->completer->markAsComplete($task, $this->user));
     }
 
@@ -101,6 +105,7 @@ class TaskCompleterTest extends TestCase
         $task = $this->makeTask();
         // Even with a recent log, providing a custom timestamp must not consult the rate limiter.
         $this->taskLogRepository->expects($this->never())->method('findLastByTaskAndUser');
+        $this->taskRepository->expects($this->once())->method('save');
 
         $past = new \DateTimeImmutable('2023-01-01 09:00:00');
         $this->assertTrue($this->completer->markAsComplete($task, $this->user, $past));
@@ -110,6 +115,9 @@ class TaskCompleterTest extends TestCase
     {
         $task = $this->makeTask();
         $task->setLastCompleted(new \DateTimeImmutable('2024-06-15 11:00:00'));
+
+        $this->taskRepository->expects($this->once())->method('save');
+        $this->taskLogRepository->expects($this->once())->method('save');
 
         $past = new \DateTimeImmutable('2023-01-01 09:00:00');
         $this->completer->markAsComplete($task, $this->user, $past);
@@ -126,6 +134,9 @@ class TaskCompleterTest extends TestCase
         $task = $this->makeTask();
         $task->setLastCompleted(new \DateTimeImmutable('2024-06-15 09:00:00'));
 
+        $this->taskRepository->expects($this->once())->method('save');
+        $this->taskLogRepository->expects($this->once())->method('save');
+
         $future = new \DateTimeImmutable('2024-06-15 13:00:00');
         $this->completer->markAsComplete($task, $this->user, $future);
 
@@ -135,14 +146,16 @@ class TaskCompleterTest extends TestCase
     public function testAsUserCreditsTheTaskLogToOtherUser(): void
     {
         $task = $this->makeTask();
-        $actor = $this->createMock(User::class);
-        $target = $this->createMock(User::class);
+        $actor = $this->createStub(User::class);
+        $target = $this->createStub(User::class);
 
         // Rate-limit lookup must use the target (the credited user), not the actor.
         $this->taskLogRepository->expects($this->once())
             ->method('findLastByTaskAndUser')
             ->with($task, $target)
             ->willReturn(null);
+
+        $this->taskRepository->expects($this->once())->method('save');
 
         $capturedLog = null;
         $this->taskLogRepository->method('save')->willReturnCallback(function (TaskLog $log) use (&$capturedLog) {

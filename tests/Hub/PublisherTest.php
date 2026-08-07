@@ -6,7 +6,7 @@ namespace App\Tests\Hub;
 
 use App\Hub\Publisher;
 use App\User\Entity\User;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,7 +40,7 @@ class PublisherTest extends TestCase
             )
             ->willReturn($response);
 
-        $publisher = new Publisher($client, $this->createMock(LoggerInterface::class), self::HUB_URL, self::SECRET);
+        $publisher = new Publisher($client, $this->createStub(LoggerInterface::class), self::HUB_URL, self::SECRET);
         $publisher->publish([$alice, $bob], 'task_done', ['taskId' => 7]);
 
         $this->assertSame([1, 2], $capturedOptions['json']['targets']);
@@ -51,10 +51,10 @@ class PublisherTest extends TestCase
 
     public function testNon200ResponseLogsError(): void
     {
-        $response = $this->createMock(ResponseInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
         $response->method('getStatusCode')->willReturn(Response::HTTP_INTERNAL_SERVER_ERROR);
 
-        $client = $this->createMock(HttpClientInterface::class);
+        $client = $this->createStub(HttpClientInterface::class);
         $client->method('request')->willReturn($response);
 
         $logger = $this->createMock(LoggerInterface::class);
@@ -68,7 +68,7 @@ class PublisherTest extends TestCase
 
     public function testTransportExceptionIsCaughtAndLogged(): void
     {
-        $client = $this->createMock(HttpClientInterface::class);
+        $client = $this->createStub(HttpClientInterface::class);
         $client->method('request')->willThrowException(new class extends \Exception implements TransportExceptionInterface {});
 
         $logger = $this->createMock(LoggerInterface::class);
@@ -100,22 +100,22 @@ class PublisherTest extends TestCase
             )
             ->willReturn($this->okResponse());
 
-        $publisher = new Publisher($client, $this->createMock(LoggerInterface::class), self::HUB_URL, self::SECRET);
+        $publisher = new Publisher($client, $this->createStub(LoggerInterface::class), self::HUB_URL, self::SECRET);
         $publisher->publish([], 'noop', null);
 
         $this->assertSame([], $captured['json']['targets']);
     }
 
-    private function okResponse(): ResponseInterface&MockObject
+    private function okResponse(): ResponseInterface&Stub
     {
-        $response = $this->createMock(ResponseInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
         $response->method('getStatusCode')->willReturn(Response::HTTP_OK);
         return $response;
     }
 
     private function userWithId(int $id): User
     {
-        $user = $this->createMock(User::class);
+        $user = $this->createStub(User::class);
         $user->method('getId')->willReturn($id);
         return $user;
     }

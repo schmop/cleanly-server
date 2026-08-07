@@ -20,7 +20,7 @@ class AttachRefreshTokenOnSuccessListenerTest extends TestCase
         $user = new User('alice@test', 'Alice');
         $user->setPassword('irrelevant');
 
-        $refreshToken = $this->createMock(RefreshToken::class);
+        $refreshToken = $this->createStub(RefreshToken::class);
         $refreshToken->method('getToken')->willReturn('the-refresh-token');
 
         $creator = $this->createMock(RefreshTokenCreator::class);
