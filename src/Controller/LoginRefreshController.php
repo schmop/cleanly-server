@@ -12,6 +12,7 @@ use App\Utils\Clock;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -53,7 +54,7 @@ class LoginRefreshController extends AbstractController
             $refreshTokenRefresher->refresh($refreshToken);
             $refreshTokenRepository->save($refreshToken);
             return JsonSuccessResponse::create(['token' => $jWTTokenManager->create($refreshToken->getUser())]);
-        } catch (PersistenceException | \Webmozart\Assert\InvalidArgumentException $e) {
+        } catch (PersistenceException | BadRequestException | \DateMalformedIntervalStringException $e) {
             return JsonErrorResponse::fromException($logger, $e, 'Failed to refresh login');
         }
     }

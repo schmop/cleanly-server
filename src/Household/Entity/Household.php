@@ -14,6 +14,7 @@ use AlexCrawford\LexoRank\Rank;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -85,6 +86,7 @@ class Household implements \JsonSerializable, RankSortableList
     /**
      * @throws \InvalidArgumentException
      * @throws \LogicException
+     * @throws BadRequestException
      */
     public static function createFromRequest(Request $request, User $user): self
     {

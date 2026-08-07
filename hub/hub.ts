@@ -63,8 +63,10 @@ export function createApp(publishSecret: string, whoamiFn: WhoamiFn = defaultWho
         if (auth?.toLowerCase() !== `bearer ${publishSecret}`) {
             return forbidden(response, 'No valid sse push secret given!');
         }
-        const targets: number[] = request.body.targets;
-        const data: any = request.body.data;
+        // Express 5 hands us an undefined body when nothing got parsed, so guard before reaching in.
+        const body = request.body ?? {};
+        const targets: number[] = body.targets;
+        const data: any = body.data;
         if (targets == null || data == null || !Array.isArray(targets)) {
             return badRequest(response, 'Invalid publish, data or targets invalid!', {targets, data});
         }

@@ -27,6 +27,7 @@ use App\Webhook\WebhookValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,7 +45,7 @@ class HouseholdController extends UserAwareController
             PersistenceException::persistAndFlush($entityManager, $household);
 
             return JsonSuccessResponse::create();
-        } catch (PersistenceException | \LogicException $e) {
+        } catch (PersistenceException | BadRequestException | \LogicException $e) {
             return JsonErrorResponse::fromException($logger, $e, 'Failed to create household');
         }
     }

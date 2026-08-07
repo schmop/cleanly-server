@@ -42,6 +42,14 @@ describe('POST /publish', () => {
         expect(res.status).toBe(400);
     });
 
+    it('rejects publish without a body', async () => {
+        const { app } = appWithFakeWhoami();
+        const res = await request(app)
+            .post('/publish')
+            .set('Authorization', `Bearer ${SECRET}`);
+        expect(res.status).toBe(400);
+    });
+
     it('returns 200 when payload is well-formed and there are no listeners', async () => {
         const { app } = appWithFakeWhoami();
         const res = await request(app)

@@ -17,7 +17,7 @@ class RandomRefreshTokenCreator implements RefreshTokenCreator
     }
 
     /**
-     * @throws \Webmozart\Assert\InvalidArgumentException
+     * @throws \DateMalformedIntervalStringException
      * @throws PersistenceException
      */
     function create(User $user): RefreshToken

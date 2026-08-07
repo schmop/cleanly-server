@@ -3,7 +3,6 @@
 namespace App\Auth;
 use App\Auth\Entity\RefreshToken;
 use App\Utils\Clock;
-use Webmozart\Assert\Assert;
 
 class RefreshTokenRefresher
 {
@@ -14,7 +13,7 @@ class RefreshTokenRefresher
     }
 
     /**
-     * @throws \Webmozart\Assert\InvalidArgumentException
+     * @throws \DateMalformedIntervalStringException
      */
     function refresh(RefreshToken $refreshToken): void
     {
@@ -24,7 +23,6 @@ class RefreshTokenRefresher
                 $this->ttlProvider->ttl
             )
         );
-        Assert::isInstanceOf($interval, \DateInterval::class);
         $refreshToken->refresh(
             $this->clock->now()->add(
                 $interval,

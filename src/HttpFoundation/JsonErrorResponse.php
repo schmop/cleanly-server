@@ -5,6 +5,7 @@ namespace App\HttpFoundation;
 use App\Household\NotInHouseholdException;
 use App\Json\Exception\UnexpectedJsonException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -35,7 +36,7 @@ class JsonErrorResponse
      */
     public static function fromException(LoggerInterface $logger, \Throwable $e, string $context = 'Request failed'): JsonResponse
     {
-        if ($e instanceof UnexpectedJsonException || $e instanceof \TypeError || $e instanceof \ValueError) {
+        if ($e instanceof UnexpectedJsonException || $e instanceof BadRequestException || $e instanceof \TypeError || $e instanceof \ValueError) {
             return self::create(['reason' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
         if ($e instanceof AccessDeniedException || $e instanceof NotInHouseholdException) {

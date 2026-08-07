@@ -11,6 +11,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
 use App\Push\DeviceRepository;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use App\Push\Entity\Device;
 use Doctrine\ORM\EntityManagerInterface;
@@ -34,7 +35,7 @@ class PushController extends UserAwareController
             PersistenceException::flush($entityManager);
 
             return JsonSuccessResponse::create();
-        } catch (PersistenceException | \LogicException $e) {
+        } catch (PersistenceException | BadRequestException | \LogicException $e) {
             return JsonErrorResponse::fromException($logger, $e, 'Failed to register push device');
         }
     }
