@@ -4,6 +4,26 @@ Android: https://play.google.com/store/apps/details?id=de.schmoppo.cleanly
 
 Web: https://schmoppo.de
 
+## 1.31 - 07.08.2026
+
+Push-Benachrichtigungen bringen euch jetzt direkt ans Ziel: Ein Tipp auf eine Aufgaben-Benachrichtigung öffnet die Aufgabenliste, eine Checklisten-Benachrichtigung die passende Checkliste, eine neue Transaktion die Finanzübersicht und eine Einladung die Einladungen.
+
+Mehrere Benachrichtigungen aus demselben Haushalt werden auf Android jetzt nach Haushalt und Art zusammengefasst, statt einzeln die Benachrichtigungsleiste zu füllen.
+
+Die Benachrichtigung „Aufgabe ist fällig" verschwindet automatisch, sobald die Aufgabe erledigt wurde.
+
+Haushalte lassen sich jetzt umbenennen. Wer den Haushalt verwalten darf, findet dazu den Eintrag „Haushalt umbenennen" in den Haushaltseinstellungen.
+
+![haushalt-umbenennen-menue](assets/changelog/haushalt-umbenennen-menue.png)
+
+![haushalt-umbenennen-dialog](assets/changelog/haushalt-umbenennen-dialog.png)
+
+Trägt ein Moderator eine Erledigung für ein anderes Mitglied nach, nennt die Push-Benachrichtigung jetzt die Person, der die Aufgabe gutgeschrieben wurde. Das betroffene Mitglied wird zusätzlich darüber informiert, dass jemand die Erledigung für es eingetragen hat.
+
+Fehler behoben, bei dem eine nachträglich eingetragene Erledigung der falschen Person gutgeschrieben wurde.
+
+Fehler behoben, bei dem beim nachträglichen Erledigen die vorausgefüllte Uhrzeit nicht der eigenen Zeitzone entsprach.
+
 ## 1.30 - 21.04.2026
 
 Haushalte lassen sich jetzt auf dem Dashboard per Drag & Drop in die gewünschte Reihenfolge bringen. Die Sortierung wird pro Benutzer gespeichert – jedes Haushaltsmitglied sieht seine eigene Reihenfolge.
