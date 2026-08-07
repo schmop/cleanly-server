@@ -6,7 +6,9 @@ namespace App\Controller;
 
 use App\HttpFoundation\JsonErrorResponse;
 use App\HttpFoundation\JsonSuccessResponse;
+use App\Json\Exception\UnexpectedJsonException;
 use App\Json\Json;
+use App\Persistence\PersistenceException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\User\UserFetcher;
@@ -31,7 +33,7 @@ class SettingsController
                 $settingsData = UserSettingsData::createFromJson(Json::fromRequest($request));
                 $settingsData->applyTo($settings);
                 $userSettingsRepository->save($settings);
-            } catch (\Exception $e) {
+            } catch (UnexpectedJsonException | PersistenceException $e) {
                 $logger->error('Could not save settings, reason: {reason}', [
                     'reason' => $e->getMessage(),
                     'exception' => $e

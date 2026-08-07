@@ -70,7 +70,7 @@ class HouseholdController extends UserAwareController
             foreach ($invitees as $invitee) {
                 try {
                     $inviteToken = new HouseholdInvite($base64Url->encode(random_bytes(32)), $household, $invitee, $user);
-                } catch (\Exception $e) {
+                } catch (\Random\RandomException | \DateMalformedIntervalStringException | \DateInvalidOperationException $e) {
                     return JsonErrorResponse::create(['reason' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
                 $entityManager->persist($inviteToken);

@@ -24,7 +24,7 @@ readonly class TodoEventProcessor
      * @param TodoEvent[] $events
      * @throws InconsistentChecklistEventException
      * @throws PersistenceException
-     * @throws \Exception
+     * @throws \DateMalformedStringException
      */
     public function process(array $events, Checklist $checklist): void
     {
@@ -49,7 +49,7 @@ readonly class TodoEventProcessor
                         break;
                 }
             }
-        } catch (\Exception $e) {
+        } catch (InconsistentChecklistEventException | PersistenceException | \DateMalformedStringException $e) {
             $this->entityManager->rollback();
             throw $e;
         }

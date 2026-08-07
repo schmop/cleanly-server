@@ -14,6 +14,7 @@ use App\Todo\ChecklistFactory;
 use App\Todo\ChecklistRepository;
 use App\Todo\ChecklistUpdateNotifier;
 use App\Todo\Entity\Checklist;
+use App\Todo\InconsistentChecklistEventException;
 use App\Todo\TodoEvent;
 use App\Todo\TodoEventProcessor;
 use App\Todo\TodoPublisher;
@@ -46,12 +47,12 @@ class ChecklistController extends UserAwareController
                 $todoEventProcessor->process($events, $checklist);
                 $checklistUpdateNotifier->notify($this->getUser(), $checklist);
                 $todoPublisher->publish($this->getUser(), $events, $checklist);
-            } catch (\Exception $e) {
+            } catch (UnexpectedJsonException | InconsistentChecklistEventException | PersistenceException | \DateMalformedStringException $e) {
                 return JsonErrorResponse::create(['reason' => 'Edits on the checklist were invalid, ' . $e->getMessage(), 'trace' => $e->getTrace()]);
             }
 
             return JsonSuccessResponse::create();
-        } catch (AccessDeniedException $e) {
+        } catch (AccessDeniedException | \LogicException $e) {
             return JsonErrorResponse::fromException($logger, $e, 'Failed to update checklist');
         }
     }

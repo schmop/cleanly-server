@@ -3,8 +3,10 @@
 namespace App\Command;
 
 use App\Household\HouseholdRepository;
+use App\Persistence\PersistenceException;
 use App\Push\Pusher;
 use App\Task\Entity\Task;
+use App\Task\Exception\ReminderComputationException;
 use App\Task\TaskSecretary;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -67,7 +69,7 @@ class NotifyTaskDueCommand extends Command
                 }
                 $output->writeln(sprintf('Sent %d push notifications in %s', count($dueTasks), $household->getName()));
             }
-        } catch (\Exception $e) {
+        } catch (ReminderComputationException | PersistenceException $e) {
             $this->logger->error('Could not notify task as due, {message}', [
                 'message' => $e->getMessage(),
                 'exception' => $e,
