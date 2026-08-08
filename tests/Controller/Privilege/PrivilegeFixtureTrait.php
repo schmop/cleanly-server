@@ -12,6 +12,7 @@ use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdPrivilege;
 use App\Household\ReassignmentStrategy;
 use App\Task\Entity\Task;
+use App\Task\Entity\TaskLog;
 use App\Todo\Entity\Checklist;
 use App\User\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -71,6 +72,24 @@ trait PrivilegeFixtureTrait
         $em->flush();
     }
 
+    /**
+     * Re-reads an entity from a cleared EntityManager. Entities captured before
+     * a request are stale afterwards, and a warm identity map would happily hand
+     * back the pre-request state, which is exactly what these assertions must
+     * not trust.
+     *
+     * @template T of object
+     * @param class-string<T> $class
+     * @return T|null
+     */
+    private function refetch(string $class, mixed $id): ?object
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+
+        return $em->find($class, $id);
+    }
+
     private function createUser(?string $emailHint = null): User
     {
         $email = sprintf('%s_%s@test.example', $emailHint ?? 'u', uniqid('', true));
@@ -117,6 +136,15 @@ trait PrivilegeFixtureTrait
         $this->em->flush();
 
         return $task;
+    }
+
+    private function createTaskLog(Task $task, User $user, \DateTimeImmutable $at): TaskLog
+    {
+        $log = new TaskLog(uniqid('log_', true), $at, $user, $task);
+        $this->em->persist($log);
+        $this->em->flush();
+
+        return $log;
     }
 
     private function createChecklist(Household $household, string $name = 'Test Checklist'): Checklist

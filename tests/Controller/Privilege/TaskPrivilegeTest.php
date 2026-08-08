@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller\Privilege;
 
+use App\Household\Entity\Household;
 use App\Household\Entity\HouseholdPrivilege;
 use App\Task\Entity\Task;
+use App\Task\Entity\TaskLog;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -57,6 +59,11 @@ class TaskPrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $names = array_map(static fn (Task $t): string => $t->getName(), $reloaded->getTasks()->toArray());
+        $this->assertContains('Some task', $names);
     }
 
     public function testModeratorCanCreateTask(): void
@@ -166,6 +173,12 @@ class TaskPrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Task::class, $task->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame('Renamed', $reloaded->getName());
+        $this->assertSame('cat', $reloaded->getIcon());
+        $this->assertSame(2, $reloaded->getStars());
     }
 
     public function testRegularMemberCannotEditTask(): void
@@ -274,6 +287,8 @@ class TaskPrivilegeTest extends WebTestCase
         $this->client->request('POST', "/api/task/mark-done/{$task->getId()}");
 
         $this->assertResponseIsSuccessful();
+
+        $this->assertSame([$member->getId()], $this->logUserIds($task->getId()));
     }
 
     public function testNonMemberCannotMarkTaskDone(): void
@@ -306,6 +321,9 @@ class TaskPrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        // Credited to the target, not to the moderator who clicked.
+        $this->assertSame([$target->getId()], $this->logUserIds($task->getId()));
     }
 
     public function testRegularMemberCannotMarkTaskDoneAsAnotherUser(): void
@@ -397,6 +415,27 @@ class TaskPrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Task::class, $task->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame($member->getId(), $reloaded->getAssignee()?->getId());
+    }
+
+    /**
+     * User ids credited by each of a task's completion logs, read back from the DB.
+     *
+     * @return list<int|null>
+     */
+    private function logUserIds(?int $taskId): array
+    {
+        $this->assertNotNull($taskId);
+        $reloaded = $this->refetch(Task::class, $taskId);
+        $this->assertNotNull($reloaded);
+
+        return array_map(
+            static fn (TaskLog $log): ?int => $log->getUser()->getId(),
+            array_values($reloaded->getLogs()->toArray()),
+        );
     }
 
     public function testNonMemberCannotAssignTask(): void

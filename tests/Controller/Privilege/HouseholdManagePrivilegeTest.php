@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Controller\Privilege;
 
 use App\Household\Entity\Household;
+use App\Household\Entity\HouseholdInvite;
 use App\Household\Entity\HouseholdPrivilege;
+use App\Household\ReassignmentStrategy;
 use App\User\Entity\User;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -53,6 +55,14 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $invitedIds = array_map(
+            static fn (HouseholdInvite $i): ?int => $i->getInvitee()?->getId(),
+            $reloaded->getInvites()->toArray(),
+        );
+        $this->assertContains($invitee->getId(), $invitedIds);
     }
 
     public function testModeratorCannotInvite(): void
@@ -117,6 +127,14 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         $this->client->request('POST', "/api/household/kick/{$household->getId()}/{$member->getId()}");
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $memberIds = array_map(
+            static fn (User $u): ?int => $u->getId(),
+            $reloaded->getMembers()->toArray(),
+        );
+        $this->assertNotContains($member->getId(), $memberIds);
     }
 
     public function testModeratorCannotKick(): void
@@ -169,6 +187,14 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $reloadedMember = $this->memberOf($reloaded, $member->getId());
+        $this->assertSame(
+            HouseholdPrivilege::PRIVILEGE_MODERATOR,
+            $reloaded->getUserPrivilege($reloadedMember),
+        );
     }
 
     public function testModeratorCannotChangePrivilege(): void
@@ -254,6 +280,10 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame('https://example.invalid', $reloaded->getWebhookUrl());
     }
 
     public function testModeratorCannotSetWebhook(): void
@@ -303,6 +333,10 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         );
 
         $this->assertResponseIsSuccessful();
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame(ReassignmentStrategy::Rotate, $reloaded->getReassignmentStrategy());
     }
 
     public function testModeratorCannotSetReassignmentStrategy(): void
@@ -337,6 +371,95 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         $this->assertResponseStatusCodeSame(403);
     }
 
+    // --- change privilege: request-validation guards (all reject with 400) ---
+
+    public function testAdminCannotChangeTheirOwnPrivilege(): void
+    {
+        [$admin, $household] = $this->makeHouseholdWithAdmin();
+
+        $this->client->loginUser($admin);
+        $this->client->request(
+            'POST',
+            sprintf('/api/household/privilege/%d/%d/%d', $household->getId(), $admin->getId(), HouseholdPrivilege::PRIVILEGE_USER),
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+        $this->assertSame('You cannot change your own privileges!', $this->errorReason());
+
+        // The admin must keep admin rights, or they could lock themselves out.
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame(
+            HouseholdPrivilege::PRIVILEGE_ADMIN,
+            $reloaded->getUserPrivilege($this->memberOf($reloaded, $admin->getId())),
+        );
+    }
+
+    public function testCannotChangePrivilegeOfNonMember(): void
+    {
+        [$admin, $household] = $this->makeHouseholdWithAdmin();
+        $outsider = $this->createUser('outsider');
+
+        $this->client->loginUser($admin);
+        $this->client->request(
+            'POST',
+            sprintf('/api/household/privilege/%d/%d/%d', $household->getId(), $outsider->getId(), HouseholdPrivilege::PRIVILEGE_MODERATOR),
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+        $this->assertStringContainsString("aren't members", $this->errorReason());
+
+        // No membership may be created as a side effect of the rejected call.
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $memberIds = array_map(static fn (User $u): ?int => $u->getId(), $reloaded->getMembers()->toArray());
+        $this->assertNotContains($outsider->getId(), $memberIds);
+    }
+
+    public function testInvalidPrivilegeLevelIsRejected(): void
+    {
+        [$admin, $household] = $this->makeHouseholdWithAdmin();
+        $member = $this->addMember($household, HouseholdPrivilege::PRIVILEGE_USER);
+
+        $this->client->loginUser($admin);
+        $this->client->request(
+            'POST',
+            sprintf('/api/household/privilege/%d/%d/%d', $household->getId(), $member->getId(), 9999),
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+        $this->assertSame('Invalid privilege given!', $this->errorReason());
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame(
+            HouseholdPrivilege::PRIVILEGE_USER,
+            $reloaded->getUserPrivilege($this->memberOf($reloaded, $member->getId())),
+        );
+    }
+
+    public function testAdminCannotDemoteAnotherAdmin(): void
+    {
+        [$admin, $household] = $this->makeHouseholdWithAdmin();
+        $coAdmin = $this->addMember($household, HouseholdPrivilege::PRIVILEGE_ADMIN);
+
+        $this->client->loginUser($admin);
+        $this->client->request(
+            'POST',
+            sprintf('/api/household/privilege/%d/%d/%d', $household->getId(), $coAdmin->getId(), HouseholdPrivilege::PRIVILEGE_USER),
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+        $this->assertSame('You cannot overthrow another admin!', $this->errorReason());
+
+        $reloaded = $this->refetch(Household::class, $household->getId());
+        $this->assertNotNull($reloaded);
+        $this->assertSame(
+            HouseholdPrivilege::PRIVILEGE_ADMIN,
+            $reloaded->getUserPrivilege($this->memberOf($reloaded, $coAdmin->getId())),
+        );
+    }
+
     /**
      * @return array{User, Household}
      */
@@ -346,5 +469,31 @@ class HouseholdManagePrivilegeTest extends WebTestCase
         $household = $this->createHousehold($admin);
 
         return [$admin, $household];
+    }
+
+    /** Resolves a member on a freshly loaded household; privileges match by identity. */
+    private function memberOf(Household $household, ?int $userId): User
+    {
+        foreach ($household->getMembers() as $member) {
+            if ($member->getId() === $userId) {
+                return $member;
+            }
+        }
+
+        self::fail("User {$userId} is not a member of the household");
+    }
+
+    private function errorReason(): string
+    {
+        $payload = json_decode(
+            (string)$this->client->getResponse()->getContent(),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        self::assertIsArray($payload);
+        self::assertArrayHasKey('reason', $payload);
+        self::assertIsString($payload['reason']);
+
+        return $payload['reason'];
     }
 }
