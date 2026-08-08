@@ -53,13 +53,13 @@ class TaskCompleterTest extends TestCase
         $this->taskRepository->expects($this->once())->method('save')->with($task);
         $this->taskLogRepository->expects($this->once())->method('save');
 
-        $before = time();
         $this->assertTrue($this->completer->markAsComplete($task, $this->user));
-        $after = time();
         $this->assertNotNull($task->getLastCompleted());
-        $ts = $task->getLastCompleted()?->getTimestamp() ?? 0;
-        $this->assertGreaterThanOrEqual($before, $ts);
-        $this->assertLessThanOrEqual($after, $ts);
+        // Completion time comes from the injected clock, not the wall clock.
+        $this->assertSame(
+            $this->clock->now()->getTimestamp(),
+            $task->getLastCompleted()?->getTimestamp(),
+        );
     }
 
     public function testRateLimitedCompletionWithinFiveMinutesReturnsFalse(): void
@@ -75,10 +75,10 @@ class TaskCompleterTest extends TestCase
         $this->assertFalse($this->completer->markAsComplete($task, $this->user));
     }
 
-    public function testCompletionExactlyAtFiveMinutesIsStillRateLimited(): void
+    public function testCompletionExactlyAtFiveMinutesIsAllowed(): void
     {
         $task = $this->makeTask();
-        // Exactly 5 minutes ago — boundary is inclusive (< RATE_LIMIT means exactly 5min is allowed).
+        // Exactly 5 minutes ago. The check is `< RATE_LIMIT`, so the boundary itself passes.
         $log = $this->makeLogAt('2024-06-15 11:55:00', $task);
         $this->taskLogRepository->method('findLastByTaskAndUser')->willReturn($log);
 

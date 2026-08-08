@@ -25,7 +25,7 @@ class TaskCompleter
     public function markAsComplete(Task $task, User $user, ?\DateTimeImmutable $customTimestamp = null, ?User $asUser = null): bool
     {
         $completingUser = $asUser ?? $user;
-        $completionTime = $customTimestamp ?? new \DateTimeImmutable();
+        $completionTime = $customTimestamp ?? $this->clock->now();
 
         // Only apply rate limiting for real-time completions (not retroactive logging)
         if ($customTimestamp === null) {
